@@ -137,15 +137,17 @@ export default function Workspace() {
     <>
       <PageHeading
         eyebrow={
-          student ? "TU EXPEDIENTE DIGITAL" : `EXPEDIENTE · ${app.folio}`
+          student
+            ? "TITULACIÓN / SERVICIOS ESCOLARES"
+            : `EXPEDIENTE · ${app.folio}`
         }
         title={
           docsOnly
-            ? "Documentos del expediente"
+            ? "Documentos para revisión"
             : timelineOnly
-              ? "Historial de la solicitud"
+              ? "Movimientos del trámite"
               : student
-                ? "Mi solicitud de titulación"
+                ? "Mi titulación"
                 : app.student.name
         }
         action={
@@ -159,7 +161,13 @@ export default function Workspace() {
         }
       >
         {student
-          ? "Revisa tu expediente y conoce qué sigue en tu trámite."
+          ? docsOnly
+            ? "Adjunta archivos legibles y consulta las observaciones de cada área."
+            : timelineOnly
+              ? "Consulta cuándo cambió tu solicitud, quién la atendió y qué se registró."
+              : EDITABLE.includes(app.status)
+                ? "Completa tu expediente antes de enviarlo a Servicios Escolares."
+                : "Consulta el estado de tu solicitud y las indicaciones de Servicios Escolares."
           : `${app.student.profile.matricula || "Sin matrícula"} · ${app.student.profile.carrera || "Sin carrera"}`}
       </PageHeading>
       <Alert>{state.error}</Alert>
@@ -211,7 +219,9 @@ export default function Workspace() {
             >
               <section className="panel">
                 <div className="panel-heading">
-                  <h2>{student ? "Tu información" : "Datos del egresado"}</h2>
+                  <h2>
+                    {student ? "Datos registrados" : "Datos del egresado"}
+                  </h2>
                   {student && EDITABLE.includes(app.status) && (
                     <Link to="/titulacion/perfil" className="text-link">
                       Editar ↗
@@ -435,7 +445,7 @@ export default function Workspace() {
                   <strong>
                     {student
                       ? EDITABLE.includes(app.status)
-                        ? "El borrador queda guardado"
+                        ? "Revisa antes de enviar"
                         : "Solicitud registrada"
                       : "Control del expediente"}
                   </strong>

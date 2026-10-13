@@ -33,15 +33,15 @@ El umbral habitual de WCAG para texto normal es 4.5:1. Pasar estas combinaciones
 
 ## Tipografía, espacio y composición
 
-Manrope para títulos operativos y DM Sans para cuerpo, con respaldo Arial/sans-serif. La bienvenida y las pantallas operativas utilizan la misma familia sans; no hay títulos serif de gran tamaño en el home privado. Las fuentes se incluyen en la build mediante paquetes Fontsource y se sirven localmente; sus licencias se conservan en docs/licencias. No se solicitan fuentes a Google al visitar la aplicación.
+DM Sans para cuerpo y encabezados principales (peso 450, 30–46 px en trabajo, 40–76 px en bienvenida); Manrope se conserva en componentes secundarios. Respaldo Arial/sans-serif. La jerarquía utiliza escala, espacio y peso moderado. Las fuentes se incluyen mediante Fontsource y se sirven localmente; licencias en docs/licencias.
 
-Contenido con ancho máximo de 1280 px. Espaciado basado en 4 px. Bordes suaves, radios de 3 px en controles y de 5–8 px en navegación/contenedores del marco, con superficies de poco ruido visual. Evitar gráficas decorativas, métricas ficticias, tarjetas repetidas sin acción, gradientes fuertes y sidebars distintos por módulo. El home privado muestra únicamente módulos y accesos directos. La bienvenida pública incorpora una ilustración vectorial propia grande, conforme a la solicitud CR-003 del líder; no representa documentos o instalaciones oficiales.
+Contenido con ancho máximo de 1280 px. Espaciado basado en 4 px, radios de 3 px en controles y divisiones finas en lugar de contenedores anidados. El expediente comparte lienzo marfil; los diálogos conservan superficie diferenciada. Evitar métricas ficticias, tarjetas sin acción y gradientes decorativos. El home conserva módulos y accesos. La bienvenida utiliza un SVG isométrico original por capas, conforme a CR-004; no representa un documento oficial.
 
-Puntos de adaptación actuales: 1100, 800 y 640 px. En móvil, navegación global desplegable; navegación del módulo horizontal con desplazamiento propio; formularios en una columna; acciones apiladas; tablas con desplazamiento interno. Comprobar 390 px, 768 px, 1440 px y 200 % de zoom. No recortar texto ni ocultar acciones esenciales para que “quepa”.
+El marco se adapta a 1150, 960, 760, 640 y 380 px. Por debajo de 960 px, navegación global desplegable; pestañas del módulo con desplazamiento propio; formularios en una columna y tablas con desplazamiento interno. Los componentes conservan sus puntos de adaptación. Comprobar 320/390/768/1440 px y 200 % de zoom. No ocultar acciones esenciales.
 
 ## Componentes compartidos
 
-- Shell: bienvenida pública o marco privado con sidebar compartido, barra de migas de pan, sesión y pie. En móvil, la navegación global usa dialog nativo.
+- Shell: bienvenida pública o marco privado con navegación superior compartida, migas de pan, sesión y pie. En móvil usa dialog nativo.
 - Badge: estado textual y color semántico; no comunicar estado únicamente por color.
 - Field: etiqueta persistente, obligatoriedad, validación nativa y ayuda contextual.
 - Alert: errores recuperables y mensajes de confirmación con aria-live mediante roles.
@@ -62,6 +62,6 @@ Antes de integrar una pantalla: usar tokens y componentes, comprobar foco/teclad
 
 Leer [AUDITORIA-DISENO.md](AUDITORIA-DISENO.md): investigación, diagnóstico de la primera entrega y criterios de aceptación. El resumen muestra tareas y faltantes; documentos y el historial completo tienen vistas propias. La revisión institucional se muestra después del envío, sin confundir adjuntos con dictámenes. La bandeja utiliza el ancho completo. Los errores de perfil enlazan al campo y conservan los valores. Los dictámenes exigen elegir un resultado.
 
-## Marco público y privado · CR-003
+## Marco público y privado · CR-004
 
-[ARQUITECTURA-UI.md](ARQUITECTURA-UI.md) define los contratos y referencias. El home requiere sesión y solo presenta Titulación y accesos por rol. La imagen grande pertenece a la bienvenida; el trabajo usa superficies claras y densidad moderada. Mantener las migas en la barra superior, una sola navegación global y pestañas locales. El movimiento de la ilustración termina tras 1.1 s y se elimina con prefers-reduced-motion.
+[ARQUITECTURA-UI.md](ARQUITECTURA-UI.md) define los contratos y [ESTUDIO-LARAVEL.md](ESTUDIO-LARAVEL.md) documenta la investigación. El home exige sesión y conserva Titulación y accesos por rol. Una navegación superior, migas debajo y pestañas locales sustituyen la sidebar anterior. El SVG de bienvenida termina su entrada a 1.7 s, permite repetición manual y queda estático con prefers-reduced-motion. Las pantallas de trabajo solo usan entrada de opacidad de 300 ms.

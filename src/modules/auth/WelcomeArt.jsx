@@ -1,101 +1,151 @@
-import { useId } from "react";
+import { useState } from "react";
+import { RotateCcw } from "lucide-react";
+import useReducedMotion from "../../shared/useReducedMotion";
 
-// Ilustración vectorial propia. No representa el campus ni un documento oficial.
+// Composición vectorial propia: etapas del expediente, sin sellos oficiales.
 export default function WelcomeArt() {
-  const id = useId();
+  const [take, setTake] = useState(0);
+  const reducedMotion = useReducedMotion();
   return (
-    <div className="welcome-art" aria-hidden="true">
-      <svg viewBox="0 0 680 570" fill="none" focusable="false">
-        <defs>
-          <linearGradient
-            id={`${id}-light`}
-            x1="200"
-            y1="160"
-            x2="470"
-            y2="470"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="var(--canvas)" />
-            <stop offset="1" stopColor="var(--sage)" />
-          </linearGradient>
-          <linearGradient
-            id={`${id}-wall`}
-            x1="145"
-            y1="90"
-            x2="460"
-            y2="500"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="var(--brand)" />
-            <stop offset="1" stopColor="var(--ink)" />
-          </linearGradient>
-        </defs>
-        <g className="art-guide" stroke="var(--line)" strokeWidth="1">
-          <path d="M40 462 357 315 647 454 330 555Z" />
-          <path d="M40 490 357 343 647 482M110 430 401 569M540 402 225 549" />
-          <path strokeDasharray="3 6" d="M301 40V525M90 245H570" />
-        </g>
-        <circle
-          className="art-sun"
-          cx="510"
-          cy="110"
-          r="52"
-          fill="var(--gold)"
-        />
-        <path d="M94 475 355 351 612 472 351 555Z" fill="var(--sage)" />
-        <path
-          d="M205 463V210C205 124 275 54 361 54S517 124 517 210V463L461 490V214C461 159 416 114 361 114S261 159 261 214V490Z"
-          fill="var(--green)"
-        />
-        <path
-          d="M145 490 205 463V210C205 124 275 54 361 54L301 83C215 83 145 153 145 239Z"
-          fill="var(--brand)"
-          opacity=".75"
-        />
-        <path
-          d="M199 490 261 463V214C261 159 306 114 361 114L301 143C245 143 199 189 199 245Z"
-          fill={`url(#${id}-light)`}
-        />
-        <path
-          d="M403 490 461 463V214C461 159 416 114 361 114L301 143C357 143 403 189 403 245Z"
-          fill="var(--sage)"
-        />
-        <path
-          d="M145 490V245C145 159 215 89 301 89S457 159 457 245V490H403V245C403 189 357 143 301 143S199 189 199 245V490Z"
-          fill={`url(#${id}-wall)`}
-        />
-        <path d="M199 490 261 463H461L403 490Z" fill="var(--surface)" />
-        <path
-          d="M261 463V214C261 159 306 114 361 114S461 159 461 214V463"
-          stroke="var(--surface)"
-          opacity=".45"
-        />
-        <g className="art-door">
-          <path d="M268 454V257L363 211V408Z" fill="var(--brand)" />
+    <div className="welcome-scene">
+      <div className="welcome-art" key={take} aria-hidden="true">
+        <svg viewBox="0 0 680 530" fill="none" focusable="false">
+          <g className="scene-grid" stroke="var(--line)" strokeWidth=".65">
+            {Array.from({ length: 12 }, (_, i) => (
+              <path key={`a${i}`} d={`M${-280 + i * 85} 0l920 530`} />
+            ))}
+            {Array.from({ length: 12 }, (_, i) => (
+              <path key={`b${i}`} d={`M${-280 + i * 85} 530l920-530`} />
+            ))}
+          </g>
           <path
-            d="m268 257 95-46v197l-95 46V257Z"
-            stroke="var(--gold)"
-            strokeWidth="2"
+            d="m105 404 228-124 255 146-227 124Z"
+            fill="var(--sage)"
+            opacity=".55"
           />
-          <path
-            d="m285 267 61-29v159l-61 29V267Z"
-            stroke="var(--surface)"
-            opacity=".2"
-          />
-          <path d="m338 337 8-4v18l-8 4Z" fill="var(--gold)" />
-        </g>
-        <path
-          className="art-path"
-          d="m62 516 187-89 18-8"
-          stroke="var(--gold)"
-          strokeWidth="3"
-        />
-        <g stroke="var(--green)" strokeWidth="1.5">
-          <path d="M533 292h18m-9-9v18M113 164h14m-7-7v14" />
-        </g>
-        <path d="M488 493h82" stroke="var(--line)" />
-        <path d="M488 500h41" stroke="var(--line)" />
-      </svg>
+          <g className="scene-layer scene-layer-bottom">
+            <path
+              d="m130 307 215-119 216 119-215 119Z"
+              fill="var(--sage)"
+              stroke="var(--green)"
+            />
+            <path
+              d="m130 307 215 119v32L130 339Z"
+              fill="var(--green)"
+              stroke="var(--green)"
+            />
+            <path
+              d="m345 426 216-119v32L345 458Z"
+              fill="var(--surface)"
+              stroke="var(--green)"
+            />
+            <text
+              transform="matrix(.88 .49 0 1 158 332)"
+              fill="var(--surface)"
+              fontSize="17"
+            >
+              03 / SEGUIMIENTO
+            </text>
+            <path
+              d="m205 305 141-77 140 78-141 77Z"
+              stroke="var(--green)"
+              opacity=".4"
+            />
+          </g>
+          <g className="scene-layer scene-layer-middle">
+            <path
+              d="m130 207 215-119 216 119-215 119Z"
+              fill="var(--surface)"
+              stroke="var(--brand)"
+            />
+            <path
+              d="m130 207 215 119v32L130 239Z"
+              fill="var(--brand)"
+              stroke="var(--brand)"
+            />
+            <path
+              d="m345 326 216-119v32L345 358Z"
+              fill="var(--brand-soft)"
+              stroke="var(--brand)"
+            />
+            <text
+              transform="matrix(.88 .49 0 1 158 232)"
+              fill="var(--surface)"
+              fontSize="17"
+            >
+              02 / DOCUMENTOS
+            </text>
+            <g stroke="var(--brand)" strokeWidth="1.5" opacity=".5">
+              <path d="m242 199 87-48 124 69-87 48Z" />
+              <path d="m270 199 51-28m-32 40 51-28m-32 40 51-28" />
+            </g>
+          </g>
+          <g className="scene-layer scene-layer-top">
+            <path
+              d="m130 107 215-119 216 119-215 119Z"
+              fill="var(--canvas)"
+              stroke="var(--ink)"
+            />
+            <path
+              d="m130 107 215 119v32L130 139Z"
+              fill="var(--canvas)"
+              stroke="var(--ink)"
+            />
+            <path
+              d="m345 226 216-119v32L345 258Z"
+              fill="var(--surface)"
+              stroke="var(--ink)"
+            />
+            <text
+              transform="matrix(.88 .49 0 1 158 132)"
+              fill="var(--ink)"
+              fontSize="17"
+            >
+              01 / TUS DATOS
+            </text>
+            <path
+              d="m282 78 57-32 71 40-57 32Z"
+              stroke="var(--gold)"
+              strokeWidth="2"
+            />
+            <path
+              d="m277 109 80 45m-98-34 80 45"
+              stroke="var(--ink)"
+              opacity=".35"
+            />
+          </g>
+          <g className="scene-route" stroke="var(--brand)" strokeWidth="1.5">
+            <path
+              className="scene-trace"
+              pathLength="1"
+              d="M30 382 105 424 206 480 282 438"
+            />
+            <circle cx="30" cy="382" r="5" fill="var(--canvas)" />
+            <circle cx="105" cy="424" r="5" fill="var(--canvas)" />
+            <circle cx="206" cy="480" r="5" fill="var(--brand)" />
+          </g>
+          <g className="scene-spark" stroke="var(--gold)" strokeWidth="1.5">
+            <path d="M585 163h18m-9-9v18M82 175h12m-6-6v12" />
+          </g>
+        </svg>
+      </div>
+      <div className="scene-caption">
+        <span>Datos. Documentos. Seguimiento.</span>
+        {reducedMotion ? (
+          <span title="Tu dispositivo solicita reducir el movimiento.">
+            Movimiento reducido
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setTake((t) => t + 1)}
+            aria-label="Repetir animación de bienvenida"
+          >
+            <RotateCcw size={14} />
+            <span>Repetir</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }

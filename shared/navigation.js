@@ -4,6 +4,7 @@ export const MODULES = [
     id: "titulacion",
     path: "/titulacion",
     name: "Titulación electrónica",
+    shortName: "Titulación",
     description:
       "Expediente, revisión de documentos y seguimiento del trámite.",
     area: "Servicios Escolares",

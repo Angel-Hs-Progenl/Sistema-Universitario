@@ -20,4 +20,5 @@
   --space-8: 32px;
   --space-12: 48px;
   --space-16: 64px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }

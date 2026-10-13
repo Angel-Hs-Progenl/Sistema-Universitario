@@ -253,13 +253,6 @@ main#main:focus-visible {
   white-space: nowrap;
 }
 /* Acceso y formularios. */
-.auth-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 100px;
-  max-width: 1040px;
-  padding-block: 55px 20px;
-}
 .field {
   display: flex;
   flex-direction: column;

@@ -82,3 +82,5 @@ Nombre sugerido: `uto-servicios-universitarios`. Sin licencia de distribución h
 La [auditoría de diseño](docs/AUDITORIA-DISENO.md) documenta investigación y cambios aplicados al directorio, expediente y formularios. Consulta [SECURITY.md](SECURITY.md) antes de publicar. Tras preparar cambios con git add, ejecuta `python scripts/check_repository.py`; `--history` incluye los commits disponibles localmente. El control evita algunos formatos de secretos y rutas privadas; también se requiere revisión humana. `.gitignore` no elimina archivos ya versionados ni su historial.
 
 La [arquitectura de interfaz](docs/ARQUITECTURA-UI.md) define bienvenida pública, home compacto, navegación global y migas de pan. Los equipos deben reutilizar ese marco al integrar módulos.
+
+La revisión CR-004 utiliza navegación superior compartida y una bienvenida SVG por capas. El [estudio de Laravel](docs/ESTUDIO-LARAVEL.md) detalla observaciones, decisiones, textos y alternativas gratuitas de animación. Se implementa con CSS/SVG local, sin un servicio de animaciones.

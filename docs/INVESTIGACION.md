@@ -49,3 +49,7 @@ No se conocen aún proveedor SSO, infraestructura, formatos definitivos, manual 
 ## Aplicación privada y bienvenida
 
 [ARQUITECTURA-UI.md](ARQUITECTURA-UI.md) desarrolla la investigación de layouts de Laravel, navegación de Primer/GitHub, patrón accesible W3C, separación de acceso público de BBVA y motion de Samsung. Se adaptan patrones, sin cambiar el stack o copiar identidad. No se estudiaron cuentas privadas de bancos.
+
+## Laravel: inspección visual y movimiento · CR-004
+
+[ESTUDIO-LARAVEL.md](ESTUDIO-LARAVEL.md) registra inspección directa del DOM, tipografía computada, captura y grupos SVG del sitio público, además de opciones gratuitas CSS/SVG, Motion, Rombo, Anime.js y LottieFiles. Distingue observaciones e inferencias. La adaptación implementada utiliza encabezado horizontal, composición abierta, textos por tarea y entrada finita sin nuevas dependencias.

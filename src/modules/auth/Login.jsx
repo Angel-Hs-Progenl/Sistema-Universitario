@@ -37,24 +37,30 @@ export default function Login() {
     <div className="container auth-layout">
       <aside className="auth-story">
         <span className="section-index">
-          UNIVERSIDAD TECNOLÓGICA DE ORIENTAL
+          SERVICIOS ESCOLARES / UT DE ORIENTAL
         </span>
-        <h2>Servicios universitarios</h2>
-        <p>Tu espacio para realizar y dar seguimiento a tus trámites.</p>
+        <h2>
+          Tu titulación,
+          <br />
+          <span>paso a paso.</span>
+        </h2>
+        <p>
+          Integra tus documentos, atiende observaciones y consulta el avance de
+          tu expediente.
+        </p>
         <WelcomeArt />
-        <span className="welcome-caption">Oriental, Puebla</span>
       </aside>
       <section className="auth-form">
-        <span className="eyebrow">ACCESO A TU ESPACIO</span>
-        <h1>Iniciar sesión</h1>
-        <p>Usa la cuenta que te proporcionó la institución.</p>
+        <span className="eyebrow">PORTAL UNIVERSITARIO</span>
+        <h1>Accede a tu cuenta</h1>
+        <p>Continúa tu trámite con la cuenta asignada por la universidad.</p>
         <Alert>{error}</Alert>
         <form onSubmit={submit}>
           <Field
             label="Correo electrónico"
             name="email"
             type="email"
-            placeholder="tu.correo@ejemplo.mx"
+            placeholder="Correo de tu cuenta"
             autoComplete="username"
             required
             maxLength={254}
@@ -85,12 +91,12 @@ export default function Login() {
             busy={busy}
             busyText="Ingresando…"
           >
-            Iniciar sesión <ArrowRight size={18} />
+            Entrar al portal <ArrowRight size={18} />
           </BusyButton>
         </form>
         <div className="auth-help">
-          ¿Aún no tienes acceso?{" "}
-          <Link to="/ayuda">Consulta con Servicios Escolares</Link>.
+          ¿Necesitas una cuenta?{" "}
+          <Link to="/ayuda">Consulta a Servicios Escolares</Link>.
         </div>
         {import.meta.env.DEV && (
           <details className="demo-help">

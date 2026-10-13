@@ -23,7 +23,13 @@ export default function Inbox({ data, error, refresh, role }) {
     <>
       <PageHeading
         eyebrow={`${ROLES[role].toUpperCase()} · TITULACIÓN`}
-        title="Solicitudes de titulación"
+        title={
+          role === "tesoreria"
+            ? "Comprobantes por revisar"
+            : role === "vinculacion"
+              ? "Liberaciones de egresados"
+              : "Expedientes de titulación"
+        }
         action={
           ["escolares", "administrador"].includes(role) && (
             <a
@@ -35,8 +41,11 @@ export default function Inbox({ data, error, refresh, role }) {
           )
         }
       >
-        Consulta solicitudes, revisa pendientes y acompaña el avance de los
-        egresados.
+        {role === "tesoreria"
+          ? "Consulta el comprobante de cada expediente y registra el dictamen de pago."
+          : role === "vinculacion"
+            ? "Consulta los expedientes disponibles para tu área y registra la liberación de estadías y seguimiento."
+            : "Localiza un expediente, revisa sus documentos y registra el siguiente movimiento."}
       </PageHeading>
       <Alert>{error}</Alert>
       <div className="inbox-summary">
@@ -46,14 +55,14 @@ export default function Inbox({ data, error, refresh, role }) {
         </div>
         <div>
           <strong>{review.length}</strong>
-          <span>Por atender</span>
+          <span>Recibidos o en revisión</span>
         </div>
         <div>
           <strong>{data.filter((a) => a.status === "concluido").length}</strong>
           <span>Concluidos</span>
         </div>
       </div>
-      <section className="panel">
+      <section className="panel inbox-panel">
         <div className="inbox-toolbar">
           <label className="search-field">
             <Search size={18} />

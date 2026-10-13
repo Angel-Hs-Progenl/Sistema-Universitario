@@ -63,3 +63,9 @@ Investigación/decisiones: AUDITORIA-DISENO.md. Impacto en equipos: adoptar nave
 12 de octubre de 2026. Autorizado por el líder en este chat: home con lo principal, migas de pan y arquitectura visual de aplicación privada. El líder eligió explícitamente imagen/animación grande en la bienvenida. Se separan acceso público y home autenticado; se introduce sidebar global compartido y se conservan pestañas locales. Esta elección actualiza la dirección de entrada de CR-002, incluida la restricción anterior sobre ilustración decorativa en la entrada.
 
 Impacto: Shell, rutas del home/acceso, navegación, estilos compartidos y documentación. Sin cambios de stack, roles, esquema o API. El backend conserva la autorización. Referencias y criterios en ARQUITECTURA-UI.md; pruebas en VALIDACION.md. No se afirma aprobación institucional ni se cambian tarifas o requisitos académicos.
+
+## Registro CR-004 · Dirección visual basada en Laravel
+
+12 de octubre de 2026. Autorizado por el líder en este chat: nueva investigación profunda de Laravel, rediseño de login e interior, textos concretos y reemplazo de la navegación lateral. Se conserva el contenido compacto del home que el líder indicó que le gustó. Este cambio actualiza la elección de sidebar y la ilustración/duración de CR-003.
+
+Impacto: Shell y CSS comunes, ilustración SVG original, encabezados y textos de Titulación, guías para equipos. Sin cambios en API, esquema, roles, estados o requisitos académicos. No se añaden bibliotecas, proveedores externos ni Laravel al backend. Investigación y alternativas gratuitas en ESTUDIO-LARAVEL.md. No se abrió una issue externa; este registro conserva la autorización y el alcance. Aceptación visual del líder e institucional pendientes.

@@ -124,11 +124,24 @@ el índice preparado. No pegues datos privados en prompts, capturas ni Git.
 ```text
 Lee docs/ARQUITECTURA-UI.md. Reutiliza Shell, Protected y Breadcrumbs.
 Registra solo módulos funcionales en shared/navigation.js con rutas, roles
-y nombres de páginas aprobados. Mantén sidebar global compartido y pestañas
+y nombres de páginas aprobados. Mantén encabezado horizontal compartido y pestañas
 locales; no dupliques login, encabezado o migas. Para entidades dinámicas usa
 el nombre/folio de la respuesta autorizada, nunca uno deducido de la URL.
 Conserva el home compacto: módulo y accesos directos por rol. Las imágenes
 grandes están en la bienvenida y no desplazan acciones dentro del sistema.
 Comprueba acceso sin sesión, retorno al enlace tras login, teclado/Escape,
 migas a sus ancestros, estado actual y adaptación a 320/390/768/1440 px.
+```
+
+## Dirección visual CR-004
+
+```text
+Lee docs/ESTUDIO-LARAVEL.md y docs/DISENO.md. Conserva el home compacto.
+Reutiliza el Shell horizontal; no agregues una sidebar global ni otra sesión.
+Usa composición abierta, divisiones finas, títulos DM Sans de peso moderado
+y textos que indiquen la tarea real según rol/estado. No copies SVG o marca
+de Laravel. No conviertas formularios o tablas en una landing publicitaria.
+El movimiento de trabajo es breve y de opacidad; no anima datos ficticios.
+Respeta prefers-reduced-motion. Reutiliza layout.css/tokens.css y los
+componentes de formulario, error, modal y permisos existentes.
 ```

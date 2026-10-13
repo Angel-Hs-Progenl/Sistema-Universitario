@@ -1,14 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import {
-  ArrowUpRight,
-  Bell,
-  LogOut,
-  Menu,
-  X,
-  Home,
-  GraduationCap,
-  CircleHelp,
-} from "lucide-react";
+import { ArrowUpRight, Bell, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./Auth";
 import { ROLES } from "../../shared/titulacion";
@@ -36,31 +27,23 @@ function AppNavigation({ role, onNavigate }) {
       className="app-navigation"
       onClick={onNavigate}
     >
-      <span className="nav-group-label">Mi espacio</span>
       <NavLink to="/" end>
-        <Home size={17} />
         Inicio
       </NavLink>
-      <span className="nav-group-label">Servicios</span>
       {MODULES.filter((m) => m.roles.includes(role)).map((m) => (
         <NavLink key={m.id} to={m.path}>
-          <GraduationCap size={18} />
-          {m.name}
+          {m.shortName || m.name}
         </NavLink>
       ))}
-      <span className="nav-group-label">Consulta</span>
       <NavLink to="/notificaciones">
-        <Bell size={17} />
+        <Bell size={15} />
         Notificaciones
       </NavLink>
-      <NavLink to="/ayuda">
-        <CircleHelp size={17} />
-        Ayuda y requisitos
-      </NavLink>
+      <NavLink to="/ayuda">Requisitos y ayuda</NavLink>
     </nav>
   );
 }
-function NavigationDrawer({ role, onClose }) {
+function NavigationDrawer({ user, onClose }) {
   const ref = useRef(null),
     previous = useRef(document.activeElement);
   useEffect(() => {
@@ -91,7 +74,10 @@ function NavigationDrawer({ role, onClose }) {
           <X size={18} />
         </button>
       </div>
-      <AppNavigation role={role} onNavigate={onClose} />
+      <p className="drawer-account">
+        {user.name} · {ROLES[user.role]}
+      </p>
+      <AppNavigation role={user.role} onNavigate={onClose} />
     </dialog>
   );
 }
@@ -132,29 +118,10 @@ export default function Shell() {
       </a>
       {user ? (
         <div className="app-frame">
-          <aside className="app-sidebar">
-            <div className="sidebar-brand">
+          <header className="workspace-header">
+            <div className="workspace-header-inner">
               <Brand />
-            </div>
-            <AppNavigation role={user.role} />
-            <div className="sidebar-institution">
-              <span>
-                Universidad Tecnológica
-                <br />
-                de Oriental
-              </span>
-              <a
-                href="https://utdeoriental.edu.mx/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Sitio institucional
-                <ArrowUpRight size={13} />
-              </a>
-            </div>
-          </aside>
-          <div className="app-column">
-            <header className="app-topbar">
+              <AppNavigation role={user.role} />
               <button
                 className="icon-button app-menu-toggle"
                 aria-label="Abrir menú"
@@ -164,7 +131,6 @@ export default function Shell() {
               >
                 <Menu size={19} />
               </button>
-              <Breadcrumbs />
               <div className="session-controls">
                 <div className="session-person">
                   <span className="avatar" aria-hidden="true">
@@ -184,7 +150,15 @@ export default function Shell() {
                   <LogOut size={17} />
                 </button>
               </div>
-            </header>
+            </div>
+          </header>
+          <div className="app-column">
+            <div className="workspace-context">
+              <Breadcrumbs />
+              <span className="workspace-context-label">
+                Universidad Tecnológica de Oriental
+              </span>
+            </div>
             <main
               id="main"
               tabIndex={-1}
@@ -197,7 +171,7 @@ export default function Shell() {
             {footer}
           </div>
           {menu && (
-            <NavigationDrawer role={user.role} onClose={() => setMenu(false)} />
+            <NavigationDrawer user={user} onClose={() => setMenu(false)} />
           )}
         </div>
       ) : (

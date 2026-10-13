@@ -1,6 +1,6 @@
 # Arquitectura de interfaz: acceso y espacio privado
 
-12 de octubre de 2026. Cambio CR-003 solicitado por el líder: home limpio, migas de pan, navegación de aplicación privada y una imagen/animación grande en la bienvenida. El stack permanece React/JavaScript, FastAPI/Python y PostgreSQL. Laravel se estudió como referencia de interfaz; no se incorpora al backend.
+12 de octubre de 2026. CR-003 separó bienvenida y home privado. CR-004, solicitado por el líder, sustituye la navegación lateral y rediseña acceso y trabajo a partir del [estudio detallado de Laravel](ESTUDIO-LARAVEL.md). El stack permanece React/JavaScript, FastAPI/Python y PostgreSQL. Laravel es una referencia visual.
 
 ## Referencias verificadas y decisiones
 
@@ -17,11 +17,11 @@ Estas referencias no definen una arquitectura visual única ni prueban usabilida
 
 ## Dos experiencias con una identidad
 
-**Bienvenida y acceso (`/acceso`).** Marca institucional temporal, ilustración propia grande, formulario de sesión, recuperación y atención. La ilustración SVG representa un acceso arquitectónico abstracto; no es una fotografía del campus ni un título oficial. Usa la paleta propuesta. La entrada dura hasta 1.1 s, una sola vez por montaje; no hay autoplay continuo, sonido ni esperas para usar el formulario. Con prefers-reduced-motion aparece estática. En móvil conserva una escala menor y el formulario queda en una columna.
+**Bienvenida y acceso (`/acceso`).** Marca institucional temporal, titular amplio, ilustración SVG propia por capas y formulario abierto. Los planos representan datos, documentos y seguimiento; no son documentos oficiales. Usa la paleta propuesta. La entrada termina a 1.7 s; puede repetirse con un botón. Sin bucles, sonido o bloqueo del formulario. Con prefers-reduced-motion aparece estática. En móvil el formulario queda debajo del dibujo, en una columna.
 
 **Home privado (`/`).** Exige sesión. Solo contiene saludo breve, módulo habilitado y accesos directos por rol. Se retiran el directorio promocional, la guía de pasos, los requisitos extensos y los bloques de atención del home. Esa información permanece en Ayuda. No se añaden módulos ficticios ni métricas vacías para llenar espacio.
 
-**Trabajo dentro del sistema.** Sidebar único en escritorio; menú nativo dialog en móvil, con Escape, foco contenido y devolución al disparador. Barra superior con migas de pan y sesión, visible al desplazarse. Titulación conserva sus pestañas horizontales. Un equipo futuro reutiliza este marco; no crea otro encabezado, sidebar o login.
+**Trabajo dentro del sistema.** Encabezado global horizontal con sesión; migas en una fila debajo. Sin sidebar. Por debajo de 960 px, menú nativo dialog con Escape, foco contenido y devolución al disparador. Titulación conserva pestañas horizontales, junto a su identidad en escritorio y debajo en móvil. Los encabezados se desplazan con el documento. Un equipo futuro reutiliza este marco; no crea otro encabezado o login.
 
 ```mermaid
 flowchart TD
@@ -41,7 +41,7 @@ La protección de rutas del cliente solo organiza el flujo. Las autorizaciones r
 
 - `shared/navigation.js`: registro de módulos habilitados, accesos directos y jerarquía. Cada entrada declara id, path, nombre, área, roles, páginas y nombre de entidad. No registrar funciones que aún no existen.
 - `src/app/Navigation.jsx`: proveedor de contexto y componente Breadcrumbs. El contexto recibe el folio de la respuesta autorizada mediante useBreadcrumbEntity; nunca lo deduce del ID de la URL. En 404 o carga muestra “Expediente”, sin inventar folios.
-- `src/app/Shell.jsx`: marco público/privado, sesión, sidebar y diálogo móvil. Cada módulo aporta contenido y su navegación local.
+- `src/app/Shell.jsx`: marco público/privado, sesión, navegación superior y diálogo móvil. Cada módulo aporta contenido y su navegación local.
 - `src/styles/app.css`: componentes de trabajo, formularios, tablas y estados. `src/styles/layout.css`: marcos, navegación, bienvenida y home. Ambos usan tokens.css; no definir paletas independientes.
 - `src/modules/auth/WelcomeArt.jsx`: ilustración vectorial y animación de bienvenida. No introduce dependencias, peticiones a proveedores de imágenes ni fuentes externas.
 

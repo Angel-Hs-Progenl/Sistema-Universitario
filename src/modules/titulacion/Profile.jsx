@@ -31,7 +31,7 @@ export default function Profile() {
   return (
     <>
       <div className="eyebrow">TITULACIÓN / INFORMACIÓN ACADÉMICA</div>
-      <h1>Datos del egresado</h1>
+      <h1>Datos para tu expediente</h1>
       <p className="page-intro">
         Verifica que coincidan con tus documentos oficiales. Los campos con *
         son obligatorios.
@@ -40,7 +40,7 @@ export default function Profile() {
       <Alert type="success">{success}</Alert>
       <form onSubmit={save} className="panel form-panel">
         <div className="panel-heading">
-          <h2>Información del egresado</h2>
+          <h2>Identificación y contacto</h2>
           <ShieldCheck size={20} />
         </div>
         <div className="form-grid">

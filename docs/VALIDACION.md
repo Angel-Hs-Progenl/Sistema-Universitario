@@ -62,3 +62,14 @@ En Servicios Escolares se comprobó búsqueda por folio, expediente, dictamen in
 - La ilustración es SVG propio, con entrada finita de hasta 1.1 s y regla prefers-reduced-motion. No se realizó auditoría completa de accesibilidad, lector de pantalla, zoom de navegador ni prueba de aceptación con usuarios.
 
 En la bandeja del personal a 320 px se detectó que texto oculto de la tabla escapaba del contenedor. Se estableció el contenedor de posicionamiento de table-scroll: el ancho global quedó en 305 px para un viewport de 320, mientras la tabla de 650 px se desplaza dentro de una región de 239 px.
+
+## Revisión CR-004 · Laravel, acceso y navegación superior
+
+- Cinco pruebas npm aprobadas y compilación del frontend aprobada. No cambió backend, API, catálogo de estados ni esquema. La ejecución de 19 pruebas PostgreSQL de CR-002 sigue siendo evidencia histórica, no una nueva ejecución de esta revisión.
+- Inspección directa del sitio público de Laravel: captura, DOM y estilos computados. Observaciones e inferencias separadas en ESTUDIO-LARAVEL.md, con comparación de opciones gratuitas. Ninguna dependencia nueva.
+- Acceso real con las cuentas ficticias de estudiante y Servicios Escolares; ambos llegan al home compacto. Se abrió el expediente, documentos y perfil académico; cerrar sesión regresa al acceso con formulario vacío.
+- Login, resumen y bandeja revisados a 320/390/768/1440 px: scrollWidth global igual a clientWidth. A 320, tabla de 650 px dentro de región de 281 px; página de 305 px. Perfil y acciones de documentos comprobados a 320.
+- Menú móvil nativo: foco inicial en Cerrar menú, Escape y regreso al botón Abrir menú. Diálogo de dictamen abierto/cerrado, elección inicial vacía y foco devuelto al documento; no se guardó un dictamen ni se modificaron expedientes.
+- Búsqueda sin coincidencias muestra estado vacío; limpiar restaura la fila. Filtro de concluidos oculta el expediente en revisión; Todos los estados lo restaura. Expediente autorizado muestra TIT-2026-000002 en las migas.
+- El navegador de verificación devuelve prefers-reduced-motion=true. Se verificó CSS animationName=none y el texto Movimiento reducido, sin botón de repetición ineficaz. La secuencia normal de 1.7 s está implementada y revisada en CSS, pero no se afirma haber observado su reproducción en este navegador con la preferencia desactivada.
+- Capturas locales con datos ficticios: output/qa/login-v4.png, expediente-v4.png, bandeja-v4.png y perfil-v4-movil.png. Se excluyen de Git. Pendientes: aceptación visual del líder, usuarios institucionales, zoom y auditoría completa de accesibilidad.

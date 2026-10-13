@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Link, Navigate, useLocation } from "react-router-dom";
+import { NavLink, Outlet, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../app/Auth";
 export default function TitleLayout() {
   const { user } = useAuth();
@@ -15,10 +15,14 @@ export default function TitleLayout() {
   return (
     <div className="container module-layout">
       <header className="module-header">
+        <div className="module-identity">
+          <span>01 /</span>
+          <strong>Titulación electrónica</strong>
+        </div>
         <nav className="module-nav" aria-label="Titulación">
           {(user.role === "estudiante"
             ? [
-                ["/titulacion", "Resumen"],
+                ["/titulacion", "Mi expediente"],
                 ["/titulacion/perfil", "Datos del egresado"],
                 ["/titulacion/documentos", "Documentos"],
                 ["/titulacion/seguimiento", "Historial"],
@@ -29,7 +33,6 @@ export default function TitleLayout() {
               {label}
             </NavLink>
           ))}
-          <Link to="/ayuda">Requisitos y ayuda</Link>
         </nav>
       </header>
       <section className="module-content">
