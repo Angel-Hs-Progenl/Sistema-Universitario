@@ -69,3 +69,7 @@ El límite de intentos es local al proceso; para varios workers se necesita un l
 La UI administra una lista de hasta 500 solicitudes; antes de mayores volúmenes se requiere paginación y búsqueda del servidor. Los reportes completos, catálogos de carreras/modalidades, correcciones excepcionales y operación con múltiples campus necesitan requisitos aprobados.
 
 Decisiones registradas: ADR-001 monolito modular; ADR-002 React/JS y FastAPI/Python por indicación del líder; ADR-003 PostgreSQL y migraciones Alembic; ADR-004 CSS central con tokens; ADR-005 emisión oficial del título como integración externa pendiente. Cambiarlas exige impacto y aprobación según docs/CASCADA.md.
+
+## Arquitectura de interfaz
+
+[ARQUITECTURA-UI.md](ARQUITECTURA-UI.md) distingue bienvenida pública, home autenticado y marco de trabajo. shared/navigation.js registra módulos/jerarquía; Navigation.jsx sirve migas comunes; Shell.jsx contiene la navegación global. El cliente preserva el destino de enlaces privados tras el acceso. Las autorizaciones se mantienen en FastAPI.

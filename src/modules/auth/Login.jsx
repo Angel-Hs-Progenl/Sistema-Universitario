@@ -4,13 +4,15 @@ import {
   useLocation,
   useNavigate,
   useSearchParams,
+  Navigate,
 } from "react-router-dom";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import WelcomeArt from "./WelcomeArt";
 import { useAuth } from "../../app/Auth";
 import { Alert, Field, BusyButton } from "../../shared/ui";
 import { api } from "../../shared/api";
 export default function Login() {
-  const { login } = useAuth(),
+  const { login, user } = useAuth(),
     navigate = useNavigate(),
     location = useLocation();
   const [error, setError] = useState(""),
@@ -23,43 +25,28 @@ export default function Login() {
     try {
       const values = Object.fromEntries(new FormData(e.target));
       await login(values);
-      navigate(location.state?.from || "/titulacion", { replace: true });
+      navigate(location.state?.from || "/", { replace: true });
     } catch (e) {
       setError(e.message);
     } finally {
       setBusy(false);
     }
   }
+  if (user) return <Navigate to={location.state?.from || "/"} replace />;
   return (
     <div className="container auth-layout">
       <aside className="auth-story">
-        <Link to="/" className="text-link">
-          ← Servicios universitarios
-        </Link>
-        <span className="section-index">ACCESO AL SERVICIO</span>
-        <h2>
-          Tu expediente,
-          <br />
-          <em>en un solo lugar.</em>
-        </h2>
-        <p>
-          Continúa una solicitud, adjunta documentos o consulta el avance de tu
-          titulación.
-        </p>
-        <dl className="access-guide">
-          <div>
-            <dt>Egresados</dt>
-            <dd>Prepara y da seguimiento a tu expediente.</dd>
-          </div>
-          <div>
-            <dt>Personal universitario</dt>
-            <dd>Revisa las solicitudes asignadas a tu área.</dd>
-          </div>
-        </dl>
+        <span className="section-index">
+          UNIVERSIDAD TECNOLÓGICA DE ORIENTAL
+        </span>
+        <h2>Servicios universitarios</h2>
+        <p>Tu espacio para realizar y dar seguimiento a tus trámites.</p>
+        <WelcomeArt />
+        <span className="welcome-caption">Oriental, Puebla</span>
       </aside>
       <section className="auth-form">
-        <span className="eyebrow">CUENTA UNIVERSITARIA</span>
-        <h1>Ingresar</h1>
+        <span className="eyebrow">ACCESO A TU ESPACIO</span>
+        <h1>Iniciar sesión</h1>
         <p>Usa la cuenta que te proporcionó la institución.</p>
         <Alert>{error}</Alert>
         <form onSubmit={submit}>

@@ -1,5 +1,7 @@
 # Investigación y revisión de interfaces generadas con IA
 
+Este registro describe CR-002. La dirección vigente de bienvenida y navegación se actualizó a petición del líder en [ARQUITECTURA-UI.md](ARQUITECTURA-UI.md), CR-003.
+
 12 de octubre de 2026. El líder solicitó corregir la apariencia genérica del inicio y titulación. Se distingue entre evidencia publicada, diagnóstico de esta aplicación y decisiones del proyecto. La investigación no sustituye pruebas con usuarios de la UT.
 
 ## Evidencia y aplicación

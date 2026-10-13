@@ -6,6 +6,7 @@ import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/manrope";
 import "./styles/tokens.css";
 import "./styles/app.css";
+import "./styles/layout.css";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>

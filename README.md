@@ -1,6 +1,6 @@
 # Servicios universitarios de la UT de Oriental
 
-Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. El inicio publica únicamente Titulación electrónica. Evaluación docente y Becas tienen requisitos identificados y se incorporarán después de aprobar su alcance.
+Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. El inicio privado ofrece únicamente Titulación electrónica. La bienvenida reúne ilustración y acceso; los enlaces internos conservan su destino al iniciar sesión. Evaluación docente y Becas tienen requisitos identificados y se incorporarán después de aprobar su alcance.
 
 Esta entrega es una versión funcional para desarrollo y validación institucional: utiliza sesiones reales, base de datos, archivos protegidos, permisos por área e historial. No está homologada para producción ni conectada al registro oficial de títulos de SEP. No introducir expedientes reales hasta cerrar los pendientes de seguridad, operación y privacidad.
 
@@ -80,3 +80,5 @@ Nombre sugerido: `uto-servicios-universitarios`. Sin licencia de distribución h
 ## Diseño y protección del repositorio
 
 La [auditoría de diseño](docs/AUDITORIA-DISENO.md) documenta investigación y cambios aplicados al directorio, expediente y formularios. Consulta [SECURITY.md](SECURITY.md) antes de publicar. Tras preparar cambios con git add, ejecuta `python scripts/check_repository.py`; `--history` incluye los commits disponibles localmente. El control evita algunos formatos de secretos y rutas privadas; también se requiere revisión humana. `.gitignore` no elimina archivos ya versionados ni su historial.
+
+La [arquitectura de interfaz](docs/ARQUITECTURA-UI.md) define bienvenida pública, home compacto, navegación global y migas de pan. Los equipos deben reutilizar ese marco al integrar módulos.

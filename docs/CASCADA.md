@@ -57,3 +57,9 @@ La demostración de aceptación utiliza dos estudiantes ficticios y las cinco á
 12 de octubre de 2026. Solicitado y autorizado por el líder en este chat: investigar y corregir el diseño genérico del inicio y titulación, y reforzar exclusiones de datos privados. Alcance: Shell, CSS/tokens, directorio, acceso, tareas/resumen, formularios, dictámenes y guardia de Git. No cambia stack, roles ni esquema de datos. La restricción de reenvío de archivos rechazados corrige el caso de uso TIT-08 ya especificado; no introduce otra modalidad de titulación.
 
 Investigación/decisiones: AUDITORIA-DISENO.md. Impacto en equipos: adoptar navegación horizontal, patrones de tarea y errores, y prompts revisados; no duplicar estilos. Evidencia: pruebas de regresión y revisión de navegador en VALIDACION.md. Aprobación del líder permite esta implementación; aceptación institucional y fases formales siguen pendientes. No se abrió una issue ni se modificó GitHub desde esta entrega.
+
+## Registro CR-003 · Bienvenida, home privado y migas de pan
+
+12 de octubre de 2026. Autorizado por el líder en este chat: home con lo principal, migas de pan y arquitectura visual de aplicación privada. El líder eligió explícitamente imagen/animación grande en la bienvenida. Se separan acceso público y home autenticado; se introduce sidebar global compartido y se conservan pestañas locales. Esta elección actualiza la dirección de entrada de CR-002, incluida la restricción anterior sobre ilustración decorativa en la entrada.
+
+Impacto: Shell, rutas del home/acceso, navegación, estilos compartidos y documentación. Sin cambios de stack, roles, esquema o API. El backend conserva la autorización. Referencias y criterios en ARQUITECTURA-UI.md; pruebas en VALIDACION.md. No se afirma aprobación institucional ni se cambian tarifas o requisitos académicos.

@@ -30,8 +30,9 @@ export function AuthProvider({ children }) {
   }
   async function logout() {
     await api("/auth/logout", { method: "POST" });
-    setUser(null);
     setCsrf("");
+    // A fresh document clears private UI state and a previous account's return route.
+    window.location.replace("/acceso");
   }
   return (
     <AuthContext.Provider

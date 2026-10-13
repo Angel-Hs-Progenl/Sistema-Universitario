@@ -49,3 +49,16 @@ Los comandos están en README.md. Tras cambios, ejecutar las pruebas pertinentes
 - La revisión de secretos cubre el índice y commits disponibles localmente, no ramas remotas que no se hayan obtenido ni servicios externos. No se reescribió historial ni se rotaron credenciales.
 
 En Servicios Escolares se comprobó búsqueda por folio, expediente, dictamen inicial vacío, observación obligatoria al elegir rechazo y devolución del foco al botón Revisar al cerrar. No se guardó un dictamen de prueba sobre ese expediente.
+
+## Revisión CR-003 · Bienvenida y espacio privado
+
+- Cinco pruebas npm aprobadas: dos contratos existentes y tres pruebas de jerarquía/rutas, folio recibido y accesos por rol. Compilación de producción aprobada.
+- Navegador: la raíz sin sesión lleva al acceso; el login normal lleva a Inicio; un enlace privado a documentos conserva el destino tras autenticar; las migas regresan a Inicio y al módulo; un expediente autorizado muestra el folio real.
+- Home revisado a 320, 390, 768 y 1440 px sin desbordamiento global. Documentos y bienvenida revisados en móvil. La imagen mantiene proporción y no sustituye el formulario.
+- Menú móvil nativo: foco contenido, Escape, cierre y foco de vuelta a Abrir menú comprobados.
+- Se detectó y corrigió la conservación del destino de una cuenta anterior al salir. El logout carga un documento nuevo y el siguiente login vuelve a Inicio. Se comprobó con Servicios Escolares. Las rutas exclusivas del estudiante redirigen al personal a su bandeja.
+- Capturas con datos ficticios: output/qa/bienvenida-v3.png, inicio-privado-v3.png, bienvenida-v3-movil.png y expediente-migas-v3.png. Están excluidas de Git.
+- No cambió la API ni el esquema. La suite PostgreSQL de 19 pruebas consta en CR-002; no se declara una nueva ejecución para cambios exclusivamente del cliente.
+- La ilustración es SVG propio, con entrada finita de hasta 1.1 s y regla prefers-reduced-motion. No se realizó auditoría completa de accesibilidad, lector de pantalla, zoom de navegador ni prueba de aceptación con usuarios.
+
+En la bandeja del personal a 320 px se detectó que texto oculto de la tabla escapaba del contenedor. Se estableció el contenedor de posicionamiento de table-scroll: el ancho global quedó en 305 px para un viewport de 320, mientras la tabla de 650 px se desplaza dentro de una región de 239 px.

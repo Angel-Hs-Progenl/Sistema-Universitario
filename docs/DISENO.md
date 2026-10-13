@@ -1,6 +1,6 @@
 # Sistema de diseño de servicios universitarios
 
-La experiencia se centra en lo que una persona necesita hacer: encontrar un servicio, preparar un expediente y conocer el siguiente paso. El inicio es un directorio institucional; titulación es un expediente con acciones por contexto y una bandeja para el personal. Las estadísticas aparecen solo cuando ayudan a priorizar solicitudes.
+La experiencia se centra en lo que una persona necesita hacer: encontrar un servicio, preparar un expediente y conocer el siguiente paso. El inicio es un selector privado y compacto de módulos; titulación es un expediente con acciones por contexto y una bandeja para el personal. Las estadísticas aparecen solo cuando ayudan a priorizar solicitudes.
 
 La identidad usa el nombre proporcionado por el líder. El monograma tipográfico UTO es temporal; no se afirma que sea el escudo oficial. La paleta está propuesta por el usuario y pendiente de autorización institucional. No se ha acreditado su pertenencia al manual gráfico de la UT.
 
@@ -33,15 +33,15 @@ El umbral habitual de WCAG para texto normal es 4.5:1. Pasar estas combinaciones
 
 ## Tipografía, espacio y composición
 
-Manrope para títulos operativos y DM Sans para cuerpo, con respaldo Arial/sans-serif. Georgia/Times New Roman del sistema se usa solo como acento serif en el directorio y la orientación de acceso. Las fuentes se incluyen en la build mediante paquetes Fontsource y se sirven localmente; sus licencias se conservan en docs/licencias. No se solicitan fuentes a Google al visitar la aplicación.
+Manrope para títulos operativos y DM Sans para cuerpo, con respaldo Arial/sans-serif. La bienvenida y las pantallas operativas utilizan la misma familia sans; no hay títulos serif de gran tamaño en el home privado. Las fuentes se incluyen en la build mediante paquetes Fontsource y se sirven localmente; sus licencias se conservan en docs/licencias. No se solicitan fuentes a Google al visitar la aplicación.
 
-Contenido con ancho máximo de 1280 px. Espaciado basado en 4 px. Bordes suaves, radios de 3 px y superficies con poco ruido visual. Evitar gráficas decorativas, métricas ficticias, tarjetas repetidas sin acción, gradientes fuertes y sidebars distintos por módulo. El inicio no usa certificados decorativos ni eslóganes: presenta servicios, destinatarios, requisitos y acceso para retomar.
+Contenido con ancho máximo de 1280 px. Espaciado basado en 4 px. Bordes suaves, radios de 3 px en controles y de 5–8 px en navegación/contenedores del marco, con superficies de poco ruido visual. Evitar gráficas decorativas, métricas ficticias, tarjetas repetidas sin acción, gradientes fuertes y sidebars distintos por módulo. El home privado muestra únicamente módulos y accesos directos. La bienvenida pública incorpora una ilustración vectorial propia grande, conforme a la solicitud CR-003 del líder; no representa documentos o instalaciones oficiales.
 
 Puntos de adaptación actuales: 1100, 800 y 640 px. En móvil, navegación global desplegable; navegación del módulo horizontal con desplazamiento propio; formularios en una columna; acciones apiladas; tablas con desplazamiento interno. Comprobar 390 px, 768 px, 1440 px y 200 % de zoom. No recortar texto ni ocultar acciones esenciales para que “quepa”.
 
 ## Componentes compartidos
 
-- Shell: franja institucional, marca, navegación, identidad de sesión y pie.
+- Shell: bienvenida pública o marco privado con sidebar compartido, barra de migas de pan, sesión y pie. En móvil, la navegación global usa dialog nativo.
 - Badge: estado textual y color semántico; no comunicar estado únicamente por color.
 - Field: etiqueta persistente, obligatoriedad, validación nativa y ayuda contextual.
 - Alert: errores recuperables y mensajes de confirmación con aria-live mediante roles.
@@ -61,3 +61,7 @@ Antes de integrar una pantalla: usar tokens y componentes, comprobar foco/teclad
 ## Revisión de interfaces con IA
 
 Leer [AUDITORIA-DISENO.md](AUDITORIA-DISENO.md): investigación, diagnóstico de la primera entrega y criterios de aceptación. El resumen muestra tareas y faltantes; documentos y el historial completo tienen vistas propias. La revisión institucional se muestra después del envío, sin confundir adjuntos con dictámenes. La bandeja utiliza el ancho completo. Los errores de perfil enlazan al campo y conservan los valores. Los dictámenes exigen elegir un resultado.
+
+## Marco público y privado · CR-003
+
+[ARQUITECTURA-UI.md](ARQUITECTURA-UI.md) define los contratos y referencias. El home requiere sesión y solo presenta Titulación y accesos por rol. La imagen grande pertenece a la bienvenida; el trabajo usa superficies claras y densidad moderada. Mantener las migas en la barra superior, una sola navegación global y pestañas locales. El movimiento de la ilustración termina tras 1.1 s y se elimina con prefers-reduced-motion.

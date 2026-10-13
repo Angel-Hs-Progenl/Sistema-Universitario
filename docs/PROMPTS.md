@@ -118,3 +118,17 @@ del dictamen. Señala evidencia comprobada y pendientes; no inventes pruebas.
 Antes de subir, revisa el diff y ejecuta scripts/check_repository.py sobre
 el índice preparado. No pegues datos privados en prompts, capturas ni Git.
 ```
+
+## Integrar navegación de un módulo
+
+```text
+Lee docs/ARQUITECTURA-UI.md. Reutiliza Shell, Protected y Breadcrumbs.
+Registra solo módulos funcionales en shared/navigation.js con rutas, roles
+y nombres de páginas aprobados. Mantén sidebar global compartido y pestañas
+locales; no dupliques login, encabezado o migas. Para entidades dinámicas usa
+el nombre/folio de la respuesta autorizada, nunca uno deducido de la URL.
+Conserva el home compacto: módulo y accesos directos por rol. Las imágenes
+grandes están en la bienvenida y no desplazan acciones dentro del sistema.
+Comprueba acceso sin sesión, retorno al enlace tras login, teclado/Escape,
+migas a sus ancestros, estado actual y adaptación a 320/390/768/1440 px.
+```

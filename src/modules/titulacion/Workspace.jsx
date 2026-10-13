@@ -7,7 +7,6 @@ import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
   ArrowRight,
-  ArrowLeft,
   Plus,
   RefreshCw,
   Download,
@@ -18,6 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../../app/Auth";
+import { useBreadcrumbEntity } from "../../app/Navigation";
 import { api, date } from "../../shared/api";
 import { Badge, Alert, BusyButton, useAsync } from "../../shared/ui";
 import {
@@ -43,6 +43,7 @@ export default function Workspace() {
   const [busy, setBusy] = useState(false),
     [modal, setModal] = useState(null),
     [notice, setNotice] = useState("");
+  useBreadcrumbEntity(id ? state.data?.folio : null);
   async function create() {
     setBusy(true);
     state.setError("");
@@ -134,11 +135,6 @@ export default function Workspace() {
     timelineOnly = view === "seguimiento";
   return (
     <>
-      {id && (
-        <Link to="/titulacion" className="back-home">
-          <ArrowLeft size={15} /> Volver a solicitudes
-        </Link>
-      )}
       <PageHeading
         eyebrow={
           student ? "TU EXPEDIENTE DIGITAL" : `EXPEDIENTE · ${app.folio}`

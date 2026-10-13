@@ -17,5 +17,7 @@ Lee README.md, docs/ARQUITECTURA.md, docs/DISENO.md y la especificación del mó
 - Metodología de cascada: respeta la línea base y registra cambios en docs/CASCADA.md. Esta versión es una propuesta inicial implementada, pendiente de aprobación institucional; no declares fases formalmente aprobadas.
 - Al finalizar, reporta qué cambió, cómo lo verificaste y qué falta; no llames producción a una validación local.
 
-- Diseño: leer docs/AUDITORIA-DISENO.md. Definir rol/tarea/acción/estados; evitar eslóganes, documentos ilustrados, métricas decorativas, información repetida y contenedores sin propósito. Conservar navegación horizontal y patrones compartidos.
+- Diseño: leer docs/AUDITORIA-DISENO.md. Definir rol/tarea/acción/estados; evitar eslóganes, documentos ilustrados, métricas decorativas, información repetida y contenedores sin propósito. Conservar sidebar global compartido, pestañas locales y migas de pan según docs/ARQUITECTURA-UI.md.
 - Antes de publicar: revisar SECURITY.md y el diff; preparar el índice y ejecutar python scripts/check_repository.py. El control no detecta todos los datos personales; .gitignore no limpia historial.
+
+- CR-003: el home requiere sesión y contiene solo módulos habilitados/accesos por rol. La bienvenida incorpora la ilustración grande solicitada por el líder. Usar shared/navigation.js y Navigation.jsx; no crear otra navegación global.

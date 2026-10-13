@@ -45,3 +45,7 @@ No se conocen aún proveedor SSO, infraestructura, formatos definitivos, manual 
 ## Investigación adicional de interfaces con IA
 
 [AUDITORIA-DISENO.md](AUDITORIA-DISENO.md) desarrolla la revisión de NN/G y Microsoft Research, los patrones de GOV.UK, Primer y Carbon, sus límites y los cambios aplicados. La lista de antipatrones está ligada a tareas universitarias y a criterios de aceptación; no se considera una prohibición universal de estilos.
+
+## Aplicación privada y bienvenida
+
+[ARQUITECTURA-UI.md](ARQUITECTURA-UI.md) desarrolla la investigación de layouts de Laravel, navegación de Primer/GitHub, patrón accesible W3C, separación de acceso público de BBVA y motion de Samsung. Se adaptan patrones, sin cambiar el stack o copiar identidad. No se estudiaron cuentas privadas de bancos.

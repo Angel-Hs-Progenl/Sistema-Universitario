@@ -1,19 +1,20 @@
-import { NavLink, Outlet, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { NavLink, Outlet, Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../app/Auth";
-import { ROLES } from "../../../shared/titulacion";
 export default function TitleLayout() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
+  if (
+    user.role !== "estudiante" &&
+    [
+      "/titulacion/perfil",
+      "/titulacion/documentos",
+      "/titulacion/seguimiento",
+    ].includes(pathname.replace(/\/$/, ""))
+  )
+    return <Navigate to="/titulacion" replace />;
   return (
     <div className="container module-layout">
       <header className="module-header">
-        <Link to="/" className="back-home">
-          <ArrowLeft size={14} /> Servicios universitarios
-        </Link>
-        <div className="module-title">
-          <span>Titulación electrónica</span>
-          <span>{ROLES[user.role]}</span>
-        </div>
         <nav className="module-nav" aria-label="Titulación">
           {(user.role === "estudiante"
             ? [
