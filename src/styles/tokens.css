@@ -1,0 +1,23 @@
+:root {
+  --brand: #6f1738;
+  --gold: #b8862b;
+  --sage: #dce8d5;
+  --green: #386641;
+  --canvas: #f7f6f2;
+  --ink: #202124;
+  --surface: #ffffff;
+  --muted: #62645f;
+  --line: #dedfd5;
+  --error: #a12036;
+  --brand-soft: #f5eaef;
+  --radius: 8px;
+  --content: 1200px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+}

@@ -1,0 +1,6 @@
+# Sustituir por el usuario GitHub real del líder antes de activar revisiones obligatorias.
+# Ejemplo de formato (descomentar y reemplazar):
+# * @USUARIO-DEL-LIDER
+# /src/modules/becas/ @ORGANIZACION/equipo-becas
+# /src/modules/evaluacion/ @ORGANIZACION/equipo-evaluacion
+# No hay propietarios activos hasta configurar los usuarios reales.

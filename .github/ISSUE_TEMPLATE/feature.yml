@@ -1,0 +1,31 @@
+name: Requisito o cambio de alcance
+description: Registrar una necesidad antes de cambiar la línea base
+body:
+  - type: input
+    id: module
+    attributes:
+      label: Módulo y responsable
+    validations:
+      required: true
+  - type: textarea
+    id: need
+    attributes:
+      label: Necesidad y usuario
+      description: Explica el problema y el resultado observable.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterios de aceptación
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impacto en diseño, datos, API, seguridad y calendario
+  - type: textarea
+    id: approval
+    attributes:
+      label: Decisión del líder y del área usuaria
+      description: Completar antes de incorporar el cambio a la línea base.
