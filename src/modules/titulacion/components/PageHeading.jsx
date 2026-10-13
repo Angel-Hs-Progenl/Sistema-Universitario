@@ -1,6 +1,6 @@
 export default function PageHeading({ eyebrow, title, children, action }) {
   return (
-    <div className="workspace-heading">
+    <div className="page-heading">
       <div>
         <span className="eyebrow">{eyebrow}</span>
         <h1>{title}</h1>

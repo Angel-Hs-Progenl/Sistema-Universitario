@@ -37,3 +37,15 @@ Starlette emite una advertencia de futura migración del cliente de pruebas HTTP
 ## Repetición y aceptación
 
 Los comandos están en README.md. Tras cambios, ejecutar las pruebas pertinentes, compilar y adjuntar evidencia de las vistas afectadas. Un cambio en requisitos debe registrarse en CASCADA.md antes de integrarse. La aprobación formal de cada fase corresponde al líder y al área usuaria; este registro no sustituye esa aprobación.
+
+## Revisión CR-002 · Diseño y Git (12 de octubre de 2026)
+
+- Compilación React y dos pruebas de contrato aprobadas después del rediseño.
+- 19 pruebas PostgreSQL aprobadas; se amplió el caso de corrección para impedir reenviar un documento rechazado sin reemplazarlo.
+- Dos pruebas de la protección de repositorio aprobadas: bloquean archivo privado/credencial sintética sin imprimirla, y aceptan el ejemplo sanitizado/migraciones. Se ejecutan en repositorios temporales.
+- Revisión de navegador con cuentas ficticias: entrada, sesión de estudiante, resumen/tareas/faltantes, envío incompleto deshabilitado, error de CURP con foco y enlace al campo, corrección y guardado, selección y reemplazo de PDF y vuelta al resumen. La selección no se presenta como archivo guardado.
+- Evidencia local en output/qa/_v2_.png; no contiene expedientes reales y se excluye de Git. Las vistas se revisan a 320, 390, 768 y 1440 px; la navegación/tabla se desplazan dentro de sus regiones, sin desbordamiento global.
+- Investigación y criterios para los equipos en AUDITORIA-DISENO.md. No se realizaron pruebas con usuarios institucionales, auditoría WCAG completa, zoom de navegador ni pruebas de lectores de pantalla.
+- La revisión de secretos cubre el índice y commits disponibles localmente, no ramas remotas que no se hayan obtenido ni servicios externos. No se reescribió historial ni se rotaron credenciales.
+
+En Servicios Escolares se comprobó búsqueda por folio, expediente, dictamen inicial vacío, observación obligatoria al elegir rechazo y devolución del foco al botón Revisar al cerrar. No se guardó un dictamen de prueba sobre ese expediente.

@@ -40,17 +40,54 @@ export function Alert({ children, type = "error" }) {
     </div>
   ) : null;
 }
-export function Field({ label, hint, ...props }) {
+export function Field({ label, hint, error, ...props }) {
   const id = props.name || props.id;
   return (
-    <label className="field" htmlFor={id}>
-      <span>
+    <div className="field">
+      <label htmlFor={id}>
         {label}
         {props.required && <span className="required"> *</span>}
-      </span>
-      <input id={id} {...props} />
-      {hint && <small>{hint}</small>}
-    </label>
+      </label>
+      <input
+        id={id}
+        aria-invalid={error ? "true" : undefined}
+        aria-describedby={
+          [hint && `${id}-hint`, error && `${id}-error`]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
+        {...props}
+      />
+      {hint && <small id={`${id}-hint`}>{hint}</small>}
+      {error && (
+        <small className="field-error" id={`${id}-error`}>
+          {error}
+        </small>
+      )}
+    </div>
+  );
+}
+export function ErrorSummary({ error }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (error) ref.current?.focus();
+  }, [error]);
+  if (!error) return null;
+  return (
+    <div className="error-summary" ref={ref} tabIndex={-1} role="alert">
+      <h2>No se pudo completar la operación</h2>
+      {error.fields?.length ? (
+        <ul>
+          {error.fields.map((e) => (
+            <li key={e.field}>
+              <a href={`#${e.field}`}>{e.message}</a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>{error.message || error}</p>
+      )}
+    </div>
   );
 }
 export function Modal({ title, children, onClose }) {
@@ -96,10 +133,15 @@ export function Empty({ title, children, action }) {
     </div>
   );
 }
-export function BusyButton({ busy, children, ...props }) {
+export function BusyButton({
+  busy,
+  children,
+  busyText = "Guardando…",
+  ...props
+}) {
   return (
     <button {...props} disabled={busy || props.disabled}>
-      {busy ? "Guardando…" : children}
+      {busy ? busyText : children}
     </button>
   );
 }

@@ -5,13 +5,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import {
-  ArrowRight,
-  GraduationCap,
-  LockKeyhole,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { Alert, Field, BusyButton } from "../../shared/ui";
 import { api } from "../../shared/api";
@@ -39,26 +33,33 @@ export default function Login() {
   return (
     <div className="container auth-layout">
       <aside className="auth-story">
-        <span className="eyebrow">UT DE ORIENTAL</span>
-        <GraduationCap size={52} strokeWidth={1} />
+        <Link to="/" className="text-link">
+          ← Servicios universitarios
+        </Link>
+        <span className="section-index">ACCESO AL SERVICIO</span>
         <h2>
-          Tu siguiente
+          Tu expediente,
           <br />
-          capítulo
-          <br />
-          <em>empieza aquí.</em>
+          <em>en un solo lugar.</em>
         </h2>
         <p>
-          Accede a tu espacio para gestionar tus trámites universitarios y
-          continuar donde te quedaste.
+          Continúa una solicitud, adjunta documentos o consulta el avance de tu
+          titulación.
         </p>
-        <div>
-          <LockKeyhole size={17} /> Acceso personal y seguro
-        </div>
+        <dl className="access-guide">
+          <div>
+            <dt>Egresados</dt>
+            <dd>Prepara y da seguimiento a tu expediente.</dd>
+          </div>
+          <div>
+            <dt>Personal universitario</dt>
+            <dd>Revisa las solicitudes asignadas a tu área.</dd>
+          </div>
+        </dl>
       </aside>
       <section className="auth-form">
-        <span className="eyebrow">BIENVENIDO A TU UNIVERSIDAD</span>
-        <h1>Inicia sesión</h1>
+        <span className="eyebrow">CUENTA UNIVERSITARIA</span>
+        <h1>Ingresar</h1>
         <p>Usa la cuenta que te proporcionó la institución.</p>
         <Alert>{error}</Alert>
         <form onSubmit={submit}>
@@ -92,8 +93,12 @@ export default function Login() {
           <Link to="/recuperar" className="text-link forgot">
             Olvidé mi contraseña
           </Link>
-          <BusyButton className="button button-primary full" busy={busy}>
-            Entrar a mi espacio <ArrowRight size={18} />
+          <BusyButton
+            className="button button-primary full"
+            busy={busy}
+            busyText="Ingresando…"
+          >
+            Iniciar sesión <ArrowRight size={18} />
           </BusyButton>
         </form>
         <div className="auth-help">

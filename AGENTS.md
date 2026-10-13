@@ -16,3 +16,6 @@ Lee README.md, docs/ARQUITECTURA.md, docs/DISENO.md y la especificación del mó
 - Cada PR referencia un requisito, muestra evidencia de UI si aplica y ejecuta pruebas relevantes. No modificar tests para ocultar fallos.
 - Metodología de cascada: respeta la línea base y registra cambios en docs/CASCADA.md. Esta versión es una propuesta inicial implementada, pendiente de aprobación institucional; no declares fases formalmente aprobadas.
 - Al finalizar, reporta qué cambió, cómo lo verificaste y qué falta; no llames producción a una validación local.
+
+- Diseño: leer docs/AUDITORIA-DISENO.md. Definir rol/tarea/acción/estados; evitar eslóganes, documentos ilustrados, métricas decorativas, información repetida y contenedores sin propósito. Conservar navegación horizontal y patrones compartidos.
+- Antes de publicar: revisar SECURITY.md y el diff; preparar el índice y ejecutar python scripts/check_repository.py. El control no detecta todos los datos personales; .gitignore no limpia historial.

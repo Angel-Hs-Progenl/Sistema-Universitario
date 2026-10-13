@@ -73,6 +73,10 @@ $env:TEST_DATABASE_URL='postgresql+psycopg://usuario:clave@127.0.0.1:5432/uto_te
 
 ## Repositorio
 
-El código está preparado para un único repositorio. El líder revisa las contribuciones antes de integrarlas. El remoto se conectará cuando compartas la URL del repositorio que crearás; no se ha publicado ningún archivo ni se han invitado colaboradores.
+El código está preparado para un único repositorio. El líder revisa las contribuciones antes de integrarlas. El remoto origin está conectado al [repositorio de GitHub](https://github.com/Angel-Hs-Progenl/Sistema-Universitario); el líder publicó la base inicial. Las invitaciones, protecciones y revisión por propietarios se administran en GitHub.
 
 Nombre sugerido: `uto-servicios-universitarios`. Sin licencia de distribución hasta que el equipo y la institución acuerden la titularidad. Los documentos originales, `.env`, bases de datos, archivos subidos, buzones y respaldos están excluidos de Git.
+
+## Diseño y protección del repositorio
+
+La [auditoría de diseño](docs/AUDITORIA-DISENO.md) documenta investigación y cambios aplicados al directorio, expediente y formularios. Consulta [SECURITY.md](SECURITY.md) antes de publicar. Tras preparar cambios con git add, ejecuta `python scripts/check_repository.py`; `--history` incluye los commits disponibles localmente. El control evita algunos formatos de secretos y rutas privadas; también se requiere revisión humana. `.gitignore` no elimina archivos ya versionados ni su historial.

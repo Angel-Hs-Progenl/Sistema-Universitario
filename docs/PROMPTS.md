@@ -7,7 +7,7 @@ Estos prompts son instrucciones de colaboración para los equipos; no crean un s
 ```text
 Trabajamos en Servicios universitarios de la Universidad Tecnológica de Oriental.
 Lee AGENTS.md, README.md, docs/REQUISITOS.md, docs/ARQUITECTURA.md,
-docs/DISENO.md, docs/CASCADA.md y CONTRIBUTING.md antes de editar.
+docs/DISENO.md, docs/AUDITORIA-DISENO.md, docs/CASCADA.md y CONTRIBUTING.md antes de editar.
 
 Stack obligatorio: frontend React + JavaScript + HTML/CSS; backend FastAPI
 + Python; SQLAlchemy + PostgreSQL; migraciones Alembic. Monolito modular.
@@ -43,7 +43,7 @@ Acción principal: <verbo y resultado>.
 
 Usa los componentes actuales y el estilo de titulación como referencia.
 No copies toda la página ni sus reglas de negocio. Integra las rutas con el
-router compartido. Comprueba 390, 768 y 1440 px; evita overflow global.
+router compartido. Comprueba 320, 390, 768 y 1440 px; evita overflow global.
 Conserva foco y teclado. Si hay una acción irreversible, muestra el resumen
 y confirma en el contexto de la aplicación. No añadas métricas ficticias.
 ```
@@ -99,4 +99,22 @@ adaptación móvil, teclado y pruebas relevantes.
 Reporta defectos concretos con archivo, línea, efecto y caso reproducible.
 Separa defectos de preferencias. No marques un módulo como terminado si sus
 criterios no se pueden demostrar. Actualiza la documentación si cambió un contrato.
+```
+
+## Revisión de diseño antes de entregar
+
+```text
+Revisa esta pantalla usando docs/AUDITORIA-DISENO.md. Explica el rol, tarea,
+acción principal y origen de cada dato. Identifica contenido repetido,
+contenedores con poca utilidad, títulos vagos y controles que no funcionan.
+Mantén el lenguaje institucional, las líneas/radios/tipografías del sistema,
+y el estado escrito. No agregues slogans, certificados ilustrados, tarjetas
+de métricas, gradientes ni otro sidebar global. No copies una marca externa.
+
+Comprueba el recorrido: inicio, carga, vacío, error, corrección, permisos y
+confirmación. Muestra en móvil y escritorio qué puede hacer la persona y
+qué falta. No des por validado un archivo adjunto. Exige elección explícita
+del dictamen. Señala evidencia comprobada y pendientes; no inventes pruebas.
+Antes de subir, revisa el diff y ejecuta scripts/check_repository.py sobre
+el índice preparado. No pegues datos privados en prompts, capturas ni Git.
 ```

@@ -5,15 +5,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import {
-  ArrowUpRight,
-  Bell,
-  LogOut,
-  Menu,
-  X,
-  GraduationCap,
-  CircleHelp,
-} from "lucide-react";
+import { ArrowUpRight, Bell, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "./Auth";
 import { ROLES } from "../../shared/titulacion";
@@ -21,12 +13,12 @@ import { Alert } from "../shared/ui";
 export function Brand() {
   return (
     <Link className="brand" to="/" aria-label="UT de Oriental, inicio">
-      <span className="brand-mark">
-        <GraduationCap size={27} strokeWidth={1.6} />
+      <span className="brand-mark" aria-hidden="true">
+        UT<span>O</span>
       </span>
       <span>
         <strong>UT de Oriental</strong>
-        <small>SERVICIOS UNIVERSITARIOS</small>
+        <small>Universidad Tecnológica</small>
       </span>
     </Link>
   );
@@ -83,7 +75,7 @@ export default function Shell() {
             onClick={() => setMenu(false)}
           >
             <NavLink to="/" end>
-              Inicio
+              Servicios
             </NavLink>
             <NavLink to="/titulacion">Titulación</NavLink>
             <NavLink to="/ayuda">Ayuda</NavLink>
@@ -111,8 +103,16 @@ export default function Shell() {
                 </button>
               </>
             ) : (
-              <Link to="/acceso" className="button button-primary small">
-                Iniciar sesión <ArrowUpRight size={16} />
+              <Link
+                to="/acceso"
+                className="button button-primary small"
+                aria-label="Iniciar sesión"
+              >
+                <span className="login-label">Iniciar sesión</span>
+                <span className="login-label-short" aria-hidden="true">
+                  Acceder
+                </span>{" "}
+                <ArrowUpRight size={16} />
               </Link>
             )}
           </div>
@@ -126,7 +126,7 @@ export default function Shell() {
         <div className="container footer-inner">
           <div>
             <strong>UT de Oriental</strong>
-            <span>Tu universidad, más cerca.</span>
+            <span>Servicios universitarios en línea</span>
           </div>
           <div>
             <Link to="/privacidad">Privacidad</Link>

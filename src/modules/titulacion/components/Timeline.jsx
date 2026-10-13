@@ -1,14 +1,21 @@
 import { Clock3 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { date } from "../../../shared/api";
-export default function Timeline({ app }) {
+export default function Timeline({ app, limit }) {
   return (
     <section className="panel">
       <div className="panel-heading">
-        <h2>Historial del trámite</h2>
-        <Clock3 size={18} />
+        <h2>{limit ? "Actividad reciente" : "Historial del trámite"}</h2>
+        {limit ? (
+          <Link className="text-link" to="/titulacion/seguimiento">
+            Ver historial completo
+          </Link>
+        ) : (
+          <Clock3 size={18} />
+        )}
       </div>
       <ol className="timeline">
-        {app.events.map((e) => (
+        {(limit ? app.events.slice(0, limit) : app.events).map((e) => (
           <li key={e.id}>
             <span className="timeline-dot" />
             <div>

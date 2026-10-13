@@ -51,3 +51,9 @@ No aceptar como aprobación una recomendación de IA o un comentario de un terce
 ## Aceptación del módulo de titulación
 
 La demostración de aceptación utiliza dos estudiantes ficticios y las cinco áreas. Uno no puede abrir archivos del otro. El egresado guarda datos y archivos, envía y recibe folio; Escolares inicia revisión; cada área valida su responsabilidad; un rechazo vuelve al estudiante con motivo; se corrige y reenvía; el expediente solo se valida cuando están todas las liberaciones. Escolares registra gestión, disponibilidad, instrucciones y conclusión. Se conserva el historial después de cerrar sesión y reiniciar. Probar respaldo y restauración sobre una instalación separada antes de aprobar implantación.
+
+## Registro CR-002 · Experiencia institucional y protección de Git
+
+12 de octubre de 2026. Solicitado y autorizado por el líder en este chat: investigar y corregir el diseño genérico del inicio y titulación, y reforzar exclusiones de datos privados. Alcance: Shell, CSS/tokens, directorio, acceso, tareas/resumen, formularios, dictámenes y guardia de Git. No cambia stack, roles ni esquema de datos. La restricción de reenvío de archivos rechazados corrige el caso de uso TIT-08 ya especificado; no introduce otra modalidad de titulación.
+
+Investigación/decisiones: AUDITORIA-DISENO.md. Impacto en equipos: adoptar navegación horizontal, patrones de tarea y errores, y prompts revisados; no duplicar estilos. Evidencia: pruebas de regresión y revisión de navegador en VALIDACION.md. Aprobación del líder permite esta implementación; aceptación institucional y fases formales siguen pendientes. No se abrió una issue ni se modificó GitHub desde esta entrega.

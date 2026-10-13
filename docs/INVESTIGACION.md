@@ -41,3 +41,7 @@ La [página institucional de estadías](https://utdeoriental.edu.mx/direccion-vi
 ## Alcance de esta investigación
 
 No se conocen aún proveedor SSO, infraestructura, formatos definitivos, manual de marca ni procedimientos de titulación de la universidad. Las recomendaciones sobre diseño y arquitectura son propuestas técnicas revisables. Las tarifas, obligaciones legales específicas y emisión oficial requieren validación con sus responsables; no se han supuesto como hechos.
+
+## Investigación adicional de interfaces con IA
+
+[AUDITORIA-DISENO.md](AUDITORIA-DISENO.md) desarrolla la revisión de NN/G y Microsoft Research, los patrones de GOV.UK, Primer y Carbon, sus límites y los cambios aplicados. La lista de antipatrones está ligada a tareas universitarias y a criterios de aceptación; no se considera una prohibición universal de estilos.

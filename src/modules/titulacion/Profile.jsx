@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Save, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Save, ShieldCheck } from "lucide-react";
 import { useAuth } from "../../app/Auth";
-import { Field, Alert, BusyButton } from "../../shared/ui";
+import { Field, Alert, BusyButton, ErrorSummary } from "../../shared/ui";
 import { api } from "../../shared/api";
 export default function Profile() {
   const { user, setUser } = useAuth(),
@@ -22,7 +21,7 @@ export default function Profile() {
       setUser(result);
       setSuccess("Tus datos se guardaron correctamente.");
     } catch (e) {
-      setError(e.message);
+      setError(e);
     } finally {
       setBusy(false);
     }
@@ -31,13 +30,13 @@ export default function Profile() {
     return <Alert>El perfil académico corresponde al rol estudiante.</Alert>;
   return (
     <>
-      <div className="eyebrow">TU EXPEDIENTE · PASO 01</div>
-      <h1>Primero, tus datos.</h1>
+      <div className="eyebrow">TITULACIÓN / INFORMACIÓN ACADÉMICA</div>
+      <h1>Datos del egresado</h1>
       <p className="page-intro">
         Verifica que coincidan con tus documentos oficiales. Los campos con *
         son obligatorios.
       </p>
-      <Alert>{error}</Alert>
+      <ErrorSummary error={error} />
       <Alert type="success">{success}</Alert>
       <form onSubmit={save} className="panel form-panel">
         <div className="panel-heading">
@@ -48,6 +47,7 @@ export default function Profile() {
           <Field
             label="Nombre completo"
             name="name"
+            error={error.fields?.find((e) => e.field === "name")?.message}
             defaultValue={user.name}
             required
             minLength={3}
@@ -57,6 +57,7 @@ export default function Profile() {
           <Field
             label="Matrícula"
             name="matricula"
+            error={error.fields?.find((e) => e.field === "matricula")?.message}
             defaultValue={user.profile.matricula}
             required
             pattern="[A-Za-z0-9-]+"
@@ -65,6 +66,7 @@ export default function Profile() {
           <Field
             label="CURP"
             name="curp"
+            error={error.fields?.find((e) => e.field === "curp")?.message}
             defaultValue={user.profile.curp}
             required
             minLength={18}
@@ -74,6 +76,7 @@ export default function Profile() {
           <Field
             label="Carrera"
             name="carrera"
+            error={error.fields?.find((e) => e.field === "carrera")?.message}
             defaultValue={user.profile.carrera}
             required
             minLength={3}
@@ -82,6 +85,7 @@ export default function Profile() {
           <Field
             label="Generación"
             name="generacion"
+            error={error.fields?.find((e) => e.field === "generacion")?.message}
             defaultValue={user.profile.generacion}
             placeholder="2022-2026"
             pattern="[0-9]{4}-[0-9]{4}"
@@ -90,6 +94,7 @@ export default function Profile() {
           <Field
             label="Teléfono"
             name="telefono"
+            error={error.fields?.find((e) => e.field === "telefono")?.message}
             type="tel"
             defaultValue={user.profile.telefono}
             required
@@ -100,7 +105,16 @@ export default function Profile() {
           <label className="field span-2">
             Domicilio completo *
             <textarea
+              id="domicilio"
               name="domicilio"
+              aria-invalid={
+                error.fields?.some((e) => e.field === "domicilio") || undefined
+              }
+              aria-describedby={
+                error.fields?.some((e) => e.field === "domicilio")
+                  ? "domicilio-error"
+                  : undefined
+              }
               defaultValue={user.profile.domicilio}
               required
               minLength={10}
@@ -108,6 +122,11 @@ export default function Profile() {
               autoComplete="street-address"
               rows={3}
             />
+            {error.fields?.find((e) => e.field === "domicilio") && (
+              <small className="field-error" id="domicilio-error">
+                {error.fields.find((e) => e.field === "domicilio").message}
+              </small>
+            )}
           </label>
         </div>
         <div className="form-footer">

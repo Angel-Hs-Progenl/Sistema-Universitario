@@ -165,6 +165,8 @@ def test_rejection_correction_resubmission(clients):
     )
     assert r.status_code == 200
     a = r.json()
+    # A returned application cannot be resubmitted with the rejected file unchanged.
+    assert move(clients["estudiante"], a, "enviada").status_code == 422
     r = clients["estudiante"].post(
         f"{BASE}/applications/{a['id']}/documents",
         data={"kind": doc["kind"]},

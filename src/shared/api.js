@@ -25,9 +25,25 @@ export async function api(path, options = {}) {
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const fields = data.errors
-      ?.map((e) => `${e.field}: ${e.message}`)
-      .join(" · ");
+    const labels = {
+      name: "nombre completo",
+      matricula: "matrícula",
+      curp: "CURP",
+      carrera: "carrera",
+      generacion: "generación",
+      telefono: "teléfono",
+      domicilio: "domicilio",
+      email: "correo electrónico",
+      password: "contraseña",
+      note: "observación",
+      reference: "referencia institucional",
+      delivery: "indicaciones de entrega",
+    };
+    const fieldErrors = data.errors?.map((e) => ({
+      field: e.field,
+      message: `Revisa ${labels[e.field] || "este campo"}. El dato no cumple el formato solicitado.`,
+    }));
+    const fields = fieldErrors?.map((e) => e.message).join(" ");
     const error = new Error(
       fields ||
         (typeof data.detail === "string"
@@ -35,6 +51,7 @@ export async function api(path, options = {}) {
           : "No se pudo completar la operación."),
     );
     error.status = response.status;
+    error.fields = fieldErrors;
     throw error;
   }
   return data;

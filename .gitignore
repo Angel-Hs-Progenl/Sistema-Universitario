@@ -1,14 +1,84 @@
+# Dependencias y compilación (conservar los lockfiles)
 node_modules/
+.venv/
+venv/
+dist/
+build/
+*.tsbuildinfo
+
+# Secretos y configuración privada; solo el ejemplo sanitizado se versiona
 .env
+.env.*
+!.env.example
+*.env
+.envrc
+.pgpass
+pgpass.conf
+.npmrc
+secrets/
+credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.cer
+
+# Expedientes, adjuntos, sesiones, buzones y respaldos
 data/
+uploads/
+outbox/
 backups/
+*.dump
+*.backup
+*.bak
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.db
+*.db-*
+*.sql.gz
+*.sql.zip
+*dump*.sql
+*backup*.sql
+*respaldo*.sql
+pgdata/
+.aws/
+.ssh/
+.azure/
+.kube/
+.gcloud/
+.codex/
+service-account*.json
+credentials*.json
+
+# Documentación fuente de uso interno (variantes habituales del nombre)
+Pdf´s Modulos/
+Pdf's Modulos/
+Pdf’s Modulos/
+PDFs Modulos/
+documentos-privados/
+
+# Evidencia local, temporales y cachés
 tmp/
+temp/
 output/
 *.log
-Pdf´s Modulos/
-playwright-report/
-.venv/
 __pycache__/
+*.py[cod]
 .pytest_cache/
-dist/
-*.pyc
+.ruff_cache/
+.mypy_cache/
+.coverage*
+htmlcov/
+coverage/
+playwright-report/
+test-results/
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo

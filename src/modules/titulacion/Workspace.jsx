@@ -2,6 +2,7 @@ import Timeline from "./components/Timeline";
 import Inbox from "./components/Inbox";
 import CaseModal from "./components/CaseModal";
 import PageHeading from "./components/PageHeading";
+import StudentTasks from "./components/StudentTasks";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
@@ -40,7 +41,8 @@ export default function Workspace() {
     [id, user.id],
   );
   const [busy, setBusy] = useState(false),
-    [modal, setModal] = useState(null);
+    [modal, setModal] = useState(null),
+    [notice, setNotice] = useState("");
   async function create() {
     setBusy(true);
     state.setError("");
@@ -55,7 +57,17 @@ export default function Workspace() {
   }
   async function changed(result) {
     if (id) state.setData(result);
-    else await state.refresh();
+    else
+      state.setData((list) =>
+        list.map((entry) => (entry.id === result.id ? result : entry)),
+      );
+    setNotice(
+      modal.type === "upload"
+        ? "Documento guardado en el expediente."
+        : modal.type === "review" || modal.type === "clearance"
+          ? "Dictamen registrado en el historial."
+          : "Estado de la solicitud actualizado.",
+    );
   }
   if (state.loading)
     return (
@@ -81,7 +93,7 @@ export default function Workspace() {
       <>
         <PageHeading
           eyebrow="TITULACIÓN ELECTRÓNICA"
-          title="Un paso más cerca de tu título."
+          title="Iniciar solicitud de titulación"
         >
           Prepara tu expediente y comienza tu trámite desde aquí.
         </PageHeading>
@@ -90,12 +102,8 @@ export default function Workspace() {
           <div className="start-icon">
             <FileText size={45} strokeWidth={1} />
           </div>
-          <span className="eyebrow">TU TRÁMITE, PASO A PASO</span>
-          <h2>
-            Vamos a preparar
-            <br />
-            tu solicitud.
-          </h2>
+          <span className="eyebrow">PREPARACIÓN DEL EXPEDIENTE</span>
+          <h2>Reúne tus datos y documentos</h2>
           <p>
             Necesitarás tus datos académicos y 7 documentos. Puedes guardar tu
             avance y continuar después.
@@ -137,9 +145,9 @@ export default function Workspace() {
         }
         title={
           docsOnly
-            ? "Cada documento cuenta."
+            ? "Documentos del expediente"
             : timelineOnly
-              ? "Tu avance, con claridad."
+              ? "Historial de la solicitud"
               : student
                 ? "Mi solicitud de titulación"
                 : app.student.name
@@ -159,6 +167,7 @@ export default function Workspace() {
           : `${app.student.profile.matricula || "Sin matrícula"} · ${app.student.profile.carrera || "Sin carrera"}`}
       </PageHeading>
       <Alert>{state.error}</Alert>
+      <Alert type="success">{notice}</Alert>
       <div className="case-banner">
         <div>
           <span className="overline">FOLIO DE SOLICITUD</span>
@@ -180,6 +189,11 @@ export default function Workspace() {
               {student ? "Tu siguiente paso" : "Orientación para el egresado"}
             </strong>
             <p>{NEXT[app.status]}</p>
+            {student && EDITABLE.includes(app.status) && (
+              <Link className="text-link" to="/titulacion/documentos">
+                Revisar documentos pendientes <ArrowRight size={14} />
+              </Link>
+            )}
             {app.delivery && (
               <p className="delivery-note">
                 Indicaciones de entrega: {app.delivery}
@@ -192,8 +206,13 @@ export default function Workspace() {
         <Timeline app={app} />
       ) : (
         <>
+          {student && !docsOnly && app.status !== "cancelado" && (
+            <StudentTasks app={app} />
+          )}
           {!docsOnly && (
-            <div className="case-overview">
+            <div
+              className={`case-overview ${student && EDITABLE.includes(app.status) ? "preparation-overview" : ""}`}
+            >
               <section className="panel">
                 <div className="panel-heading">
                   <h2>{student ? "Tu información" : "Datos del egresado"}</h2>
@@ -220,81 +239,86 @@ export default function Workspace() {
                     <dt>Generación</dt>
                     <dd>{app.student.profile.generacion || "Por completar"}</dd>
                   </div>
-                  {!["tesoreria", "vinculacion"].includes(user.role) && (
-                    <>
-                      <div>
-                        <dt>CURP</dt>
-                        <dd>{app.student.profile.curp || "Por completar"}</dd>
-                      </div>
-                      <div>
-                        <dt>Correo</dt>
-                        <dd>{app.student.email}</dd>
-                      </div>
-                      <div>
-                        <dt>Teléfono</dt>
-                        <dd>
-                          {app.student.profile.telefono || "Por completar"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Domicilio</dt>
-                        <dd>
-                          {app.student.profile.domicilio || "Por completar"}
-                        </dd>
-                      </div>
-                    </>
-                  )}
+                  {!student &&
+                    !["tesoreria", "vinculacion"].includes(user.role) && (
+                      <>
+                        <div>
+                          <dt>CURP</dt>
+                          <dd>{app.student.profile.curp || "Por completar"}</dd>
+                        </div>
+                        <div>
+                          <dt>Correo</dt>
+                          <dd>{app.student.email}</dd>
+                        </div>
+                        <div>
+                          <dt>Teléfono</dt>
+                          <dd>
+                            {app.student.profile.telefono || "Por completar"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Domicilio</dt>
+                          <dd>
+                            {app.student.profile.domicilio || "Por completar"}
+                          </dd>
+                        </div>
+                      </>
+                    )}
                 </dl>
               </section>
-              <section className="progress-panel">
-                <div className="panel-heading">
-                  <h2>
-                    {user.role === "tesoreria"
-                      ? "Validación de pago"
-                      : user.role === "vinculacion"
-                        ? "Liberación de Vinculación"
-                        : "Integración del expediente"}
-                  </h2>
-                  <ShieldCheck size={19} />
-                </div>
-                <div className="progress-number">
-                  {areaValid}
-                  <span> / {areaTotal}</span>
-                </div>
-                <p>
-                  {user.role === "vinculacion"
-                    ? "liberación registrada"
-                    : user.role === "tesoreria"
-                      ? "comprobante validado"
-                      : "documentos obligatorios validados"}
-                </p>
-                <progress
-                  max={areaTotal}
-                  value={areaValid}
-                  aria-label={`${areaValid} de ${areaTotal} validaciones ${areaTotal === 1 ? "de tu área" : "del expediente"}`}
-                />
-                <div className="clearance-status">
-                  <span>
-                    {app.clearance ? (
-                      <CircleCheck size={18} />
-                    ) : (
-                      <Clock3 size={18} />
-                    )}
-                  </span>
-                  <div>
-                    <strong>Vinculación</strong>
-                    <p>
-                      {app.clearance
-                        ? "Estadías y seguimiento liberados"
-                        : "Liberación pendiente"}
-                    </p>
-                    {app.clearance_note && <small>{app.clearance_note}</small>}
+              {(!student || !EDITABLE.includes(app.status)) && (
+                <section className="progress-panel">
+                  <div className="panel-heading">
+                    <h2>
+                      {user.role === "tesoreria"
+                        ? "Validación de pago"
+                        : user.role === "vinculacion"
+                          ? "Liberación de Vinculación"
+                          : "Revisión institucional"}
+                    </h2>
+                    <ShieldCheck size={19} />
                   </div>
-                </div>
-              </section>
+                  <div className="progress-number">
+                    {areaValid}
+                    <span> / {areaTotal}</span>
+                  </div>
+                  <p>
+                    {user.role === "vinculacion"
+                      ? "liberación registrada"
+                      : user.role === "tesoreria"
+                        ? "comprobante validado"
+                        : "documentos obligatorios validados"}
+                  </p>
+                  <progress
+                    max={areaTotal}
+                    value={areaValid}
+                    aria-label={`${areaValid} de ${areaTotal} validaciones ${areaTotal === 1 ? "de tu área" : "del expediente"}`}
+                  />
+                  <div className="clearance-status">
+                    <span>
+                      {app.clearance ? (
+                        <CircleCheck size={18} />
+                      ) : (
+                        <Clock3 size={18} />
+                      )}
+                    </span>
+                    <div>
+                      <strong>Vinculación</strong>
+                      <p>
+                        {app.clearance
+                          ? "Estadías y seguimiento liberados"
+                          : "Liberación pendiente"}
+                      </p>
+                      {app.clearance_note && (
+                        <small>{app.clearance_note}</small>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              )}
             </div>
           )}
-          {user.role !== "vinculacion" && (
+          {user.role !== "vinculacion" && (!student || docsOnly) && (
             <section className="panel documents-panel">
               <div className="panel-heading">
                 <div>
@@ -303,12 +327,15 @@ export default function Workspace() {
                       ? "Validación de pago"
                       : "Documentación del expediente"}
                   </h2>
-                  <p>PDF o JPG · Máximo 5 MB por archivo</p>
+                  <p>
+                    PDF o JPG · Máximo 5 MB por archivo
+                    {student && " · Adjuntar no envía la solicitud"}
+                  </p>
                 </div>
                 <span className="count-pill">
                   {user.role === "tesoreria"
                     ? documents.length
-                    : `${documents.length} / 8`}
+                    : `${documents.filter((d) => DOCUMENTS.find((k) => k.id === d.kind)?.required).length} de 7 obligatorios`}
                 </span>
               </div>
               <div className="document-list">
@@ -359,6 +386,7 @@ export default function Workspace() {
                             >
                               <Upload size={14} />
                               {doc ? "Reemplazar" : "Adjuntar"}
+                              <span className="sr-only"> {kind.name}</span>
                             </button>
                           )}
                         {!student &&
@@ -371,6 +399,7 @@ export default function Workspace() {
                                 setModal({ type: "review", doc, kind })
                               }
                             >
+                              <span className="sr-only">{kind.name}: </span>
                               Revisar
                             </button>
                           )}
@@ -380,6 +409,11 @@ export default function Workspace() {
                 })}
               </div>
             </section>
+          )}
+          {student && docsOnly && (
+            <Link className="button button-primary" to="/titulacion">
+              Continuar al resumen <ArrowRight size={16} />
+            </Link>
           )}
           {!student &&
             user.role === "vinculacion" &&
@@ -404,12 +438,16 @@ export default function Workspace() {
                 <div>
                   <strong>
                     {student
-                      ? "Tu expediente queda guardado"
+                      ? EDITABLE.includes(app.status)
+                        ? "El borrador queda guardado"
+                        : "Solicitud registrada"
                       : "Control del expediente"}
                   </strong>
                   <p>
                     {student
-                      ? "Verifica tus datos y documentos antes de enviar."
+                      ? EDITABLE.includes(app.status)
+                        ? "Verifica tus datos y documentos antes de enviar."
+                        : "Consulta el estado y las observaciones en el historial."
                       : "Cada cambio quedará registrado en el historial."}
                   </p>
                 </div>
@@ -453,7 +491,7 @@ export default function Workspace() {
                     ))}
                 </div>
               </div>
-              <Timeline app={app} />
+              <Timeline app={app} limit={student ? 3 : undefined} />
             </>
           )}
         </>

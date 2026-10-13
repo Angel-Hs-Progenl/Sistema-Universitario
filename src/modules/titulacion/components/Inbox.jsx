@@ -23,7 +23,7 @@ export default function Inbox({ data, error, refresh, role }) {
     <>
       <PageHeading
         eyebrow={`${ROLES[role].toUpperCase()} · TITULACIÓN`}
-        title="Cada expediente, en orden."
+        title="Solicitudes de titulación"
         action={
           ["escolares", "administrador"].includes(role) && (
             <a
@@ -85,7 +85,15 @@ export default function Inbox({ data, error, refresh, role }) {
             <RefreshCw size={18} />
           </button>
         </div>
-        <div className="table-scroll">
+        <p className="table-hint">
+          Desplaza la tabla para consultar todas las columnas.
+        </p>
+        <div
+          className="table-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Solicitudes de titulación, tabla desplazable"
+        >
           <table>
             <caption className="sr-only">
               Solicitudes de titulación electrónica

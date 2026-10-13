@@ -79,7 +79,8 @@ def missing_documents(docs, validated=False):
         for d in DOCUMENTS
         if d["required"]
         and not any(
-            x.kind == d["id"] and (not validated or x.status == "validado")
+            x.kind == d["id"]
+            and (x.status == "validado" if validated else x.status != "rechazado")
             for x in docs
         )
     ]
