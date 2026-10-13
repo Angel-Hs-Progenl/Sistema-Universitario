@@ -1,5 +1,7 @@
 # Servicios universitarios de la UT de Oriental
 
+Las animaciones empiezan activadas. Puedes desactivarlas o volver a activarlas desde el footer; el navegador conserva esta preferencia de apariencia al navegar y recargar.
+
 Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. El inicio privado ofrece únicamente Titulación electrónica. La bienvenida reúne ilustración y acceso; los enlaces internos conservan su destino al iniciar sesión. Evaluación docente y Becas tienen requisitos identificados y se incorporarán después de aprobar su alcance.
 
 **Para los equipos:** empieza por [clonar e instalar](docs/INSTALACION.md), revisa [la arquitectura modular](docs/ARQUITECTURA.md) y utiliza los [prompts comunes](docs/PROMPTS.md). Cada equipo amplía esta aplicación; no entrega otro login, backend o diseño independiente.

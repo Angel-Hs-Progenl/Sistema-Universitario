@@ -1,15 +1,6 @@
-import { useEffect, useState } from "react";
+import { useMotionPreference } from "./MotionPreference";
 
 export default function useReducedMotion() {
-  const [reduced, setReduced] = useState(
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
-  useEffect(() => {
-    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(preference.matches);
-    update();
-    preference.addEventListener("change", update);
-    return () => preference.removeEventListener("change", update);
-  }, []);
-  return reduced;
+  // Contrato conservado para Brand y WelcomeArt; CR-006 usa la elección del footer.
+  return !useMotionPreference().enabled;
 }

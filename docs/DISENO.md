@@ -1,5 +1,9 @@
 # Sistema de diseño de servicios universitarios
 
+**Actualización CR-006 (13/10/2026):** por solicitud explícita del líder, las animaciones comienzan activadas aunque el sistema operativo solicite reducirlas. El footer público y privado ofrece Desactivar animaciones / Activar animaciones. Esta elección sustituye la detección automática mencionada en las revisiones anteriores de este documento.
+
+MotionProvider comparte la preferencia, sincroniza data-motion en html y guarda únicamente on/off en localStorage bajo uto:animations. Al desactivar se eliminan animaciones, transiciones y desplazamiento suave; el logo cambia estáticamente. Si se bloquea el almacenamiento, funciona en memoria. No se guardan sesiones o expedientes. Los equipos reutilizan useMotionPreference/useReducedMotion.
+
 La experiencia se centra en lo que una persona necesita hacer: encontrar un servicio, preparar un expediente y conocer el siguiente paso. El inicio es un selector privado y compacto de módulos; titulación es un expediente con acciones por contexto y una bandeja para el personal. Las estadísticas aparecen solo cuando ayudan a priorizar solicitudes.
 
 La identidad usa el nombre proporcionado por el líder. CR-005 incorpora el PNG oficial entregado y una marca vectorial original del azor propuesta para el portal. No sustituye el escudo ni se declara aprobada institucionalmente. La paleta está propuesta por el usuario; no se ha acreditado su pertenencia al manual gráfico de la UT.

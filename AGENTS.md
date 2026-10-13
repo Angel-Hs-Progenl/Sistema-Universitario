@@ -1,5 +1,7 @@
 # Instrucciones comunes del proyecto
 
+- CR-006: movimiento activado inicialmente por indicación del líder, con control compartido en el footer. Reutilizar MotionProvider/useMotionPreference/useReducedMotion. Solo se permite localStorage para esta preferencia on/off de apariencia; no para sesiones o expedientes.
+
 Lee README.md, docs/ARQUITECTURA.md, docs/DISENO.md y la especificación del módulo antes de modificar código. El líder controla el alcance y autoriza los cambios de requisitos; no inventes decisiones institucionales.
 
 - Stack obligatorio: React, JavaScript, HTML/CSS, FastAPI, Python, SQLAlchemy y PostgreSQL. No introducir otro backend, base de datos o sistema de autenticación.

@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { ArrowUpRight, Bell, Menu, X } from "lucide-react";
+import { ArrowUpRight, Bell, Menu, X, Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./Auth";
 import { ROLES } from "../../shared/titulacion";
@@ -8,6 +8,7 @@ import { Alert } from "../shared/ui";
 import { Breadcrumbs } from "./Navigation";
 import Brand from "../shared/Brand";
 import AccountMenu from "./AccountMenu";
+import { useMotionPreference } from "../shared/MotionPreference";
 
 function AppNavigation({ role, onNavigate }) {
   return (
@@ -71,6 +72,7 @@ function NavigationDrawer({ user, onClose }) {
   );
 }
 export default function Shell() {
+  const { enabled, toggle } = useMotionPreference();
   const { user, logout } = useAuth(),
     [menu, setMenu] = useState(false),
     [error, setError] = useState(""),
@@ -95,6 +97,14 @@ export default function Shell() {
     <footer className="app-footer">
       <span>UT de Oriental · {new Date().getFullYear()}</span>
       <div>
+        <button type="button" className="footer-motion" onClick={toggle}>
+          {enabled ? (
+            <Pause size={13} aria-hidden="true" />
+          ) : (
+            <Play size={13} aria-hidden="true" />
+          )}
+          {enabled ? "Desactivar animaciones" : "Activar animaciones"}
+        </button>
         <Link to="/privacidad">Privacidad</Link>
         <Link to="/ayuda">Ayuda</Link>
       </div>

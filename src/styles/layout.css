@@ -1074,18 +1074,8 @@
     max-width: 170px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .auth-story h2,
-  .auth-story > p,
-  .auth-form,
-  .welcome-art *,
-  .module-content,
-  .private-home {
-    animation: none !important;
-  }
-  .button-primary:hover:not(:disabled) {
-    transform: none;
-  }
+html[data-motion="off"] .button-primary:hover:not(:disabled) {
+  transform: none;
 }
 @media print {
   .workspace-header,

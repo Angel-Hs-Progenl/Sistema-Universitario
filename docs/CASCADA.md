@@ -77,3 +77,9 @@ Impacto: Shell y CSS comunes, ilustración SVG original, encabezados y textos de
 Impacto transversal autorizado: marca/Shell, cuenta y acceso, identidad/sesiones compartidas, migración aditiva 0003, dependencia oficial google-auth, logs, exclusiones de Git y documentación. Google requiere credenciales OAuth institucionales externas a esta entrega. No hay registro automático de usuarios, roles derivados de Google, SMS, cambio de estados académicos o suplencia de áreas. La vinculación de teléfono exige un operador administrador autenticado y confirmación previa de titularidad institucional.
 
 Artefactos: ACCESO-INSTITUCIONAL.md, INSTALACION.md, public/brand, docs/capturas, README y prompts revisados. Pruebas y límites en VALIDACION.md. La autorización del líder permite esta implementación; no sustituye aprobación del logo, procedimiento de vinculación, privacidad o implantación por la universidad.
+
+## Registro CR-006 · Animaciones controladas desde el footer
+
+13 de octubre de 2026. El líder solicita activarlas inicialmente y ofrecer su desactivación en el footer. Se reemplaza la detección automática de prefers-reduced-motion por una preferencia compartida de apariencia, persistida como on/off. El control está disponible sin sesión y dentro del portal; desactiva movimiento sin cambiar tareas, permisos o datos.
+
+Impacto: MotionProvider, hook de movimiento, Shell, CSS y guías. Sin nuevas dependencias ni cambios de backend/modelo. Se conserva el giro estático al desactivar. La solicitud del líder autoriza este cambio; la validación institucional general sigue pendiente.

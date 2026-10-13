@@ -1,5 +1,7 @@
 # Prompts comunes para trabajar con IA
 
+CR-006: las animaciones están activas inicialmente y se controlan desde el footer. Reutiliza MotionProvider/useMotionPreference/useReducedMotion. No añadas detección automática del sistema operativo o un almacenamiento distinto por módulo; el usuario puede desactivar todo el movimiento con la preferencia común. localStorage solo contiene on/off de apariencia; nunca sesiones o expedientes.
+
 Estos prompts son instrucciones de colaboración para los equipos; no crean un skill ni reemplazan el control del líder. Copia el bloque común y el bloque de la tarea. Da a la IA acceso a los archivos citados; no pegues expedientes reales ni secretos. Pide evidencia observable y revisa los resultados antes del PR.
 
 ## Bloque obligatorio para cualquier módulo

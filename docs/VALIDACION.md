@@ -87,3 +87,12 @@ En la bandeja del personal a 320 px se detectó que texto oculto de la tabla esc
 - Inicio/detención de servidores Windows comprobado: se corrigió el manejo DateTime de ConvertFrom-Json y el seguimiento de procesos hijos. Tras detener, ambos puertos quedaron libres; al iniciar, sus procesos propietarios quedaron registrados.
 
 Limitaciones: Google Workspace real pendiente de cliente OAuth y validación institucional; logo y procedimiento de vinculación pendientes de aprobación. No se realizó prueba de producción, de carga, lector de pantalla, zoom o auditoría WCAG completa. Las capturas no prueban seguridad por sí mismas.
+
+## Revisión CR-006 · Control de animaciones
+
+13 de octubre de 2026. Cinco pruebas del frontend y compilación aprobadas. Sin cambios en backend o esquema; no se repitió la suite PostgreSQL.
+
+- Navegador: sin preferencia guardada, las animaciones están activas y el footer ofrece Desactivar animaciones. Se comprobó animationName=layer-enter aun cuando el navegador solicita movimiento reducido, conforme al cambio autorizado CR-006.
+- Desactivar aplica animationName=none inmediatamente; cambia el botón a Activar animaciones y muestra Animaciones desactivadas en la bienvenida. La elección se conserva al recargar y al navegar a Ayuda. Reactivar devuelve la preferencia a on.
+- Footer revisado a 320, 390, 768 y 1440 px: scrollWidth igual a clientWidth, sin desbordamiento global. La preferencia almacena únicamente on/off; no contiene sesiones ni expedientes.
+- Evidencia local en output/qa/animaciones-footer.png, excluida de Git. No se realizó una nueva auditoría completa de accesibilidad ni aceptación institucional.

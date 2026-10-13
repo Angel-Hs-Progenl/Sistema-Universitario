@@ -132,8 +132,8 @@ export default function WelcomeArt() {
       <div className="scene-caption">
         <span>Datos. Documentos. Seguimiento.</span>
         {reducedMotion ? (
-          <span title="Tu dispositivo solicita reducir el movimiento.">
-            Movimiento reducido
+          <span title="Puedes activarlas desde el pie de página.">
+            Animaciones desactivadas
           </span>
         ) : (
           <button

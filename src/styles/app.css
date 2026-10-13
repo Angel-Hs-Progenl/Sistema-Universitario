@@ -1416,14 +1416,12 @@ td small {
     padding: 17px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *:before,
-  *:after {
-    scroll-behavior: auto !important;
-    animation: none !important;
-    transition: none !important;
-  }
+html[data-motion="off"] *,
+html[data-motion="off"] *:before,
+html[data-motion="off"] *:after {
+  scroll-behavior: auto !important;
+  animation: none !important;
+  transition: none !important;
 }
 @media print {
   body {
