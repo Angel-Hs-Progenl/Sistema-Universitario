@@ -15,7 +15,8 @@ export default function Home() {
       <header className="home-heading">
         <h1>Inicio</h1>
         <p>
-          Hola, {user.name.split(" ")[0]}. Selecciona el servicio que necesitas.
+          Hola, {user.display_name || user.name.split(" ")[0]}. Selecciona el
+          servicio que necesitas.
         </p>
       </header>
       <div className="home-workspace">

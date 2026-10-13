@@ -21,3 +21,5 @@ Lee README.md, docs/ARQUITECTURA.md, docs/DISENO.md y la especificación del mó
 - Antes de publicar: revisar SECURITY.md y el diff; preparar el índice y ejecutar python scripts/check_repository.py. El control no detecta todos los datos personales; .gitignore no limpia historial.
 
 - CR-003: el home requiere sesión y contiene solo módulos habilitados/accesos por rol. La bienvenida incorpora la ilustración grande solicitada por el líder. Usar shared/navigation.js y Navigation.jsx; no crear otra navegación global.
+
+- CR-005: reutilizar shared/Brand.jsx y app/AccountMenu.jsx. Google Workspace solo autoriza dominio institucional verificado y usuarios habilitados; no asigna roles. Teléfono de acceso requiere vinculación explícita de operador, independiente del perfil académico. Leer docs/ACCESO-INSTITUCIONAL.md; no simular OAuth o SMS. Solo capturas ficticias revisadas en docs/capturas pueden publicarse.

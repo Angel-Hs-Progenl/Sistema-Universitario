@@ -54,3 +54,7 @@ Sin sesión, la raíz y enlaces privados llevan al acceso. Una entrada normal te
 Comprobar 320/390/768/1440 px sin desbordamiento global. Revisar contraste, teclado, errores y foco; la imagen no puede impedir completar el acceso. No se afirma una conformidad WCAG completa ni se sustituye la aceptación con usuarios institucionales.
 
 El cierre de sesión carga un documento nuevo para limpiar el estado de interfaz y el destino de la cuenta anterior. Un enlace privado solicitado posteriormente conserva su propio destino. Las vistas de perfil/documentos/historial del egresado redirigen al personal a la bandeja; no cambian sus permisos en el servidor.
+
+## Actualización de identidad · CR-005
+
+Brand se extrae a src/shared/Brand.jsx y sirve PNG oficial + azor sin duplicación por módulo. AccountMenu reemplaza nombre/rol/salida estáticos por un disparador de perfil; la lista ofrece edición del nombre visible y logout. /cuenta es una ruta protegida común con migas propias. La bienvenida conserva la imagen lateral y utiliza columna de acceso con Google/correo/teléfono. Contrato de autenticación y configuración en ACCESO-INSTITUCIONAL.md.

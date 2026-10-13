@@ -20,6 +20,12 @@ else:
         + (Path(tempfile.mkdtemp(prefix="uto-tests-")) / "test.sqlite").as_posix()
     )
 os.environ["APP_ENV"] = "test"
+# Never inherit live OAuth/SMTP credentials from a developer's .env.
+os.environ["GOOGLE_CLIENT_ID"] = ""
+os.environ["GOOGLE_CLIENT_SECRET"] = ""
+os.environ["SMTP_HOST"] = ""
+os.environ["SMTP_PASSWORD"] = ""
+os.environ["APP_ORIGIN"] = "http://127.0.0.1:5173"
 os.environ["DATA_DIR"] = tempfile.mkdtemp(prefix="uto-files-")
 from alembic.config import Config
 from alembic import command

@@ -34,15 +34,17 @@ Contraseña ficticia para todas: `Demo-UTO-2026!`.
 | vinculacion@demo.uto.local   | Liberación de estadías y seguimiento                |
 | administrador@demo.uto.local | Administración del flujo académico                  |
 
-El seed no sobrescribe registros existentes. `APP_ENV=production` prohíbe ejecutarlo. El entorno institucional debe crearse vacío y habilitar cuentas autorizadas; no basta con ocultar el enlace de cuentas demo. Los perfiles, CURP y documentos del seed son ficticios, marcados como ejemplo y sin validez.
+El seed no sobrescribe expedientes o contraseñas existentes. CR-005 vincula el teléfono reservado +12025550100 a la cuenta estudiante demo si aún no tiene uno; no reemplaza una vinculación existente. `APP_ENV=production` prohíbe ejecutarlo. El entorno institucional debe crearse vacío y habilitar cuentas autorizadas. Los perfiles, CURP y documentos del seed son ficticios, marcados como ejemplo y sin validez.
 
 Alta de usuario (la contraseña se solicita oculta, no va en argumentos):
 
 ```powershell
-.venv/Scripts/python.exe backend/manage.py create-user --email correo@institucion.mx --name 'Nombre autorizado' --role escolares
+.venv/Scripts/python.exe backend/manage.py create-user --email cuenta@utdeoriental.edu.mx --name 'Nombre autorizado' --role escolares
 ```
 
 La pantalla de administración de usuarios y asignación de permisos aún no está implementada. Las altas se hacen mediante CLI con acceso de operador al servidor.
+
+Google Workspace, teléfono vinculado y requisitos de operación se documentan en [ACCESO-INSTITUCIONAL.md](ACCESO-INSTITUCIONAL.md). Un teléfono de contacto no se migra a credencial automáticamente. El menú de cuenta solo cambia el nombre visible; no asigna roles ni cambia datos del expediente.
 
 ## Correo y recuperación
 

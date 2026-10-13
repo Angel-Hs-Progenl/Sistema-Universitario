@@ -9,7 +9,7 @@ import {
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import WelcomeArt from "./WelcomeArt";
 import { useAuth } from "../../app/Auth";
-import { Alert, Field, BusyButton } from "../../shared/ui";
+import { Alert, Field, BusyButton, useAsync } from "../../shared/ui";
 import { api } from "../../shared/api";
 export default function Login() {
   const { login, user } = useAuth(),
@@ -18,6 +18,16 @@ export default function Login() {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [show, setShow] = useState(false);
+  const [method, setMethod] = useState("email");
+  const options = useAsync(() => api("/auth/options"), []);
+  const [params] = useSearchParams();
+  const oauthErrors = {
+    expired: "El intento de Google venció. Inicia de nuevo desde este portal.",
+    cancelled: "Se canceló el acceso con Google. Puedes volver a intentarlo.",
+    unavailable: "Google está pendiente de configuración institucional.",
+    denied:
+      "No se pudo autorizar esa cuenta. Usa Google Workspace de la universidad y una cuenta habilitada en el portal.",
+  };
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
@@ -34,7 +44,7 @@ export default function Login() {
   }
   if (user) return <Navigate to={location.state?.from || "/"} replace />;
   return (
-    <div className="container auth-layout">
+    <div className="container auth-layout auth-conversational">
       <aside className="auth-story">
         <span className="section-index">
           SERVICIOS ESCOLARES / UT DE ORIENTAL
@@ -51,23 +61,92 @@ export default function Login() {
         <WelcomeArt />
       </aside>
       <section className="auth-form">
-        <span className="eyebrow">PORTAL UNIVERSITARIO</span>
-        <h1>Accede a tu cuenta</h1>
-        <p>Continúa tu trámite con la cuenta asignada por la universidad.</p>
-        <Alert>{error}</Alert>
+        <img
+          className="login-azor"
+          src="/brand/azor.svg"
+          alt=""
+          width="38"
+          height="38"
+        />
+        <h1>Continúa en tu portal</h1>
+        <p>Para estudiantes y personal de la UT de Oriental.</p>
+        <Alert>{error || oauthErrors[params.get("oauth_error")]}</Alert>
+        {options.data?.google_enabled ? (
+          <a
+            className="google-signin"
+            href={`/api/v1/auth/google/start?next=${encodeURIComponent(location.state?.from || "/")}`}
+          >
+            <img src="/brand/google-g.png" alt="" width="20" height="20" />
+            Continuar con Google
+          </a>
+        ) : (
+          <button type="button" className="google-signin" disabled>
+            <img src="/brand/google-g.png" alt="" width="20" height="20" />
+            {options.loading ? "Consultando acceso…" : "Continuar con Google"}
+          </button>
+        )}
+        <p className="auth-domain">Solo cuentas @utdeoriental.edu.mx</p>
+        {!options.loading && !options.data?.google_enabled && (
+          <p className="auth-availability">
+            {options.error
+              ? "No se pudo consultar Google. Puedes entrar con tu cuenta del portal."
+              : "Google se habilitará al configurar el acceso institucional."}
+          </p>
+        )}
+        <div className="auth-divider">
+          <span>o usa tu cuenta del portal</span>
+        </div>
+        <div
+          className="login-methods"
+          role="group"
+          aria-label="Forma de acceso"
+        >
+          <button
+            type="button"
+            aria-pressed={method === "email"}
+            onClick={() => {
+              setMethod("email");
+              setError("");
+            }}
+          >
+            Correo institucional
+          </button>
+          <button
+            type="button"
+            aria-pressed={method === "phone"}
+            onClick={() => {
+              setMethod("phone");
+              setError("");
+            }}
+          >
+            Teléfono vinculado
+          </button>
+        </div>
         <form onSubmit={submit}>
           <Field
-            label="Correo electrónico"
-            name="email"
-            type="email"
-            placeholder="Correo de tu cuenta"
+            key={method}
+            label={
+              method === "email" ? "Correo institucional" : "Teléfono vinculado"
+            }
+            name="identifier"
+            type={method === "email" ? "email" : "tel"}
+            placeholder={
+              method === "email"
+                ? "Tu cuenta @utdeoriental.edu.mx"
+                : "10 dígitos o +código de país"
+            }
+            hint={
+              method === "phone"
+                ? "Debe estar vinculado por el operador a tu cuenta institucional."
+                : undefined
+            }
             autoComplete="username"
             required
             maxLength={254}
           />
           <div className="password-field">
             <Field
-              label="Contraseña"
+              label="Contraseña del portal"
               name="password"
               type={show ? "text" : "password"}
               autoComplete="current-password"
@@ -91,7 +170,7 @@ export default function Login() {
             busy={busy}
             busyText="Ingresando…"
           >
-            Entrar al portal <ArrowRight size={18} />
+            Continuar <ArrowRight size={18} />
           </BusyButton>
         </form>
         <div className="auth-help">

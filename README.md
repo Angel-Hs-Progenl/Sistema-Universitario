@@ -2,6 +2,12 @@
 
 Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. El inicio privado ofrece únicamente Titulación electrónica. La bienvenida reúne ilustración y acceso; los enlaces internos conservan su destino al iniciar sesión. Evaluación docente y Becas tienen requisitos identificados y se incorporarán después de aprobar su alcance.
 
+**Para los equipos:** empieza por [clonar e instalar](docs/INSTALACION.md), revisa [la arquitectura modular](docs/ARQUITECTURA.md) y utiliza los [prompts comunes](docs/PROMPTS.md). Cada equipo amplía esta aplicación; no entrega otro login, backend o diseño independiente.
+
+![Acceso institucional](docs/capturas/acceso.png)
+
+Las capturas usan únicamente cuentas y expedientes ficticios. Google aparece pendiente porque este entorno no tiene credenciales OAuth institucionales. [Galería de pantallas](docs/capturas/README.md).
+
 Esta entrega es una versión funcional para desarrollo y validación institucional: utiliza sesiones reales, base de datos, archivos protegidos, permisos por área e historial. No está homologada para producción ni conectada al registro oficial de títulos de SEP. No introducir expedientes reales hasta cerrar los pendientes de seguridad, operación y privacidad.
 
 ## Empezar
@@ -9,6 +15,8 @@ Esta entrega es una versión funcional para desarrollo y validación institucion
 Requisitos: Node.js 24 LTS, Python 3.12 y PostgreSQL 16. Instala PostgreSQL localmente o utiliza `docker compose up -d db` después de definir `POSTGRES_PASSWORD` en `.env`.
 
 ```powershell
+git clone https://github.com/Angel-Hs-Progenl/Sistema-Universitario.git
+cd Sistema-Universitario
 npm ci
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend/requirements.lock.txt
@@ -27,11 +35,15 @@ Abre [la aplicación local](http://127.0.0.1:5173/) y [la documentación de la A
 
 El seed es opcional, idempotente y exclusivo de desarrollo. Cuenta estudiante: `estudiante@demo.uto.local`; contraseña ficticia: `Demo-UTO-2026!`. En [operación](docs/OPERACION.md) están los demás roles y la forma de crear cuentas propias.
 
-Para detener los dos servidores: `./scripts/start-local.ps1 -Stop`. También puedes iniciar el frontend con `npm run dev` y el backend con `.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000` en terminales separadas.
+El teléfono reservado de prueba `+12025550100` accede a esa misma cuenta con la contraseña demo, después de ejecutar seed-demo. Es una vinculación ficticia y no envía SMS. Los correos demo se usan solo en desarrollo; las cuentas institucionales se provisionan con `@utdeoriental.edu.mx`.
+
+Para detener los dos servidores: `./scripts/start-local.ps1 -Stop`. También puedes iniciar el frontend con `npm run dev` y el backend con `.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --no-access-log` en terminales separadas.
 
 ## Qué funciona
 
 - Inicio de servicios, acceso y recuperación de contraseña con token de un solo uso.
+- Acceso con teléfono vinculado y contraseña del portal; menú de cuenta y edición de nombre visible.
+- Integración Google Workspace preparada: restringida al dominio institucional y a usuarios ya habilitados; su activación requiere configurar OAuth. [Instrucciones y límites](docs/ACCESO-INSTITUCIONAL.md).
 - Perfil académico, folio único y un expediente activo por estudiante.
 - Carga y reemplazo de PDF/JPG de hasta 5 MB; descarga autorizada.
 - Envío, revisión, rechazo con observación, corrección y reenvío.
@@ -55,6 +67,8 @@ La recuperación sin SMTP escribe los enlaces en `data/outbox/` solamente en des
 | [Operación](docs/OPERACION.md)                           | Inicio, cuentas, migraciones, respaldos y pendientes     |
 | [Investigación](docs/INVESTIGACION.md)                   | Fuentes y decisiones respaldadas                         |
 | [Validación](docs/VALIDACION.md)                         | Pruebas ejecutadas y límites de verificación             |
+| [Instalación para equipos](docs/INSTALACION.md)          | Clonar, levantar PostgreSQL, ejecutar y entregar módulos  |
+| [Acceso institucional](docs/ACCESO-INSTITUCIONAL.md)      | Google, teléfono vinculado, perfil y operación segura     |
 
 ## Comprobar cambios
 
@@ -84,3 +98,9 @@ La [auditoría de diseño](docs/AUDITORIA-DISENO.md) documenta investigación y 
 La [arquitectura de interfaz](docs/ARQUITECTURA-UI.md) define bienvenida pública, home compacto, navegación global y migas de pan. Los equipos deben reutilizar ese marco al integrar módulos.
 
 La revisión CR-004 utiliza navegación superior compartida y una bienvenida SVG por capas. El [estudio de Laravel](docs/ESTUDIO-LARAVEL.md) detalla observaciones, decisiones, textos y alternativas gratuitas de animación. Se implementa con CSS/SVG local, sin un servicio de animaciones.
+
+CR-005 añade la marca del azor junto a UT de Oriental y el giro desde el PNG oficial aportado por el líder. La marca es una propuesta del portal, pendiente de autorización institucional; no sustituye el escudo oficial. Con movimiento reducido se realiza un cambio estático. [Recursos y procedencia](public/brand/README.md).
+
+![Inicio privado](docs/capturas/inicio.png)
+
+![Menú de cuenta y Titulación](docs/capturas/cuenta-menu.png)

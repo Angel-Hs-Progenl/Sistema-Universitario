@@ -16,6 +16,7 @@ if os.getenv("APP_ENV") == "production" and not DATABASE_URL.startswith("postgre
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
+    hide_parameters=True,
     **(
         {"connect_args": {"check_same_thread": False}}
         if DATABASE_URL.startswith("sqlite")

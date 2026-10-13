@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from .core.auth import router as auth_router
+from .core.google_oauth import router as google_router
 from .core.security import ORIGIN, PRODUCTION
 from .modules.titulacion.router import router as titles_router
 
@@ -70,7 +71,10 @@ async def validation(request, exc):
 async def database_error(request, exc):
     import logging
 
-    logging.getLogger("uvicorn.error").exception("Error de base de datos")
+    # Database exception details may contain personal values or OAuth data.
+    logging.getLogger("uvicorn.error").error(
+        "Error de base de datos (%s)", type(exc).__name__
+    )
     return JSONResponse(
         {"detail": "No fue posible completar la operación. Intenta de nuevo."},
         status_code=503,
@@ -87,4 +91,5 @@ def health():
 
 
 app.include_router(auth_router)
+app.include_router(google_router)
 app.include_router(titles_router)

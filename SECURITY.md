@@ -4,6 +4,12 @@ No incorporar expedientes reales, bases de datos, adjuntos, respaldos, correos d
 
 `.gitignore` cubre entornos, variantes de `.env`, dependencias, compilaciones, llaves/certificados, bases y sus diarios, uploads, buzones, respaldos, documentos internos y evidencia local. Mantener migraciones y lockfiles versionados. Los originales de `Pdf´s Modulos` permanecen en el equipo.
 
+CR-005 excluye también client_secret*.json, token*.json, oauth-secrets/, estados del navegador, HAR y trazas. El scanner bloquea estas rutas incluso si se agregan forzadamente y reconoce un formato de secreto OAuth de Google. No es un clasificador completo de datos personales.
+
+Solo docs/capturas contiene evidencia seleccionada para publicar, con cuentas y expedientes ficticios revisados visualmente. output/ continúa ignorado. Los recursos de public/brand son públicos por diseño: PNG institucional entregado por el líder, marca propuesta del azor e icono original de Google; su procedencia se documenta. El original duplicado de la raíz se ignora para publicar una sola copia del PNG.
+
+No publicar GOOGLE_CLIENT_SECRET, tokens, códigos OAuth, cookies, capturas de accesos reales o exports de Cloud. El callback usa consultas sensibles: el inicio local desactiva access logs y el servidor institucional debe hacer lo mismo o redactarlos en su proxy. Los errores de base no imprimen parámetros personales. Consultar docs/ACCESO-INSTITUCIONAL.md antes de activar Google o vincular teléfonos reales.
+
 ## Antes de subir cambios
 
 ```powershell

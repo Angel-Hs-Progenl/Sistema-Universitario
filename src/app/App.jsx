@@ -9,6 +9,7 @@ import { Help, Privacy, Notifications } from "../modules/home/Information";
 const TitleLayout = lazy(() => import("../modules/titulacion/Layout"));
 const Workspace = lazy(() => import("../modules/titulacion/Workspace"));
 const Profile = lazy(() => import("../modules/titulacion/Profile"));
+const Account = lazy(() => import("../modules/auth/Account"));
 export default function App() {
   return (
     <AuthProvider>
@@ -32,6 +33,14 @@ export default function App() {
               />
               <Route path="acceso" element={<Login />} />
               <Route path="recuperar" element={<Recover />} />
+              <Route
+                path="cuenta"
+                element={
+                  <Protected>
+                    <Account />
+                  </Protected>
+                }
+              />
               <Route path="ayuda" element={<Help />} />
               <Route path="privacidad" element={<Privacy />} />
               <Route

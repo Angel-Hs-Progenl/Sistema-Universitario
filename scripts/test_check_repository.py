@@ -17,7 +17,9 @@ class RepositoryGuardTest(unittest.TestCase):
             (root / ".env.local").write_text("PRIVATE_CONFIG=example", encoding="utf-8")
             (root / "leak.txt").write_text(synthetic, encoding="utf-8")
             subprocess.run(["git", "-C", directory, "add", "."], check=True)
-            result = subprocess.run([sys.executable, str(SCANNER)], cwd=root, capture_output=True, text=True)
+            result = subprocess.run(
+                [sys.executable, str(SCANNER)], cwd=root, capture_output=True, text=True
+            )
             self.assertEqual(result.returncode, 1)
             self.assertIn("private-path", result.stdout)
             self.assertIn("github-token", result.stdout)
@@ -27,11 +29,36 @@ class RepositoryGuardTest(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="uto-repo-guard-") as directory:
             root = Path(directory)
             subprocess.run(["git", "init", "-q", directory], check=True)
-            (root / ".env.example").write_text("DATABASE_URL=postgresql://uto:change-me@localhost/uto", encoding="utf-8")
-            (root / "migration.sql").write_text("CREATE TABLE example (id integer);", encoding="utf-8")
+            (root / ".env.example").write_text(
+                "DATABASE_URL=postgresql://uto:change-me@localhost/uto",
+                encoding="utf-8",
+            )
+            (root / "migration.sql").write_text(
+                "CREATE TABLE example (id integer);", encoding="utf-8"
+            )
             subprocess.run(["git", "-C", directory, "add", "."], check=True)
-            result = subprocess.run([sys.executable, str(SCANNER)], cwd=root, capture_output=True, text=True)
+            result = subprocess.run(
+                [sys.executable, str(SCANNER)], cwd=root, capture_output=True, text=True
+            )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_blocks_oauth_exports_and_browser_traces(self):
+        with tempfile.TemporaryDirectory(prefix="uto-oauth-guard-") as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q", directory], check=True)
+            for name in [
+                "client_secret_example.json",
+                "token-example.json",
+                "storage-state.json",
+                "session.har",
+            ]:
+                (root / name).write_text("{}", encoding="utf-8")
+            subprocess.run(["git", "-C", directory, "add", "."], check=True)
+            result = subprocess.run(
+                [sys.executable, str(SCANNER)], cwd=root, capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(result.stdout.count("private-path"), 4)
 
 
 if __name__ == "__main__":

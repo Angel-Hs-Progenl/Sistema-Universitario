@@ -4,10 +4,12 @@ import argparse
 import getpass
 import json
 import os
-from sqlalchemy import select
+from sqlalchemy import select, delete
+from sqlalchemy.exc import IntegrityError
 from app.core.database import SessionLocal, DATA_DIR
-from app.core.models import User, uid
-from app.core.security import hash_password, ROLES
+from app.core.models import User, Session, AccountEvent, uid
+from app.core.security import hash_password, verify_password, ROLES
+from app.core.identity import institutional_email, normalize_phone
 from app.modules.titulacion.models import Application, Document, Event
 from app.modules.titulacion.domain import DOCUMENTS
 
@@ -26,7 +28,16 @@ def seed():
             ("egresado2", "Diego Hernández · Demo"),
         ]:
             email = f"{role}@demo.uto.local"
-            if db.scalar(select(User).where(User.email == email)):
+            existing = db.scalar(select(User).where(User.email == email))
+            if existing:
+                if role == "estudiante" and not existing.login_phone:
+                    existing.login_phone = "+12025550100"
+                    db.add(
+                        AccountEvent(
+                            user_id=existing.id,
+                            action="Vinculación ficticia del seed de desarrollo",
+                        )
+                    )
                 continue
             profile = {
                 "matricula": "202200184" if role == "estudiante" else "202200207",
@@ -42,6 +53,7 @@ def seed():
                 role=role if role != "egresado2" else "estudiante",
                 password=password,
                 profile=json.dumps(profile, ensure_ascii=False),
+                login_phone="+12025550100" if role == "estudiante" else None,
             )
             db.add(user)
             db.flush()
@@ -127,8 +139,10 @@ def create_user(args):
     if len(password) < 12 or len(password) > 128:
         raise SystemExit("La contraseña debe tener entre 12 y 128 caracteres.")
     email = args.email.strip().lower()
-    if "@" not in email:
-        raise SystemExit("Correo inválido.")
+    if not institutional_email(email):
+        raise SystemExit(
+            "Usa una cuenta del dominio utdeoriental.edu.mx. Para datos ficticios utiliza seed-demo."
+        )
     with SessionLocal() as db:
         if db.scalar(select(User).where(User.email == email)):
             raise SystemExit("Ya existe una cuenta con ese correo.")
@@ -144,6 +158,53 @@ def create_user(args):
     print("Cuenta creada.")
 
 
+def link_phone(args):
+    """Un operador autorizado confirma previamente la titularidad con la universidad."""
+    operator_password = getpass.getpass("Contraseña del administrador del portal: ")
+    try:
+        normalized = normalize_phone(args.phone) if args.phone else None
+    except ValueError as exc:
+        raise SystemExit(str(exc))
+    with SessionLocal() as db:
+        operator = db.scalar(
+            select(User).where(User.email == args.actor.strip().lower())
+        )
+        if (
+            not operator
+            or operator.role != "administrador"
+            or not verify_password(operator_password, operator.password)
+        ):
+            raise SystemExit("Operador no autorizado.")
+        user = db.scalar(
+            select(User)
+            .where(User.email == args.email.strip().lower())
+            .with_for_update()
+        )
+        if not user:
+            raise SystemExit("Cuenta no disponible.")
+        if os.getenv("APP_ENV") == "production" and not institutional_email(user.email):
+            raise SystemExit("La cuenta debe ser institucional.")
+        try:
+            user.login_phone = normalized
+            db.execute(delete(Session).where(Session.user_id == user.id))
+            db.add(
+                AccountEvent(
+                    user_id=user.id,
+                    actor_id=operator.id,
+                    action="Teléfono de acceso vinculado por operador"
+                    if normalized
+                    else "Teléfono de acceso desvinculado por operador",
+                )
+            )
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise SystemExit(
+                "No se pudo vincular: el número ya pertenece a otra cuenta."
+            )
+    print("Vinculación actualizada; sesiones anteriores revocadas.")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -152,8 +213,23 @@ if __name__ == "__main__":
     users.add_argument("--email", required=True)
     users.add_argument("--name", required=True)
     users.add_argument("--role", choices=ROLES, required=True)
+    phone = sub.add_parser(
+        "link-phone",
+        help="Vincular solo después de verificar titularidad institucional.",
+    )
+    phone.add_argument(
+        "--actor",
+        required=True,
+        help="Cuenta administradora que autoriza la operación.",
+    )
+    phone.add_argument("--email", required=True)
+    phone_group = phone.add_mutually_exclusive_group(required=True)
+    phone_group.add_argument("--phone")
+    phone_group.add_argument("--remove", action="store_true")
     args = parser.parse_args()
     if args.command == "seed-demo":
         seed()
-    else:
+    elif args.command == "create-user":
         create_user(args)
+    else:
+        link_phone(args)

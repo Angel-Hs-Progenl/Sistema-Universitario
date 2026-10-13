@@ -59,6 +59,9 @@ def public_user(u):
         "email": u.email,
         "role": u.role,
         "profile": json.loads(u.profile),
+        "display_name": u.display_name,
+        "login_phone": u.login_phone,
+        "google_linked": bool(u.google_sub),
     }
 
 

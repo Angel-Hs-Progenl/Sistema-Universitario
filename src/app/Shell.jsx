@@ -1,25 +1,14 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { ArrowUpRight, Bell, LogOut, Menu, X } from "lucide-react";
+import { ArrowUpRight, Bell, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./Auth";
 import { ROLES } from "../../shared/titulacion";
 import { MODULES } from "../../shared/navigation";
 import { Alert } from "../shared/ui";
 import { Breadcrumbs } from "./Navigation";
+import Brand from "../shared/Brand";
+import AccountMenu from "./AccountMenu";
 
-export function Brand() {
-  return (
-    <Link className="brand" to="/" aria-label="UT de Oriental, inicio">
-      <span className="brand-mark" aria-hidden="true">
-        UT<span>O</span>
-      </span>
-      <span>
-        <strong>UT de Oriental</strong>
-        <small>Sistema universitario</small>
-      </span>
-    </Link>
-  );
-}
 function AppNavigation({ role, onNavigate }) {
   return (
     <nav
@@ -131,25 +120,7 @@ export default function Shell() {
               >
                 <Menu size={19} />
               </button>
-              <div className="session-controls">
-                <div className="session-person">
-                  <span className="avatar" aria-hidden="true">
-                    {user.name.at(0)}
-                  </span>
-                  <span>
-                    <strong>{user.name.split(" ")[0]}</strong>
-                    <small>{ROLES[user.role]}</small>
-                  </span>
-                </div>
-                <button
-                  className="icon-button"
-                  aria-label="Cerrar sesión"
-                  disabled={exiting}
-                  onClick={exit}
-                >
-                  <LogOut size={17} />
-                </button>
-              </div>
+              <AccountMenu user={user} onLogout={exit} exiting={exiting} />
             </div>
           </header>
           <div className="app-column">

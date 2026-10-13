@@ -69,3 +69,11 @@ Impacto: Shell, rutas del home/acceso, navegación, estilos compartidos y docume
 12 de octubre de 2026. Autorizado por el líder en este chat: nueva investigación profunda de Laravel, rediseño de login e interior, textos concretos y reemplazo de la navegación lateral. Se conserva el contenido compacto del home que el líder indicó que le gustó. Este cambio actualiza la elección de sidebar y la ilustración/duración de CR-003.
 
 Impacto: Shell y CSS comunes, ilustración SVG original, encabezados y textos de Titulación, guías para equipos. Sin cambios en API, esquema, roles, estados o requisitos académicos. No se añaden bibliotecas, proveedores externos ni Laravel al backend. Investigación y alternativas gratuitas en ESTUDIO-LARAVEL.md. No se abrió una issue externa; este registro conserva la autorización y el alcance. Aceptación visual del líder e institucional pendientes.
+
+## Registro CR-005 · Azor, Google Workspace y menú de cuenta
+
+13 de octubre de 2026. Solicitado por el líder: marca del azor junto a UT de Oriental, giro desde el logo oficial entregado, acceso con Google institucional/teléfono, menú de perfil, capturas publicables e instrucciones para equipos. El líder confirmó Google Workspace y eligió teléfono vinculado con contraseña del portal; no SMS. El resto del diseño conserva CR-004.
+
+Impacto transversal autorizado: marca/Shell, cuenta y acceso, identidad/sesiones compartidas, migración aditiva 0003, dependencia oficial google-auth, logs, exclusiones de Git y documentación. Google requiere credenciales OAuth institucionales externas a esta entrega. No hay registro automático de usuarios, roles derivados de Google, SMS, cambio de estados académicos o suplencia de áreas. La vinculación de teléfono exige un operador administrador autenticado y confirmación previa de titularidad institucional.
+
+Artefactos: ACCESO-INSTITUCIONAL.md, INSTALACION.md, public/brand, docs/capturas, README y prompts revisados. Pruebas y límites en VALIDACION.md. La autorización del líder permite esta implementación; no sustituye aprobación del logo, procedimiento de vinculación, privacidad o implantación por la universidad.

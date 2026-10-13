@@ -145,3 +145,19 @@ El movimiento de trabajo es breve y de opacidad; no anima datos ficticios.
 Respeta prefers-reduced-motion. Reutiliza layout.css/tokens.css y los
 componentes de formulario, error, modal y permisos existentes.
 ```
+
+## Identidad y acceso comunes · CR-005
+
+```text
+Lee docs/ACCESO-INSTITUCIONAL.md y docs/INSTALACION.md. Reutiliza Brand,
+AccountMenu y la sesión de AuthProvider. Los módulos no definen otros logos,
+logins, menús de cuenta, cookies, roles o vinculaciones de Google/teléfono.
+El azor es la marca propuesta del portal; el PNG oficial no se modifica.
+La paleta permanece en tokens.css; los recursos originales del proveedor
+de acceso no definen nuevos colores para las pantallas del módulo.
+No uses el teléfono de contacto del perfil como credencial automática.
+No deduzcas roles de correos, matrículas o claims de Google. Usa current_user
+y verifica permisos en FastAPI. No simules Google habilitado sin OAuth real.
+Para evidencia usa solo cuentas ficticias; los screenshots seleccionados
+van a docs/capturas. No publiques .env, tokens, HAR o estados del navegador.
+```

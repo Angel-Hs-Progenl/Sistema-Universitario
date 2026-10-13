@@ -2,7 +2,7 @@
 
 La experiencia se centra en lo que una persona necesita hacer: encontrar un servicio, preparar un expediente y conocer el siguiente paso. El inicio es un selector privado y compacto de módulos; titulación es un expediente con acciones por contexto y una bandeja para el personal. Las estadísticas aparecen solo cuando ayudan a priorizar solicitudes.
 
-La identidad usa el nombre proporcionado por el líder. El monograma tipográfico UTO es temporal; no se afirma que sea el escudo oficial. La paleta está propuesta por el usuario y pendiente de autorización institucional. No se ha acreditado su pertenencia al manual gráfico de la UT.
+La identidad usa el nombre proporcionado por el líder. CR-005 incorpora el PNG oficial entregado y una marca vectorial original del azor propuesta para el portal. No sustituye el escudo ni se declara aprobada institucionalmente. La paleta está propuesta por el usuario; no se ha acreditado su pertenencia al manual gráfico de la UT.
 
 ## Paleta y contraste
 
@@ -65,3 +65,11 @@ Leer [AUDITORIA-DISENO.md](AUDITORIA-DISENO.md): investigación, diagnóstico de
 ## Marco público y privado · CR-004
 
 [ARQUITECTURA-UI.md](ARQUITECTURA-UI.md) define los contratos y [ESTUDIO-LARAVEL.md](ESTUDIO-LARAVEL.md) documenta la investigación. El home exige sesión y conserva Titulación y accesos por rol. Una navegación superior, migas debajo y pestañas locales sustituyen la sidebar anterior. El SVG de bienvenida termina su entrada a 1.7 s, permite repetición manual y queda estático con prefers-reduced-motion. Las pantallas de trabajo solo usan entrada de opacidad de 300 ms.
+
+## Marca y cuenta · CR-005
+
+Brand.jsx reserva un espacio de 44 px para el PNG oficial y el azor, sin mover los textos. En una carga nueva muestra primero el PNG, gira ambas caras y termina en el azor junto a UT de Oriental. La secuencia comienza después de cargar el PNG y termina aproximadamente a 1.9 s; no se repite al cambiar de módulo. Con movimiento reducido mantiene un cambio estático después de 900 ms.
+
+El header privado usa un avatar local como disparador de cuenta, con nombre/correo/rol dentro del desplegable. Se abre por clic o teclado; Escape devuelve el foco y los clics fuera cierran. Editar perfil cambia el nombre visible; no identidad legal, permisos o credenciales.
+
+El acceso conserva la imagen lateral, pero centra una columna con Google institucional y alternativas correo/teléfono. El botón utiliza el recurso original de Google y solo se habilita con configuración real de API. Los campos explican que la contraseña pertenece al portal. [Procedencia de recursos](../public/brand/README.md).

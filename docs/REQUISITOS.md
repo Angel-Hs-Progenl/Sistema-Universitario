@@ -85,3 +85,9 @@ Antes de desarrollar: acordar criterios, presupuesto, modalidad de selección, a
 | BASE-04 | No exponer secretos, contraseñas, expedientes o archivos internos en Git                                          |
 | BASE-05 | Migraciones versionadas y pruebas de permisos/aislamiento; cambios sujetos a revisión                             |
 | BASE-06 | Operación real requiere restauración probada, aviso de privacidad, responsables, soporte y validación del cliente |
+
+## Ampliación autorizada · CR-005
+
+BASE-07: logo oficial aportado, transición hacia marca propuesta del azor y menú de cuenta común accesible. BASE-08: Google Workspace del dominio exacto utdeoriental.edu.mx y usuarios prehabilitados, sin asignación automática de roles. BASE-09: acceso por teléfono explícitamente vinculado y contraseña del portal, independiente del dato de contacto; sin SMS. BASE-10: nombre visible editable sin modificar identidad académica. BASE-11: README de instalación, prompts y capturas ficticias seleccionadas para GitHub.
+
+Autorización: líder en este chat; confirmó Google Workspace y teléfono con contraseña. Google está implementado pero su activación y prueba real dependen de OAuth institucional. La propuesta gráfica y el procedimiento de vinculación siguen pendientes de aprobación institucional. Ver CASCADA.md y ACCESO-INSTITUCIONAL.md.

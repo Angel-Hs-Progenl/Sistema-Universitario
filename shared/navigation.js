@@ -49,6 +49,7 @@ export function breadcrumbsFor(pathname, authenticated, entityLabel) {
     "/ayuda": "Ayuda",
     "/privacidad": "Privacidad",
     "/notificaciones": "Notificaciones",
+    "/cuenta": "Mi cuenta",
   };
   if (pages[path]) return [root, { label: pages[path] }];
   const module = MODULES.find(

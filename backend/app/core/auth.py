@@ -16,7 +16,9 @@ from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session as DBSession
 from .database import get_db, DATA_DIR
-from .models import User, Session, Reset, Notification
+from .models import User, Session, Reset, Notification, AccountEvent
+from .identity import institutional_email, normalize_phone
+from .sessions import establish_session
 from .security import (
     current_user,
     hash_password,
@@ -32,7 +34,8 @@ router = APIRouter(prefix="/api/v1", tags=["Identidad"])
 
 
 class Login(BaseModel):
-    email: str = Field(max_length=254)
+    email: str | None = Field(default=None, max_length=254)
+    identifier: str | None = Field(default=None, max_length=254)
     password: str = Field(min_length=1, max_length=128)
 
 
@@ -63,32 +66,26 @@ def login(
     body: Login, request: Request, response: Response, db: DBSession = Depends(get_db)
 ):
     rate_limit(request, "login")
-    user = db.scalar(select(User).where(User.email == body.email.strip().lower()))
+    identifier = (body.identifier or body.email or "").strip().lower()
+    if "@" in identifier:
+        user = db.scalar(select(User).where(User.email == identifier))
+    else:
+        try:
+            phone = normalize_phone(identifier)
+        except ValueError:
+            phone = None
+        user = (
+            db.scalar(select(User).where(User.login_phone == phone)) if phone else None
+        )
+    if user and PRODUCTION and not institutional_email(user.email):
+        user = None
     # Same expensive operation for unknown accounts to reduce timing disclosure.
     if not user:
         hash_password(body.password)
-        raise HTTPException(401, "Correo o contraseña incorrectos.")
+        raise HTTPException(401, "Cuenta o contraseña incorrectas.")
     if not verify_password(body.password, user.password):
-        raise HTTPException(401, "Correo o contraseña incorrectos.")
-    raw, csrf = secrets.token_hex(32), secrets.token_hex(32)
-    db.execute(delete(Session).where(Session.expires < int(time.time())))
-    db.add(
-        Session(
-            token=digest(raw),
-            user_id=user.id,
-            csrf=csrf,
-            expires=int(time.time()) + 28800,
-        )
-    )
-    db.commit()
-    response.set_cookie(
-        "session",
-        raw,
-        httponly=True,
-        secure=PRODUCTION,
-        samesite="strict",
-        max_age=28800,
-    )
+        raise HTTPException(401, "Cuenta o contraseña incorrectas.")
+    csrf = establish_session(db, response, user, "Acceso con contraseña del portal")
     return {"user": public_user(user), "csrf": csrf}
 
 
@@ -105,9 +102,31 @@ def logout(
     db: DBSession = Depends(get_db),
 ):
     db.delete(request.state.session)
+    db.add(AccountEvent(user_id=user.id, actor_id=user.id, action="Cierre de sesión"))
     db.commit()
     response.delete_cookie("session")
     return {"ok": True}
+
+
+class AccountPreferences(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    display_name: str = Field(min_length=1, max_length=80)
+
+
+@router.put("/account")
+def update_account(
+    body: AccountPreferences,
+    user=Depends(current_user),
+    db: DBSession = Depends(get_db),
+):
+    user.display_name = body.display_name
+    db.add(
+        AccountEvent(
+            user_id=user.id, actor_id=user.id, action="Nombre visible actualizado"
+        )
+    )
+    db.commit()
+    return public_user(user)
 
 
 def deliver_reset(email, url):

@@ -64,7 +64,7 @@ El backend aplica permisos y propiedad de registros. Se comprueba extensión, fi
 
 ## Límites y decisiones pendientes
 
-El límite de intentos es local al proceso; para varios workers se necesita un límite compartido o gateway. La validación de encabezado del archivo no es un antivirus ni análisis integral de PDF/JPG. No hay SSO, MFA, cuotas globales de almacenamiento o entrega oficial de XML. El historial conserva actor/fecha/acción pero no es un registro inmutable frente a un administrador de base.
+El límite de intentos es local al proceso; para varios workers se necesita un límite compartido o gateway. La validación de encabezado del archivo no es un antivirus ni análisis integral de PDF/JPG. Google Workspace está implementado y pendiente de configurar/probar con la universidad; no hay MFA propio, cuotas globales de almacenamiento o entrega oficial de XML. El historial conserva actor/fecha/acción pero no es inmutable frente a un administrador de base.
 
 La UI administra una lista de hasta 500 solicitudes; antes de mayores volúmenes se requiere paginación y búsqueda del servidor. Los reportes completos, catálogos de carreras/modalidades, correcciones excepcionales y operación con múltiples campus necesitan requisitos aprobados.
 
@@ -73,3 +73,9 @@ Decisiones registradas: ADR-001 monolito modular; ADR-002 React/JS y FastAPI/Pyt
 ## Arquitectura de interfaz
 
 [ARQUITECTURA-UI.md](ARQUITECTURA-UI.md) distingue bienvenida pública, home autenticado y marco de trabajo. shared/navigation.js registra módulos/jerarquía; Navigation.jsx sirve migas comunes; Shell.jsx contiene la navegación global. El cliente preserva el destino de enlaces privados tras el acceso. Las autorizaciones se mantienen en FastAPI.
+
+## Identidad compartida · CR-005
+
+La arquitectura sigue siendo monolito modular. core/auth.py atiende acceso local, perfil y recuperación; core/identity.py concentra dominio y normalización; core/google_oauth.py gestiona Google OIDC; core/sessions.py crea la misma sesión para ambos métodos. core/models.py conserva usuarios, sesiones, vinculaciones, intentos OAuth y eventos de cuenta. No existe otro catálogo de roles o almacenamiento de sesión para Google.
+
+En frontend, shared/Brand.jsx sirve la identidad común; app/AccountMenu.jsx presenta la cuenta; modules/auth/Account.jsx permite editar el nombre visible. El perfil académico permanece en Titulación. La migración 0003 es aditiva. Los equipos consumen current_user/API y no implementan otro acceso. Configuración y protocolo de vinculación en [ACCESO-INSTITUCIONAL.md](ACCESO-INSTITUCIONAL.md); instalación en [INSTALACION.md](INSTALACION.md).

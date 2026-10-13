@@ -17,6 +17,14 @@ pgpass.conf
 .npmrc
 secrets/
 credentials/
+oauth-secrets/
+client_secret*.json
+token*.json
+*.har
+*.trace
+storage-state*.json
+browser-state*.json
+/logo ut de oriental.png
 *.pem
 *.key
 *.p12
