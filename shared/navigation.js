@@ -58,9 +58,24 @@ export function breadcrumbsFor(pathname, authenticated, entityLabel) {
   if (!module) return [root, { label: "Página no encontrada" }];
   if (path === module.path) return [root, { label: module.name }];
   const leaf = module.pages?.[path.slice(module.path.length + 1)];
+  const isEntity = /^expediente\/\d+$/.test(path.slice(module.path.length + 1));
+  if (!leaf && !isEntity) return [root, { label: "Página no encontrada" }];
   return [
     root,
     { label: module.name, path: module.path },
     { label: leaf || entityLabel || module.entityName || "Detalle" },
   ];
+}
+
+export function pageTitleFor(pathname, authenticated, role) {
+  const path = pathname.replace(/\/$/, "") || "/";
+  if (path === "/titulacion")
+    return `${role === "estudiante" ? "Mi expediente" : "Solicitudes"} · Titulación · UT de Oriental`;
+  const items = breadcrumbsFor(path, authenticated);
+  return `${
+    items
+      .slice(authenticated ? 1 : 0)
+      .map((item) => item.label)
+      .join(" · ") || "Inicio"
+  } · UT de Oriental`;
 }

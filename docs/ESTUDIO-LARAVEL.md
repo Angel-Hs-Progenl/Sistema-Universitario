@@ -1,5 +1,7 @@
 # Estudio de Laravel y dirección de interfaz · CR-004
 
+Actualización CR-008: se conserva la dirección de composición de este estudio, con una escena vectorial original de azor mensajero en lugar de los tres planos. La bienvenida representa todo el portal universitario. El movimiento vigente se controla por CR-006 desde el footer; las descripciones históricas siguientes no sustituyen esa preferencia. No se incorporan nuevos recursos o bibliotecas de Laravel.
+
 12 de octubre de 2026. Solicitado por el líder: profundizar en Laravel, rediseñar acceso e interior, sustituir la navegación lateral y mejorar textos. El home conserva su contenido compacto. Es una propuesta implementada, pendiente de revisión visual del líder y validación institucional.
 
 ## Qué se comprobó directamente

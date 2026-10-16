@@ -4,6 +4,7 @@ import {
   breadcrumbsFor,
   homeShortcuts,
   MODULES,
+  pageTitleFor,
 } from "../shared/navigation.js";
 
 test("Migas jerárquicas conservan regreso al módulo y la página actual", () => {
@@ -13,6 +14,44 @@ test("Migas jerárquicas conservan regreso al módulo y la página actual", () =
     { label: "Documentos" },
   ]);
   assert.equal(breadcrumbsFor("/titulacion/", true).length, 2);
+});
+
+test("Las pestañas distinguen tarea y rol sin incluir datos personales", () => {
+  assert.equal(
+    pageTitleFor("/titulacion", true, "estudiante"),
+    "Mi expediente · Titulación · UT de Oriental",
+  );
+  assert.equal(
+    pageTitleFor("/titulacion", true, "tesoreria"),
+    "Solicitudes · Titulación · UT de Oriental",
+  );
+  assert.equal(
+    pageTitleFor("/titulacion/documentos", true, "estudiante"),
+    "Titulación electrónica · Documentos · UT de Oriental",
+  );
+  assert.equal(
+    pageTitleFor("/", true, "estudiante"),
+    "Inicio · UT de Oriental",
+  );
+  assert.equal(
+    pageTitleFor("/recuperar", false),
+    "Acceso · Recuperar acceso · UT de Oriental",
+  );
+});
+
+test("Una ruta desconocida dentro del módulo no se presenta como expediente", () => {
+  for (const path of [
+    "/titulacion/inexistente",
+    "/titulacion/expediente/no-valido",
+  ])
+    assert.equal(
+      breadcrumbsFor(path, true).at(-1).label,
+      "Página no encontrada",
+    );
+  assert.equal(
+    breadcrumbsFor("/titulacion/expediente/2", true).at(-1).label,
+    "Expediente",
+  );
 });
 test("El folio del expediente procede de datos autorizados, no de inferir el ID", () => {
   const fallback = breadcrumbsFor("/titulacion/expediente/2", true);

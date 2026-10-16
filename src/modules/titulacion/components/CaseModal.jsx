@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Upload, Download, Check, X } from "lucide-react";
 import { api } from "../../../shared/api";
-import { Modal, Alert, BusyButton, ErrorSummary } from "../../../shared/ui";
+import {
+  Modal,
+  Alert,
+  BusyButton,
+  ErrorSummary,
+  Field,
+} from "../../../shared/ui";
 import { DOCUMENTS, STATES } from "../../../../shared/titulacion";
 export default function CaseModal({ modal, app, onClose, onDone }) {
   const [busy, setBusy] = useState(false),
@@ -23,6 +29,8 @@ export default function CaseModal({ modal, app, onClose, onDone }) {
           : STATES[modal.status],
       clearance: "Dictamen de Vinculación",
     };
+  const fieldError = (name) =>
+    error.fields?.find((item) => item.field === name)?.message;
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
@@ -121,60 +129,61 @@ export default function CaseModal({ modal, app, onClose, onDone }) {
             >
               <Download size={16} /> Descargar documento
             </a>
-            <label className="field">
-              Dictamen
-              <select
-                id="status"
-                name="status"
-                required
-                value={decision}
-                onChange={(e) => setDecision(e.target.value)}
-              >
-                <option value="" disabled>
-                  Seleccionar dictamen
-                </option>
-                <option value="validado">Validado</option>
-                <option value="rechazado">Requiere corrección</option>
-              </select>
-            </label>
-            <label className="field">
-              Observaciones
-              <textarea
-                id="note"
-                name="note"
-                required={decision === "rechazado"}
-                maxLength={1000}
-                placeholder="Obligatorias si requiere corrección."
-                rows={3}
-              />
-            </label>
+            <Field
+              as="select"
+              label="Dictamen"
+              name="status"
+              error={fieldError("status")}
+              required
+              value={decision}
+              onChange={(e) => setDecision(e.target.value)}
+            >
+              <option value="" disabled>
+                Seleccionar dictamen
+              </option>
+              <option value="validado">Validado</option>
+              <option value="rechazado">Requiere corrección</option>
+            </Field>
+            <Field
+              as="textarea"
+              label="Observaciones"
+              name="note"
+              error={fieldError("note")}
+              required={decision === "rechazado"}
+              maxLength={1000}
+              hint="Explica qué debe corregirse cuando el dictamen requiera corrección."
+              rows={3}
+            />
           </>
         )}
         {type === "clearance" && (
           <>
-            <label className="field">
-              Resultado
-              <select id="approved" name="approved" required defaultValue="">
-                <option value="" disabled>
-                  Seleccionar resultado
-                </option>
-                <option value="true">
-                  Liberar estadías y seguimiento de egresados
-                </option>
-                <option value="false">Mantener pendiente</option>
-              </select>
-            </label>
-            <label className="field">
-              Fundamento u observaciones *
-              <textarea
-                id="note"
-                name="note"
-                required
-                minLength={5}
-                maxLength={1000}
-                rows={4}
-              />
-            </label>
+            <Field
+              as="select"
+              label="Resultado"
+              name="approved"
+              error={fieldError("approved")}
+              required
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Seleccionar resultado
+              </option>
+              <option value="true">
+                Liberar estadías y seguimiento de egresados
+              </option>
+              <option value="false">Mantener pendiente</option>
+            </Field>
+            <Field
+              as="textarea"
+              label="Fundamento u observaciones"
+              name="note"
+              error={fieldError("note")}
+              required
+              minLength={5}
+              maxLength={1000}
+              rows={4}
+            />
           </>
         )}
         {type === "transition" && (
@@ -237,48 +246,41 @@ export default function CaseModal({ modal, app, onClose, onDone }) {
               </p>
             )}
             {modal.status === "tramite" && (
-              <label className="field">
-                Referencia de gestión institucional *
-                <input
-                  id="reference"
-                  name="reference"
-                  required
-                  maxLength={150}
-                />
-              </label>
+              <Field
+                label="Referencia de gestión institucional"
+                name="reference"
+                error={fieldError("reference")}
+                required
+                maxLength={150}
+              />
             )}
             {modal.status === "disponible" && (
-              <label className="field">
-                Indicaciones de entrega *
-                <textarea
-                  id="delivery"
-                  name="delivery"
-                  required
-                  maxLength={1000}
-                  rows={3}
-                />
-              </label>
+              <Field
+                as="textarea"
+                label="Indicaciones de entrega"
+                name="delivery"
+                error={fieldError("delivery")}
+                required
+                maxLength={1000}
+                rows={3}
+              />
             )}
             {modal.status !== "enviada" && (
-              <label className="field">
-                Observación{" "}
-                {["cancelado", "incompleta", "rechazada", "concluido"].includes(
-                  modal.status,
-                ) && "*"}
-                <textarea
-                  id="note"
-                  name="note"
-                  required={[
-                    "cancelado",
-                    "incompleta",
-                    "rechazada",
-                    "concluido",
-                  ].includes(modal.status)}
-                  minLength={5}
-                  maxLength={1000}
-                  rows={3}
-                />
-              </label>
+              <Field
+                as="textarea"
+                label="Observación"
+                name="note"
+                error={fieldError("note")}
+                required={[
+                  "cancelado",
+                  "incompleta",
+                  "rechazada",
+                  "concluido",
+                ].includes(modal.status)}
+                minLength={5}
+                maxLength={1000}
+                rows={3}
+              />
             )}
             {["tramite", "disponible"].includes(modal.status) && (
               <Alert type="info">

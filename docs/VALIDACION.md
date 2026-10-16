@@ -96,3 +96,46 @@ Limitaciones: Google Workspace real pendiente de cliente OAuth y validación ins
 - Desactivar aplica animationName=none inmediatamente; cambia el botón a Activar animaciones y muestra Animaciones desactivadas en la bienvenida. La elección se conserva al recargar y al navegar a Ayuda. Reactivar devuelve la preferencia a on.
 - Footer revisado a 320, 390, 768 y 1440 px: scrollWidth igual a clientWidth, sin desbordamiento global. La preferencia almacena únicamente on/off; no contiene sesiones ni expedientes.
 - Evidencia local en output/qa/animaciones-footer.png, excluida de Git. No se realizó una nueva auditoría completa de accesibilidad ni aceptación institucional.
+
+## Revisión CR-007 · Auditoría integral
+
+13 de octubre de 2026. Investigación, hallazgos y pendientes en REVISION-INTEGRAL.md. Se conservan arquitectura modular, paleta, bienvenida y preferencia de animaciones CR-006.
+
+- Siete pruebas npm aprobadas, formato Prettier y compilación final aprobados. Nuevas regresiones de títulos por tarea/rol y rutas desconocidas.
+- Suite completa PostgreSQL en uto_test: 42 pruebas aprobadas. La nueva regresión comprueba lista/detalle para cinco roles, minimización de identidad académica, nuevas instantáneas e instantánea heredada; la cuenta propia conserva sus preferencias. Tras el ajuste final del fallback CSV, dos pruebas relevantes de privacidad/exportación repetidas y aprobadas.
+- Tres pruebas del guard de repositorio aprobadas. El primer intento no pudo escribir los repositorios temporales dentro del sandbox; se repitieron con permisos adecuados, sin modificar las pruebas. Sigue la advertencia histórica de Starlette sobre su cliente de pruebas.
+- Navegador con los cinco roles ficticios: acceso/cierre, inicio, documentos, historial, cuenta, ayuda/privacidad/404, bandeja y expediente. Tesorería solo ofrece revisar su comprobante; Vinculación reúne estado y dictamen; Administración no ofrece dictamen de pago/liberación. No se guardaron dictámenes ni se cambiaron estados de los expedientes demo.
+- Perfil: envío de CURP inválida rechazado por FastAPI; foco en resumen, enlace enfoca curp, aria-invalid=true y ayuda/error vinculados. Los valores del formulario permanecen visibles. Dictamen inicia sin selección y elegir corrección hace obligatoria la observación con ayuda vinculada. Escape cierra y devuelve foco al disparador.
+- Navegación interna comprobada con foco en main y título específico. Menú móvil: Escape y foco de regreso a Abrir menú. Login fallido por teléfono ficticio muestra mensaje y enfoca el resumen; acceso rápido móvil enfoca portal-access.
+- A 320 px: inicio, resumen, documentos, historial, cuenta, avisos, ayuda, privacidad y ruta desconocida con un h1 y sin desbordamiento global. Resumen/documentos/perfil/cuenta/ayuda revisados también a 390/768/1440. Bandeja a 320/390/768/1440 sin overflow global; a 320 la tabla de 650 px se desplaza dentro de 281 px. Campos móviles a 16 px.
+- Se calculó contraste de tokens: secundario/marfil 5.54:1, secundario/blanco 5.99:1, error/blanco 7.57:1. No equivale a medir todos los estados o certificar accesibilidad.
+- Capturas revisadas para publicar: docs/capturas/solicitudes.png y expediente.png, con datos ficticios. Evidencia adicional en output/qa, ignorada. No se publica el índice temporal usado para revisar los archivos actuales.
+
+- Detalle directo del estudiante comprobado: conserva los documentos y el historial completo del expediente solicitado; las migas regresan al módulo.
+- Control sobre un índice temporal de los archivos actuales: 108 blobs, cero hallazgos. El índice real del usuario permanece sin preparar. El control no detecta todos los datos personales; se revisaron también diff y capturas.
+
+Límites: error inicial de avisos y enlaces por solicitud revisados en código; no se simuló caída de red ni se probó lector de pantalla. Quedan pendientes zoom real, alto contraste, otros navegadores, carga representativa, usabilidad con usuarios y aceptación institucional. No cambió el esquema ni se borraron instantáneas históricas o expedientes. No se realizaron commit o push.
+
+## Revisión CR-008 · Bienvenida de servicios universitarios
+
+13 de octubre de 2026. Siete pruebas npm, compilación y formato Prettier aprobados. Cambio de presentación: sin nuevas dependencias, backend, modelos o permisos; no se repitió la suite PostgreSQL en esta revisión.
+
+- Titular Servicios de tu universidad, contexto Portal universitario y mensaje para trámites/evaluaciones/apoyos. Una nota distingue Titulación disponible de las próximas etapas. No se añadieron módulos o accesos ficticios al inicio privado.
+- Ilustración SVG original de azor entregando un documento en una bandeja, sobre una base isométrica. Usa tokens existentes, sin recursos remotos, sellos o datos personales. El SVG es decorativo, con aria-hidden en el contenedor y focusable=false.
+- Navegador: Repetir inicia azor-arrive y document-delivery, con desplazamiento inicial de la hoja; desactivar en el footer elimina ambas animaciones y deja la composición final visible. La elección se conserva al recargar. Se reactivó al terminar. Entrada finita de hasta 1.95 s; el formulario no depende de su finalización.
+- Bienvenida a 320/390/768/1440 px: clientWidth y scrollWidth iguales, con un h1 y formulario presente. El acceso rápido móvil enfoca portal-access. Se restauró el tamaño normal del navegador tras las comprobaciones.
+- Capturas anónimas revisadas: docs/capturas/acceso.png y acceso-movil.png actualizadas para README. Copias locales en output/qa/bienvenida-cr008*.png, ignoradas.
+
+La coevaluación/autoevaluación por parcial queda registrada como necesidad futura del líder; faltan especificaciones académicas y desarrollo. No se cambiaron reglas institucionales ni se declara aceptación o producción. Los cambios de esta revisión permanecen sin commit ni push.
+
+## Revisión CR-009 · Anatomía del azor y rótulo
+
+13 de octubre de 2026. Siete pruebas npm, compilación y formato Prettier aprobados. Solo cambia la ilustración del ave y la posición del rótulo; no se repitió la suite de backend al no cambiar su código.
+
+- Investigación: fichas de SEO/BirdLife y Cornell Lab; fotografías observadas en la galería pública de Cornell. Fuentes en DISENO.md. No se descargaron ni incorporaron fotografías o ilustraciones ajenas al repositorio.
+- Azor vectorial original separado en Goshawk.jsx: alas más anchas y de contorno redondeado, cola larga barrada, pecho claro barrado, ceja clara, cabeza compacta, pico curvo y garras articuladas. Se conserva la interpretación de color con tokens y la animación compartida.
+- UT DE ORIENTAL centrado en la cara frontal de la plataforma: sus extremos quedan aproximadamente en x=219 y x=328 del viewBox, dentro de la cara x=150..397. Los bordes superior/inferior del rótulo quedan a 5.13 y 22.87 unidades de la línea superior, dentro de los 28 de altura de la cara. Comprobación por límites renderizados, pendiente y escala SVG, además de inspección visual.
+- Navegador: 320/390/768/1440 px sin desbordamiento global. Desactivar animaciones produce animationName=none y opacidad 1 del ave; se reactivaron al terminar. Se restauró el tamaño normal del navegador.
+- Capturas anónimas revisadas de escritorio/móvil actualizadas en docs/capturas/acceso.png y acceso-movil.png. Copias locales en output/qa/azor-cr009*.png, ignoradas. El resto de la composición, documentos, bandeja, login y logo del header se conserva.
+
+Propuesta gráfica pendiente de revisión del líder; no se declara identidad zoológica oficial de la mascota, aceptación institucional ni validación de producción. Sin commit o push.

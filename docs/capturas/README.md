@@ -22,4 +22,14 @@ Capturas de validación local, 13 de octubre de 2026. Todas las cuentas, teléfo
 
 ![Acceso a 390 px](acceso-movil.png)
 
-La ilustración y el giro respetan movimiento reducido; las capturas son estáticas. Los archivos de este directorio son la evidencia seleccionada para el README. Pruebas adicionales y capturas sin revisar permanecen en output/, excluido de Git.
+La preferencia vigente es CR-006: animaciones activadas inicialmente, con control en el footer. Las capturas son estáticas. Acceso y acceso móvil muestran CR-008/009: bienvenida común, anatomía del azor revisada y rótulo centrado, con aclaración de servicios disponibles/futuros. Inicio, menú y perfil corresponden a CR-005. Los archivos de este directorio son evidencia ficticia seleccionada para publicar. Pruebas adicionales y capturas sin revisar permanecen en output/, excluido de Git.
+
+## Revisión integral · CR-007
+
+Bandeja con etiquetas persistentes, conteo de resultados y filtros. Cuenta administradora ficticia; no obtiene permisos de Tesorería o Vinculación.
+
+![Solicitudes revisadas](solicitudes.png)
+
+Resumen del estudiante, con tareas de preparación y menos instrucciones repetidas.
+
+![Expediente revisado](expediente.png)

@@ -1,5 +1,7 @@
 # Prompts comunes para trabajar con IA
 
+CR-007: consulta docs/REVISION-INTEGRAL.md antes de diseñar una vista. Conserva títulos de pestaña y carga dentro del Shell, etiquetas visibles, ayudas/errores vinculados con Field y foco con ErrorSummary. No confundas fallo de consulta con resultado vacío, ni escribas botones como si fueran estados. Cada dato o bloque debe servir a la tarea de su rol; justifica métricas y elimina información repetida. No expongas metadata de acceso dentro de contratos académicos.
+
 CR-006: las animaciones están activas inicialmente y se controlan desde el footer. Reutiliza MotionProvider/useMotionPreference/useReducedMotion. No añadas detección automática del sistema operativo o un almacenamiento distinto por módulo; el usuario puede desactivar todo el movimiento con la preferencia común. localStorage solo contiene on/off de apariencia; nunca sesiones o expedientes.
 
 Estos prompts son instrucciones de colaboración para los equipos; no crean un skill ni reemplazan el control del líder. Copia el bloque común y el bloque de la tarea. Da a la IA acceso a los archivos citados; no pegues expedientes reales ni secretos. Pide evidencia observable y revisa los resultados antes del PR.

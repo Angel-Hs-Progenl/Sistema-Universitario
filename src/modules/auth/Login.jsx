@@ -9,7 +9,13 @@ import {
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import WelcomeArt from "./WelcomeArt";
 import { useAuth } from "../../app/Auth";
-import { Alert, Field, BusyButton, useAsync } from "../../shared/ui";
+import {
+  Alert,
+  Field,
+  BusyButton,
+  ErrorSummary,
+  useAsync,
+} from "../../shared/ui";
 import { api } from "../../shared/api";
 export default function Login() {
   const { login, user } = useAuth(),
@@ -37,7 +43,7 @@ export default function Login() {
       await login(values);
       navigate(location.state?.from || "/", { replace: true });
     } catch (e) {
-      setError(e.message);
+      setError(e);
     } finally {
       setBusy(false);
     }
@@ -46,21 +52,39 @@ export default function Login() {
   return (
     <div className="container auth-layout auth-conversational">
       <aside className="auth-story">
+        <a
+          className="auth-jump text-link"
+          href="#portal-access"
+          onClick={(event) => {
+            event.preventDefault();
+            document.getElementById("portal-access")?.focus();
+          }}
+        >
+          Ir al inicio de sesión <ArrowRight size={16} />
+        </a>
         <span className="section-index">
-          SERVICIOS ESCOLARES / UT DE ORIENTAL
+          PORTAL UNIVERSITARIO / UT DE ORIENTAL
         </span>
         <h2>
-          Tu titulación,
+          Servicios de tu
           <br />
-          <span>paso a paso.</span>
+          <span>universidad.</span>
         </h2>
         <p>
-          Integra tus documentos, atiende observaciones y consulta el avance de
-          tu expediente.
+          Un espacio para tus trámites, evaluaciones y solicitudes de apoyo.
+        </p>
+        <p className="welcome-availability">
+          Por ahora, Titulación electrónica. Evaluaciones y becas se
+          incorporarán por etapas.
         </p>
         <WelcomeArt />
       </aside>
-      <section className="auth-form">
+      <section
+        className="auth-form"
+        id="portal-access"
+        tabIndex={-1}
+        aria-labelledby="access-title"
+      >
         <img
           className="login-azor"
           src="/brand/azor.svg"
@@ -68,9 +92,10 @@ export default function Login() {
           width="38"
           height="38"
         />
-        <h1>Continúa en tu portal</h1>
+        <h1 id="access-title">Continúa en tu portal</h1>
         <p>Para estudiantes y personal de la UT de Oriental.</p>
-        <Alert>{error || oauthErrors[params.get("oauth_error")]}</Alert>
+        <ErrorSummary error={error} title="No se pudo iniciar sesión" />
+        <Alert>{oauthErrors[params.get("oauth_error")]}</Alert>
         {options.data?.google_enabled ? (
           <a
             className="google-signin"
@@ -129,6 +154,7 @@ export default function Login() {
               method === "email" ? "Correo institucional" : "Teléfono vinculado"
             }
             name="identifier"
+            error={error.fields?.find((e) => e.field === "identifier")?.message}
             type={method === "email" ? "email" : "tel"}
             placeholder={
               method === "email"
@@ -148,6 +174,7 @@ export default function Login() {
             <Field
               label="Contraseña del portal"
               name="password"
+              error={error.fields?.find((e) => e.field === "password")?.message}
               type={show ? "text" : "password"}
               autoComplete="current-password"
               required
@@ -170,7 +197,7 @@ export default function Login() {
             busy={busy}
             busyText="Ingresando…"
           >
-            Continuar <ArrowRight size={18} />
+            Iniciar sesión <ArrowRight size={18} />
           </BusyButton>
         </form>
         <div className="auth-help">
@@ -232,7 +259,7 @@ export function Recover() {
       <p>
         {token
           ? "Usa al menos 12 caracteres."
-          : "Te enviaremos instrucciones al correo de tu cuenta."}
+          : "Solicita un enlace para restablecer la contraseña del portal. Usa el correo de tu cuenta institucional."}
       </p>
       <Alert>{error}</Alert>
       {message ? (

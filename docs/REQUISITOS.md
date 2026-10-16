@@ -91,3 +91,11 @@ Antes de desarrollar: acordar criterios, presupuesto, modalidad de selección, a
 BASE-07: logo oficial aportado, transición hacia marca propuesta del azor y menú de cuenta común accesible. BASE-08: Google Workspace del dominio exacto utdeoriental.edu.mx y usuarios prehabilitados, sin asignación automática de roles. BASE-09: acceso por teléfono explícitamente vinculado y contraseña del portal, independiente del dato de contacto; sin SMS. BASE-10: nombre visible editable sin modificar identidad académica. BASE-11: README de instalación, prompts y capturas ficticias seleccionadas para GitHub.
 
 Autorización: líder en este chat; confirmó Google Workspace y teléfono con contraseña. Google está implementado pero su activación y prueba real dependen de OAuth institucional. La propuesta gráfica y el procedimiento de vinculación siguen pendientes de aprobación institucional. Ver CASCADA.md y ACCESO-INSTITUCIONAL.md.
+
+## Aclaración de plataforma y necesidades futuras · CR-008
+
+13 de octubre de 2026. El líder indica expresamente que la plataforma contempla también coevaluación y autoevaluación de clase cada parcial, además de evaluación docente, Becas y Titulación. Esta necesidad procede del chat; no se atribuye al documento fuente de evaluación docente.
+
+Nombre provisional del alcance: Coevaluación y autoevaluación de clase. Antes de desarrollar se deben definir responsables, asignaciones por grupo/asignatura/parcial, cuestionarios o rúbricas, escalas, cálculo, anonimato, visibilidad y publicación de resultados, correcciones y retención. No existen rutas, tablas, pantallas o módulos habilitados para esta función en la entrega actual.
+
+La bienvenida pública utiliza el contexto general Servicios de tu universidad. Los módulos operativos continúan limitados a Titulación electrónica; la evaluación docente, esta nueva necesidad y Becas se integrarán por etapas con sus requisitos aprobados. La amplitud del mensaje no autoriza implementar decisiones académicas sin especificación.

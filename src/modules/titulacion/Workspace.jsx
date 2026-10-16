@@ -4,7 +4,7 @@ import CaseModal from "./components/CaseModal";
 import PageHeading from "./components/PageHeading";
 import StudentTasks from "./components/StudentTasks";
 import { useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowRight,
   Plus,
@@ -22,15 +22,28 @@ import { api, date } from "../../shared/api";
 import { Badge, Alert, BusyButton, useAsync } from "../../shared/ui";
 import {
   DOCUMENTS,
-  STATES,
   TRANSITIONS,
   EDITABLE,
   NEXT,
   canReview,
 } from "../../../shared/titulacion";
 
+const transitionActions = {
+  enviada: "Revisar y enviar",
+  revision: "Iniciar revisión",
+  incompleta: "Solicitar documentos faltantes",
+  rechazada: "Devolver para corrección",
+  validada: "Validar expediente",
+  proceso: "Iniciar gestión de titulación",
+  tramite: "Registrar título en trámite",
+  disponible: "Registrar disponibilidad del título",
+  concluido: "Registrar entrega y concluir",
+  cancelado: "Cancelar solicitud",
+};
+
 export default function Workspace() {
   const { user } = useAuth(),
+    navigate = useNavigate(),
     location = useLocation(),
     { id } = useParams();
   const student = user.role === "estudiante",
@@ -49,6 +62,10 @@ export default function Workspace() {
     state.setError("");
     try {
       await api("/titulacion/applications", { method: "POST" });
+      if (id) {
+        navigate("/titulacion");
+        return;
+      }
       await state.refresh();
     } catch (e) {
       state.setError(e.message);
@@ -128,9 +145,7 @@ export default function Workspace() {
         d.status === "validado" &&
         DOCUMENTS.find((k) => k.id === d.kind)?.required,
     ).length;
-  const areaTotal = ["tesoreria", "vinculacion"].includes(user.role) ? 1 : 7;
-  const areaValid =
-    user.role === "vinculacion" ? (app.clearance ? 1 : 0) : valid;
+  const requiredTotal = DOCUMENTS.filter((doc) => doc.required).length;
   const docsOnly = view === "documentos",
     timelineOnly = view === "seguimiento";
   return (
@@ -164,7 +179,7 @@ export default function Workspace() {
           ? docsOnly
             ? "Adjunta archivos legibles y consulta las observaciones de cada área."
             : timelineOnly
-              ? "Consulta cuándo cambió tu solicitud, quién la atendió y qué se registró."
+              ? "Consulta las fechas, los cambios de estado y las observaciones registradas."
               : EDITABLE.includes(app.status)
                 ? "Completa tu expediente antes de enviarlo a Servicios Escolares."
                 : "Consulta el estado de tu solicitud y las indicaciones de Servicios Escolares."
@@ -183,39 +198,40 @@ export default function Workspace() {
           <span>Actualizada el {date(app.updated_at)}</span>
         </div>
       </div>
-      {!docsOnly && (
-        <div className="next-step">
-          <span className="next-step-icon">
-            <ArrowRight size={21} />
-          </span>
-          <div>
-            <strong>
-              {student ? "Tu siguiente paso" : "Orientación para el egresado"}
-            </strong>
-            <p>{NEXT[app.status]}</p>
-            {student && EDITABLE.includes(app.status) && (
-              <Link className="text-link" to="/titulacion/documentos">
-                Revisar documentos pendientes <ArrowRight size={14} />
-              </Link>
-            )}
-            {app.delivery && (
-              <p className="delivery-note">
-                Indicaciones de entrega: {app.delivery}
-              </p>
-            )}
+      {!docsOnly &&
+        ((student && !EDITABLE.includes(app.status)) || app.delivery) && (
+          <div className="next-step">
+            <span className="next-step-icon">
+              <ArrowRight size={21} />
+            </span>
+            <div>
+              <strong>
+                {student ? "Tu siguiente paso" : "Orientación para el egresado"}
+              </strong>
+              <p>{NEXT[app.status]}</p>
+              {student && EDITABLE.includes(app.status) && (
+                <Link className="text-link" to="/titulacion/documentos">
+                  Revisar documentos pendientes <ArrowRight size={14} />
+                </Link>
+              )}
+              {app.delivery && (
+                <p className="delivery-note">
+                  Indicaciones de entrega: {app.delivery}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
       {timelineOnly ? (
         <Timeline app={app} />
       ) : (
         <>
-          {student && !docsOnly && app.status !== "cancelado" && (
+          {student && !docsOnly && EDITABLE.includes(app.status) && (
             <StudentTasks app={app} />
           )}
           {!docsOnly && (
             <div
-              className={`case-overview ${student && EDITABLE.includes(app.status) ? "preparation-overview" : ""}`}
+              className={`case-overview ${(student && EDITABLE.includes(app.status)) || user.role === "tesoreria" ? "preparation-overview" : ""}`}
             >
               <section className="panel">
                 <div className="panel-heading">
@@ -272,59 +288,71 @@ export default function Workspace() {
                     )}
                 </dl>
               </section>
-              {(!student || !EDITABLE.includes(app.status)) && (
-                <section className="progress-panel">
-                  <div className="panel-heading">
-                    <h2>
-                      {user.role === "tesoreria"
-                        ? "Validación de pago"
-                        : user.role === "vinculacion"
+              {user.role !== "tesoreria" &&
+                (!student || !EDITABLE.includes(app.status)) && (
+                  <section className="progress-panel">
+                    <div className="panel-heading">
+                      <h2>
+                        {user.role === "vinculacion"
                           ? "Liberación de Vinculación"
                           : "Revisión institucional"}
-                    </h2>
-                    <ShieldCheck size={19} />
-                  </div>
-                  <div className="progress-number">
-                    {areaValid}
-                    <span> / {areaTotal}</span>
-                  </div>
-                  <p>
-                    {user.role === "vinculacion"
-                      ? "liberación registrada"
-                      : user.role === "tesoreria"
-                        ? "comprobante validado"
-                        : "documentos obligatorios validados"}
-                  </p>
-                  <progress
-                    max={areaTotal}
-                    value={areaValid}
-                    aria-label={`${areaValid} de ${areaTotal} validaciones ${areaTotal === 1 ? "de tu área" : "del expediente"}`}
-                  />
-                  <div className="clearance-status">
-                    <span>
-                      {app.clearance ? (
-                        <CircleCheck size={18} />
-                      ) : (
-                        <Clock3 size={18} />
-                      )}
-                    </span>
-                    <div>
-                      <strong>Vinculación</strong>
-                      <p>
-                        {app.clearance
-                          ? "Estadías y seguimiento liberados"
-                          : "Liberación pendiente"}
-                      </p>
-                      {app.clearance_note && (
-                        <small>{app.clearance_note}</small>
-                      )}
+                      </h2>
+                      <ShieldCheck size={19} />
                     </div>
-                  </div>
-                </section>
-              )}
+                    {user.role !== "vinculacion" && (
+                      <>
+                        <div className="progress-number">
+                          {valid}
+                          <span> / {requiredTotal}</span>
+                        </div>
+                        <p>documentos obligatorios validados</p>
+                        <progress
+                          max={requiredTotal}
+                          value={valid}
+                          aria-label={`${valid} de ${requiredTotal} documentos obligatorios validados`}
+                        />
+                      </>
+                    )}
+                    <div className="clearance-status">
+                      <span>
+                        {app.clearance ? (
+                          <CircleCheck size={18} />
+                        ) : (
+                          <Clock3 size={18} />
+                        )}
+                      </span>
+                      <div>
+                        <strong>Vinculación</strong>
+                        <p>
+                          {app.clearance
+                            ? "Estadías y seguimiento liberados"
+                            : "Liberación pendiente"}
+                        </p>
+                        {app.clearance_note && (
+                          <small>{app.clearance_note}</small>
+                        )}
+                      </div>
+                    </div>
+                    {user.role === "vinculacion" &&
+                      app.status === "revision" && (
+                        <div className="clearance-action">
+                          <p>
+                            Registra el fundamento de la liberación de estadías
+                            y seguimiento de egresados.
+                          </p>
+                          <button
+                            className="button button-primary"
+                            onClick={() => setModal({ type: "clearance" })}
+                          >
+                            Registrar dictamen
+                          </button>
+                        </div>
+                      )}
+                  </section>
+                )}
             </div>
           )}
-          {user.role !== "vinculacion" && (!student || docsOnly) && (
+          {user.role !== "vinculacion" && (!student || docsOnly || id) && (
             <section className="panel documents-panel">
               <div className="panel-heading">
                 <div>
@@ -421,83 +449,64 @@ export default function Workspace() {
               Continuar al resumen <ArrowRight size={16} />
             </Link>
           )}
-          {!student &&
-            user.role === "vinculacion" &&
-            app.status === "revision" && (
-              <section className="panel form-panel">
-                <h2>Validación de Vinculación</h2>
-                <p>
-                  Confirma la conclusión de estadías y el seguimiento de
-                  egresados. Registra el fundamento de la liberación.
-                </p>
-                <button
-                  className="button button-primary"
-                  onClick={() => setModal({ type: "clearance" })}
-                >
-                  Registrar dictamen
-                </button>
-              </section>
-            )}
           {!docsOnly && (
             <>
-              <div className="case-action-bar">
-                <div>
-                  <strong>
-                    {student
-                      ? EDITABLE.includes(app.status)
-                        ? "Revisa antes de enviar"
-                        : "Solicitud registrada"
-                      : "Control del expediente"}
-                  </strong>
-                  <p>
-                    {student
-                      ? EDITABLE.includes(app.status)
-                        ? "Verifica tus datos y documentos antes de enviar."
-                        : "Consulta el estado y las observaciones en el historial."
-                      : "Cada cambio quedará registrado en el historial."}
-                  </p>
-                </div>
-                <div className="action-buttons">
-                  {student && app.status === "cancelado" && (
-                    <BusyButton
-                      busy={busy}
-                      className="button button-primary"
-                      onClick={create}
-                    >
-                      Crear nueva solicitud
-                    </BusyButton>
-                  )}
-                  {(TRANSITIONS[app.status] || [])
-                    .filter((s) =>
-                      student
-                        ? EDITABLE.includes(app.status) &&
-                          ["enviada", "cancelado"].includes(s)
-                        : ["escolares", "administrador"].includes(user.role) &&
-                          s !== "enviada",
-                    )
-                    .map((s) => (
-                      <button
-                        key={s}
-                        className={`button ${s === "cancelado" ? "button-quiet" : s === "incompleta" || s === "rechazada" ? "button-secondary" : "button-primary"}`}
-                        onClick={() =>
-                          setModal({ type: "transition", status: s })
-                        }
+              {(student ||
+                ["escolares", "administrador"].includes(user.role)) && (
+                <div className="case-action-bar">
+                  <div>
+                    <strong>
+                      {student
+                        ? EDITABLE.includes(app.status)
+                          ? "Revisa antes de enviar"
+                          : app.status === "cancelado"
+                            ? "Solicitud cancelada"
+                            : "Solicitud registrada"
+                        : "Control del expediente"}
+                    </strong>
+                    <p>
+                      {student
+                        ? EDITABLE.includes(app.status)
+                          ? "Verifica tus datos y documentos antes de enviar."
+                          : "Consulta el estado y las observaciones en el historial."
+                        : "Cada cambio quedará registrado en el historial."}
+                    </p>
+                  </div>
+                  <div className="action-buttons">
+                    {student && app.status === "cancelado" && (
+                      <BusyButton
+                        busy={busy}
+                        className="button button-primary"
+                        onClick={create}
                       >
-                        {s === "enviada"
-                          ? "Revisar y enviar"
-                          : s === "revision"
-                            ? "Iniciar revisión"
-                            : s === "validada"
-                              ? "Validar expediente"
-                              : s === "cancelado"
-                                ? "Cancelar solicitud"
-                                : STATES[s]}
-                        {s !== "cancelado" && <ArrowRight size={15} />}
-                      </button>
-                    ))}
+                        Crear nueva solicitud
+                      </BusyButton>
+                    )}
+                    {(TRANSITIONS[app.status] || [])
+                      .filter((s) =>
+                        student
+                          ? EDITABLE.includes(app.status) &&
+                            ["enviada", "cancelado"].includes(s)
+                          : ["escolares", "administrador"].includes(
+                              user.role,
+                            ) && s !== "enviada",
+                      )
+                      .map((s) => (
+                        <button
+                          key={s}
+                          className={`button ${s === "cancelado" ? "button-quiet" : s === "incompleta" || s === "rechazada" ? "button-secondary" : "button-primary"}`}
+                          onClick={() =>
+                            setModal({ type: "transition", status: s })
+                          }
+                        >
+                          {transitionActions[s]}
+                          {s !== "cancelado" && <ArrowRight size={15} />}
+                        </button>
+                      ))}
+                  </div>
                 </div>
-              </div>
-              <Timeline app={app} limit={student ? 3 : undefined} />
+              )}
+              <Timeline app={app} limit={student && !id ? 3 : undefined} />
             </>
           )}
         </>

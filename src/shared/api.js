@@ -35,13 +35,30 @@ export async function api(path, options = {}) {
       domicilio: "domicilio",
       email: "correo electrónico",
       password: "contraseña",
+      identifier: "correo institucional o teléfono vinculado",
+      display_name: "nombre visible",
       note: "observación",
       reference: "referencia institucional",
       delivery: "indicaciones de entrega",
     };
+    const instructions = {
+      name: "Escribe tu nombre completo, entre 3 y 150 caracteres.",
+      matricula:
+        "Escribe una matrícula de 3 a 30 caracteres. Usa solo letras, números o guiones.",
+      curp: "Revisa los 18 caracteres de tu CURP: letras en mayúsculas, fecha y dígitos tal como aparecen en tu constancia.",
+      carrera: "Escribe el nombre de tu carrera, entre 3 y 150 caracteres.",
+      generacion:
+        "Escribe el año de ingreso y egreso con el formato AAAA-AAAA; por ejemplo, 2022-2026.",
+      telefono:
+        "Escribe un teléfono de 10 a 20 caracteres. Puedes usar +, espacios, paréntesis y guiones.",
+      domicilio: "Escribe tu domicilio completo, entre 10 y 400 caracteres.",
+      display_name: "Escribe un nombre visible de 1 a 80 caracteres.",
+    };
     const fieldErrors = data.errors?.map((e) => ({
       field: e.field,
-      message: `Revisa ${labels[e.field] || "este campo"}. El dato no cumple el formato solicitado.`,
+      message:
+        instructions[e.field] ||
+        `Revisa ${labels[e.field] || "este campo"}. El dato no cumple el formato solicitado.`,
     }));
     const fields = fieldErrors?.map((e) => e.message).join(" ");
     const error = new Error(

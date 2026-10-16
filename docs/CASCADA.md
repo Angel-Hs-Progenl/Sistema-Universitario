@@ -83,3 +83,27 @@ Artefactos: ACCESO-INSTITUCIONAL.md, INSTALACION.md, public/brand, docs/capturas
 13 de octubre de 2026. El líder solicita activarlas inicialmente y ofrecer su desactivación en el footer. Se reemplaza la detección automática de prefers-reduced-motion por una preferencia compartida de apariencia, persistida como on/off. El control está disponible sin sesión y dentro del portal; desactiva movimiento sin cambiar tareas, permisos o datos.
 
 Impacto: MotionProvider, hook de movimiento, Shell, CSS y guías. Sin nuevas dependencias ni cambios de backend/modelo. Se conserva el giro estático al desactivar. La solicitud del líder autoriza este cambio; la validación institucional general sigue pendiente.
+
+## Registro CR-007 · Revisión integral y correcciones
+
+13 de octubre de 2026. El líder solicita analizar e investigar diseño, textos, estructura, navegación, accesibilidad y usabilidad. Se conservan bienvenida, paleta, home compacto y navegación horizontal. Alcance técnico: títulos, carga dentro del Shell, errores de campo, filtros/avisos, acciones precisas, reducción de repetición y representación por área.
+
+Se detecta metadata de cuenta innecesaria en el contrato del expediente. Se limita su respuesta y las nuevas instantáneas a identidad académica; se conserva el historial y se añade regresión para cinco roles. Sin cambio de modelo, migración, permisos o decisiones institucionales nuevas.
+
+Investigación, correcciones y pendientes: REVISION-INTEGRAL.md. Requisitos: BASE-01/03/04/05 y TIT-02/03/09/10/11/12/13/15. Autorización del líder para esta revisión técnica en el chat; no equivale a aprobación institucional ni cierre formal de fase.
+
+## Registro CR-008 · Bienvenida multimódulo y azor mensajero
+
+13 de octubre de 2026. El líder aclara que la plataforma abarcará Titulación, evaluación docente, coevaluación/autoevaluación de clase por parcial y Becas. Solicita corregir el titular que limitaba el portal a Titulación y reorganizar la ilustración como un azor entregando documentos, conservando la dirección visual inspirada en Laravel.
+
+Cambio autorizado de presentación: título Servicios de tu universidad, contexto Portal universitario y escena SVG original de azor, documento y bandeja sobre plataforma isométrica. La bienvenida identifica Titulación como disponible y evaluaciones/becas como futuras. Se conserva repetición y desactivación del footer; sin dependencias nuevas.
+
+La necesidad de coevaluación/autoevaluación se registra para análisis posterior, sin inventar cuestionarios, rúbricas, permisos, cálculos o fechas. No se implementan ni habilitan módulos nuevos, ni se modifican las reglas de Titulación, API, modelos o autenticación. Alcance transversal revisado por indicación del líder; aceptación institucional general pendiente.
+
+## Registro CR-009 · Azor y posición del rótulo
+
+13 de octubre de 2026. El líder solicita investigar cómo es un azor y rediseñar únicamente el ave de la bienvenida; indica que le gusta el resto de la ilustración y pide corregir UT DE ORIENTAL. Se consultan SEO/BirdLife y Cornell Lab, con observación de fotografías en la galería pública de Cornell.
+
+Cambio de presentación autorizado: dibujo vectorial original en Goshawk.jsx con alas anchas de extremos redondeados, cola barrada larga, ceja clara, pico curvo, pecho claro barrado y garras articuladas. El rótulo se centra dentro de la cara frontal y sigue su perspectiva. Se conservan plataforma, bandeja, documentos, logo del header, login, paleta y animación compartida. Sin nuevos recursos externos, dependencias, modelos, API o requisitos de negocio.
+
+La interpretación gráfica de la mascota sigue siendo una propuesta; no se declara una especie oficial de la universidad. Fuentes en DISENO.md y evidencia local en VALIDACION.md.

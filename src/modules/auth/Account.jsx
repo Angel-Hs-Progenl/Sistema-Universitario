@@ -3,7 +3,7 @@ import { UserRound, Save } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../app/Auth";
 import { api } from "../../shared/api";
-import { Field, Alert, BusyButton } from "../../shared/ui";
+import { Field, Alert, BusyButton, ErrorSummary } from "../../shared/ui";
 import { ROLES } from "../../../shared/titulacion";
 
 export default function Account() {
@@ -24,7 +24,7 @@ export default function Account() {
       setUser(updated);
       setSaved("Nombre visible guardado.");
     } catch (e) {
-      setError(e.message);
+      setError(e);
     } finally {
       setBusy(false);
     }
@@ -73,10 +73,13 @@ export default function Account() {
             Este nombre es una preferencia del portal; no modifica el nombre de
             tu expediente.
           </p>
-          <Alert>{error}</Alert>
+          <ErrorSummary error={error} />
           <Alert type="success">{saved}</Alert>
           <Field
             name="display_name"
+            error={
+              error.fields?.find((e) => e.field === "display_name")?.message
+            }
             label="Cómo quieres aparecer"
             defaultValue={user.display_name || user.name.split(" ")[0]}
             required
@@ -85,7 +88,7 @@ export default function Account() {
           />
           <BusyButton busy={busy} className="button button-primary">
             <Save size={16} />
-            Guardar perfil
+            Guardar nombre visible
           </BusyButton>
           {user.role === "estudiante" && (
             <Link

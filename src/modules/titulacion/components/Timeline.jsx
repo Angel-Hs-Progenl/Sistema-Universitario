@@ -21,7 +21,7 @@ export default function Timeline({ app, limit }) {
             <div>
               <h3>{e.action}</h3>
               {e.note && <p>{e.note}</p>}
-              <time>{date(e.created_at, true)}</time>
+              <time dateTime={e.created_at}>{date(e.created_at, true)}</time>
             </div>
           </li>
         ))}

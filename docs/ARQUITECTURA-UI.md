@@ -1,5 +1,9 @@
 # Arquitectura de interfaz: acceso y espacio privado
 
+CR-008 amplía únicamente la bienvenida pública al portal completo: Servicios de tu universidad, con trámites, evaluaciones y apoyos como contexto. UniversityScene.jsx contiene la ilustración SVG original; WelcomeArt mantiene repetición y preferencia de movimiento. El home privado conserva solo módulos implementados. La mención del líder a coevaluación/autoevaluación por parcial se registra como alcance futuro en REQUISITOS.md, sin rutas o datos simulados.
+
+Actualización CR-007: los títulos de pestaña se derivan de shared/navigation.js; la carga diferida ocurre dentro del Shell y conserva el marco. En móvil, Ir al inicio de sesión permite enfocar el formulario sin recorrer la ilustración. La preferencia de movimiento vigente es CR-006, compartida desde el footer; sustituye las referencias históricas a detección automática del sistema. [Revisión integral](REVISION-INTEGRAL.md).
+
 12 de octubre de 2026. CR-003 separó bienvenida y home privado. CR-004, solicitado por el líder, sustituye la navegación lateral y rediseña acceso y trabajo a partir del [estudio detallado de Laravel](ESTUDIO-LARAVEL.md). El stack permanece React/JavaScript, FastAPI/Python y PostgreSQL. Laravel es una referencia visual.
 
 ## Referencias verificadas y decisiones

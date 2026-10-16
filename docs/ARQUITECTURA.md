@@ -1,5 +1,7 @@
 # Arquitectura común
 
+CR-007: el Shell mantiene la navegación durante la carga diferida de contenido. shared/navigation.js también define títulos de pestaña por tarea. Field admite input/textarea/select y relaciona etiquetas, ayudas y errores. Las respuestas y nuevas instantáneas de Titulación contienen identidad académica; no reutilizan la representación de cuenta con teléfono de acceso, alias o vínculo Google. Las instantáneas heredadas se filtran al responder, sin borrar el archivo histórico. [Revisión integral y deuda identificada](REVISION-INTEGRAL.md).
+
 La decisión inicial es un **monolito modular**: una aplicación React y una API FastAPI, con separación por dominio. Así los mini equipos pueden trabajar en paralelo conservando una identidad, datos coherentes y un despliegue sencillo. No se requieren microservicios para integrar estos módulos.
 
 ```mermaid
