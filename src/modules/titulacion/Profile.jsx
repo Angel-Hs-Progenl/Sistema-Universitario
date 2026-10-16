@@ -19,7 +19,7 @@ export default function Profile() {
         body: Object.fromEntries(new FormData(e.target)),
       });
       setUser(result);
-      setSuccess("Tus datos se guardaron correctamente.");
+      setSuccess("Datos del expediente guardados.");
     } catch (e) {
       setError(e);
     } finally {
@@ -102,18 +102,13 @@ export default function Profile() {
             minLength={10}
             maxLength={20}
           />
-          <label className="field span-2">
-            Domicilio completo *
-            <textarea
-              id="domicilio"
+          <div className="span-2">
+            <Field
+              as="textarea"
+              label="Domicilio completo"
               name="domicilio"
-              aria-invalid={
-                error.fields?.some((e) => e.field === "domicilio") || undefined
-              }
-              aria-describedby={
-                error.fields?.some((e) => e.field === "domicilio")
-                  ? "domicilio-error"
-                  : undefined
+              error={
+                error.fields?.find((e) => e.field === "domicilio")?.message
               }
               defaultValue={user.profile.domicilio}
               required
@@ -122,12 +117,7 @@ export default function Profile() {
               autoComplete="street-address"
               rows={3}
             />
-            {error.fields?.find((e) => e.field === "domicilio") && (
-              <small className="field-error" id="domicilio-error">
-                {error.fields.find((e) => e.field === "domicilio").message}
-              </small>
-            )}
-          </label>
+          </div>
         </div>
         <div className="form-footer">
           <span>Correo de tu cuenta: {user.email}</span>

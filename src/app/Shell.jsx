@@ -1,9 +1,9 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ArrowUpRight, Bell, Menu, X, Pause, Play } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "./Auth";
 import { ROLES } from "../../shared/titulacion";
-import { MODULES } from "../../shared/navigation";
+import { MODULES, pageTitleFor } from "../../shared/navigation";
 import { Alert } from "../shared/ui";
 import { Breadcrumbs } from "./Navigation";
 import Brand from "../shared/Brand";
@@ -83,6 +83,20 @@ export default function Shell() {
     document.getElementById("main")?.focus({ preventScroll: true });
     setError("");
   }, [location.pathname]);
+  useEffect(() => {
+    document.title = pageTitleFor(location.pathname, !!user, user?.role);
+  }, [location.pathname, user?.role]);
+  const content = (
+    <Suspense
+      fallback={
+        <div className="page-loading" role="status">
+          Cargando página…
+        </div>
+      }
+    >
+      <Outlet />
+    </Suspense>
+  );
   async function exit() {
     setExiting(true);
     try {
@@ -147,7 +161,7 @@ export default function Shell() {
               key={location.pathname}
             >
               <Alert>{error}</Alert>
-              <Outlet />
+              {content}
             </main>
             {footer}
           </div>
@@ -172,7 +186,7 @@ export default function Shell() {
             <Breadcrumbs />
           </div>
           <main id="main" tabIndex={-1} key={location.pathname}>
-            <Outlet />
+            {content}
           </main>
           {footer}
         </div>

@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from ...core.database import get_db, DATA_DIR
 from ...core.models import User, Notification, uid, now
-from ...core.security import current_user, require_role, public_user
+from ...core.security import current_user, require_role
 from .models import Application, Document, Event
 from .domain import (
     DOCUMENTS,
@@ -54,13 +54,25 @@ def notify(db, app, message):
     db.add(Notification(user_id=app.user_id, application_id=app.id, message=message))
 
 
+def academic_identity(owner):
+    # El expediente no comparte credenciales ni preferencias de la cuenta.
+    return {
+        "id": owner.id,
+        "name": owner.name,
+        "email": owner.email,
+        "profile": json.loads(owner.profile),
+    }
+
+
 def details(db, app, user):
     owner = db.get(User, app.user_id)
     profile = (
         json.loads(app.profile_snapshot)
         if app.profile_snapshot != "{}"
-        else public_user(owner)
+        else academic_identity(owner)
     )
+    # También limitar las instantáneas anteriores a CR-007 al responder.
+    profile = {key: profile[key] for key in ("id", "name", "email", "profile")}
     if user.role in ["tesoreria", "vinculacion"]:
         profile["profile"] = {
             k: v
@@ -344,7 +356,7 @@ def transition(
         if missing:
             raise HTTPException(422, "Faltan documentos: " + ", ".join(missing))
         app.profile_snapshot = json.dumps(
-            public_user(db.get(User, app.user_id)), ensure_ascii=False
+            academic_identity(db.get(User, app.user_id)), ensure_ascii=False
         )
     if body.status == "validada":
         missing = missing_documents(docs, True)
@@ -394,7 +406,7 @@ def export(user=Depends(current_user), db: Session = Depends(get_db)):
         snapshot = (
             json.loads(app.profile_snapshot)
             if app.profile_snapshot != "{}"
-            else public_user(owner)
+            else academic_identity(owner)
         )
         p = snapshot["profile"]
         writer.writerow(

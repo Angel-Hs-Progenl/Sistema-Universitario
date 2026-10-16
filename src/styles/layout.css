@@ -1093,3 +1093,141 @@ html[data-motion="off"] .button-primary:hover:not(:disabled) {
     width: 100%;
   }
 }
+
+/* CR-007: lectura, filtros y resultados de trabajo. */
+.inbox-panel .inbox-toolbar {
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+.inbox-search {
+  flex: 1;
+  min-width: 0;
+}
+.toolbar-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 550;
+  margin-bottom: 8px;
+}
+.inbox-results {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.clear-filters {
+  border: 0;
+  background: transparent;
+  padding: 4px 0;
+  min-height: 32px;
+  font: inherit;
+}
+.notification-state {
+  display: inline-block;
+  margin-left: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.breadcrumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+}
+.app-footer {
+  font-size: 12px;
+}
+.app-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}
+@media (max-width: 640px) {
+  .inbox-search {
+    flex-basis: 100%;
+  }
+  .auth-form .field input,
+  .field input,
+  .field textarea,
+  .field select,
+  .filter-field select,
+  .search-field input {
+    font-size: 16px;
+  }
+  .app-footer {
+    font-size: 12px;
+  }
+}
+.auth-jump {
+  display: none;
+}
+@media (max-width: 760px) {
+  .auth-jump {
+    display: flex;
+    width: fit-content;
+    min-height: 44px;
+    margin-bottom: 18px;
+    font-size: 14px;
+  }
+}
+.clearance-action {
+  margin-top: 20px;
+}
+.clearance-action p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* CR-008: bienvenida común y azor mensajero, ilustración SVG local. */
+.auth-conversational .auth-story > .welcome-availability {
+  max-width: 420px;
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.welcome-art-university {
+  padding-top: 0;
+}
+.scene-azor {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: azor-arrive 1350ms 130ms var(--ease-out) both;
+}
+.scene-delivery {
+  animation: document-delivery 1750ms 200ms var(--ease-out) both;
+}
+@keyframes azor-arrive {
+  from {
+    opacity: 0;
+    transform: translate(-38px, -22px) rotate(-4deg);
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes document-delivery {
+  from {
+    opacity: 0;
+    transform: translate(-102px, -62px);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-102px, -62px);
+  }
+  58% {
+    opacity: 1;
+    transform: translate(-90px, -52px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

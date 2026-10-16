@@ -3,8 +3,53 @@ from fastapi.testclient import TestClient
 from app.main import app as api_app
 from app.core.database import engine
 from conftest import create_case, move, in_review, PROFILE
+import json
+from sqlalchemy import select
+from app.core.database import SessionLocal
+from app.core.models import User
+from app.modules.titulacion.models import Application
 
 BASE = "/api/v1/titulacion"
+
+
+def test_case_does_not_expose_account_metadata_or_snapshot_it(clients):
+    with SessionLocal() as db:
+        owner = db.scalar(select(User).where(User.email == "estudiante@test.local"))
+        owner.login_phone = "+12025550100"
+        owner.google_sub = "synthetic-google-sub"
+        owner.display_name = "Alias de prueba"
+        db.commit()
+
+    case = in_review(clients)
+    expected = {"id", "name", "email", "profile"}
+    assert set(case["student"]) == expected
+    with SessionLocal() as db:
+        record = db.get(Application, case["id"])
+        snapshot = json.loads(record.profile_snapshot)
+        assert set(snapshot) == expected
+        # Una instantánea heredada conserva su archivo original, pero no lo expone.
+        record.profile_snapshot = json.dumps(
+            {
+                **snapshot,
+                "login_phone": "+12025550100",
+                "google_linked": True,
+                "display_name": "Alias antiguo",
+            }
+        )
+        db.commit()
+
+    for role in (
+        "estudiante", "escolares", "administrador", "tesoreria", "vinculacion"
+    ):
+        detail = clients[role].get(f"{BASE}/applications/{case['id']}")
+        assert detail.status_code == 200
+        assert set(detail.json()["student"]) == expected
+        listed = clients[role].get(f"{BASE}/applications").json()
+        assert all(set(item["student"]) == expected for item in listed)
+
+    account = clients["estudiante"].get("/api/v1/auth/me").json()["user"]
+    assert account["login_phone"] == "+12025550100"
+    assert account["google_linked"] is True
 
 
 def test_profile_rejects_whitespace_and_impossible_generation(clients):

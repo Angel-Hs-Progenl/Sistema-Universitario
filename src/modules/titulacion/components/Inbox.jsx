@@ -15,10 +15,6 @@ export default function Inbox({ data, error, refresh, role }) {
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
-  const open = data.filter(
-      (a) => !["concluido", "cancelado"].includes(a.status),
-    ),
-    review = data.filter((a) => ["enviada", "revision"].includes(a.status));
   return (
     <>
       <PageHeading
@@ -48,33 +44,25 @@ export default function Inbox({ data, error, refresh, role }) {
             : "Localiza un expediente, revisa sus documentos y registra el siguiente movimiento."}
       </PageHeading>
       <Alert>{error}</Alert>
-      <div className="inbox-summary">
-        <div>
-          <strong>{open.length}</strong>
-          <span>Trámites activos</span>
-        </div>
-        <div>
-          <strong>{review.length}</strong>
-          <span>Recibidos o en revisión</span>
-        </div>
-        <div>
-          <strong>{data.filter((a) => a.status === "concluido").length}</strong>
-          <span>Concluidos</span>
-        </div>
-      </div>
       <section className="panel inbox-panel">
         <div className="inbox-toolbar">
-          <label className="search-field">
-            <Search size={18} />
-            <input
-              aria-label="Buscar solicitudes"
-              placeholder="Buscar folio, nombre o matrícula…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </label>
+          <div className="inbox-search">
+            <label className="toolbar-label" htmlFor="case-search">
+              Folio, nombre, matrícula o carrera
+            </label>
+            <div className="search-field">
+              <Search size={18} />
+              <input
+                id="case-search"
+                type="search"
+                placeholder="Buscar expediente…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+          </div>
           <label className="filter-field">
-            <span className="sr-only">Filtrar por estado</span>
+            <span className="toolbar-label">Estado de la solicitud</span>
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="todos">Todos los estados</option>
               {Object.entries(STATES)
@@ -94,6 +82,25 @@ export default function Inbox({ data, error, refresh, role }) {
             <RefreshCw size={18} />
           </button>
         </div>
+        <div className="inbox-results">
+          <p role="status" aria-atomic="true">
+            Mostrando {filtered.length} de {data.length}{" "}
+            {data.length === 1 ? "expediente" : "expedientes"}
+          </p>
+          {(query || status !== "todos") && (
+            <button
+              type="button"
+              className="text-link clear-filters"
+              onClick={() => {
+                setQuery("");
+                setStatus("todos");
+                document.getElementById("case-search")?.focus();
+              }}
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
         <p className="table-hint">
           Desplaza la tabla para consultar todas las columnas.
         </p>
@@ -109,11 +116,11 @@ export default function Inbox({ data, error, refresh, role }) {
             </caption>
             <thead>
               <tr>
-                <th>Folio / Egresado</th>
-                <th>Carrera</th>
-                <th>Estado</th>
-                <th>Actualización</th>
-                <th>
+                <th scope="col">Folio / Egresado</th>
+                <th scope="col">Carrera</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Actualización</th>
+                <th scope="col">
                   <span className="sr-only">Acción</span>
                 </th>
               </tr>
@@ -158,8 +165,8 @@ export default function Inbox({ data, error, refresh, role }) {
           </Empty>
         )}
         <div className="table-footer">
-          {filtered.length} solicitudes · Consulta limitada a los 500
-          expedientes más recientes.
+          La consulta incluye hasta los 500 expedientes más recientes. Los
+          filtros se aplican a esta lista.
         </div>
       </section>
     </>

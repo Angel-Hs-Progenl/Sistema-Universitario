@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   AlertCircle,
   Check,
@@ -40,15 +40,23 @@ export function Alert({ children, type = "error" }) {
     </div>
   ) : null;
 }
-export function Field({ label, hint, error, ...props }) {
-  const id = props.name || props.id;
+export function Field({
+  label,
+  hint,
+  error,
+  as: Control = "input",
+  children,
+  ...props
+}) {
+  const generated = useId();
+  const id = props.id || props.name || generated;
   return (
     <div className="field">
       <label htmlFor={id}>
         {label}
         {props.required && <span className="required"> *</span>}
       </label>
-      <input
+      <Control
         id={id}
         aria-invalid={error ? "true" : undefined}
         aria-describedby={
@@ -57,7 +65,9 @@ export function Field({ label, hint, error, ...props }) {
             .join(" ") || undefined
         }
         {...props}
-      />
+      >
+        {children}
+      </Control>
       {hint && <small id={`${id}-hint`}>{hint}</small>}
       {error && (
         <small className="field-error" id={`${id}-error`}>
@@ -67,20 +77,40 @@ export function Field({ label, hint, error, ...props }) {
     </div>
   );
 }
-export function ErrorSummary({ error }) {
+export function ErrorSummary({
+  error,
+  title = "Revisa los datos del formulario",
+}) {
   const ref = useRef(null);
+  const titleId = useId();
   useEffect(() => {
     if (error) ref.current?.focus();
   }, [error]);
   if (!error) return null;
   return (
-    <div className="error-summary" ref={ref} tabIndex={-1} role="alert">
-      <h2>No se pudo completar la operación</h2>
+    <div
+      className="error-summary"
+      ref={ref}
+      tabIndex={-1}
+      aria-labelledby={titleId}
+    >
+      <h2 id={titleId}>{title}</h2>
       {error.fields?.length ? (
         <ul>
           {error.fields.map((e) => (
             <li key={e.field}>
-              <a href={`#${e.field}`}>{e.message}</a>
+              <a
+                href={`#${e.field}`}
+                onClick={(event) => {
+                  const field = document.getElementById(e.field);
+                  if (field) {
+                    event.preventDefault();
+                    field.focus();
+                  }
+                }}
+              >
+                {e.message}
+              </a>
             </li>
           ))}
         </ul>

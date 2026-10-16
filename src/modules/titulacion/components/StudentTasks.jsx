@@ -50,7 +50,7 @@ export default function StudentTasks({ app }) {
               : "Los siete documentos obligatorios están adjuntos."}
           </p>
         </div>
-        <small>{7 - missing.length} de 7 adjuntos</small>
+        <small>{7 - missing.length} de 7 listos para enviar</small>
       </div>
       <div className="task-row">
         <span>03</span>

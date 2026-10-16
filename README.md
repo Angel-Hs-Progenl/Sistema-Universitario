@@ -1,8 +1,10 @@
 # Servicios universitarios de la UT de Oriental
 
+La [revisión integral CR-007](docs/REVISION-INTEGRAL.md) registra investigación, hallazgos, correcciones y pendientes de diseño, navegación, accesibilidad y estructura. Los equipos deben usarla como criterio de revisión junto con el sistema de diseño.
+
 Las animaciones empiezan activadas. Puedes desactivarlas o volver a activarlas desde el footer; el navegador conserva esta preferencia de apariencia al navegar y recargar.
 
-Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. El inicio privado ofrece únicamente Titulación electrónica. La bienvenida reúne ilustración y acceso; los enlaces internos conservan su destino al iniciar sesión. Evaluación docente y Becas tienen requisitos identificados y se incorporarán después de aprobar su alcance.
+Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. La bienvenida presenta el portal completo con el azor mensajero; el inicio privado ofrece únicamente Titulación electrónica. Los enlaces internos conservan su destino al iniciar sesión. Evaluación docente y Becas tienen requisitos identificados; coevaluación y autoevaluación por parcial son necesidades futuras señaladas por el líder. Se incorporarán por etapas, después de definir y aprobar su alcance.
 
 **Para los equipos:** empieza por [clonar e instalar](docs/INSTALACION.md), revisa [la arquitectura modular](docs/ARQUITECTURA.md) y utiliza los [prompts comunes](docs/PROMPTS.md). Cada equipo amplía esta aplicación; no entrega otro login, backend o diseño independiente.
 
