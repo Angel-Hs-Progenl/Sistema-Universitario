@@ -1,0 +1,13 @@
+/* GRUPOS Y ASIGNATURAS — solo lo propio de esta página */
+
+.ga-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ga-field input[readonly] {
+  background-color: var(--bg);
+  color: var(--suave);
+}

@@ -1,0 +1,305 @@
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap");
+
+/* =========================================================
+   LAYOUT DOCENTE
+   Paleta UT de Oriental: vino #6F1738 · dorado #B8862B · crema #F7F6F2
+   Los tokens definidos aquí los heredan todas las páginas del docente.
+   ========================================================= */
+
+.ld-layout {
+  --marca: #6f1738;
+  --marca-dark: #55102b;
+  --marca-mid: #8a2a4c;
+  --marca-soft: #f5eaef;
+  --dorado: #b8862b;
+  --dorado-claro: #dcb765;
+  --dorado-soft: #fbf5e6;
+  --green: #386641;
+  --green-soft: #dce8d5;
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --line: #e7e4dc;
+  --line-soft: #f1efe9;
+  --ink: #202124;
+  --muted: #5f6368;
+
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: "Quicksand", -apple-system, "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.ld-layout button,
+.ld-layout input,
+.ld-layout select {
+  font-family: inherit;
+}
+
+/* ============ SIDEBAR ============ */
+
+.ld-sidebar {
+  position: sticky;
+  top: 0;
+  width: 250px;
+  min-width: 250px;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 14px;
+}
+
+.ld-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 28px;
+}
+
+.ld-logo {
+  background: var(--marca);
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  box-shadow: 0 8px 16px -10px rgba(111, 23, 56, 0.7);
+}
+
+.ld-brand strong,
+.ld-brand small {
+  display: block;
+}
+
+.ld-brand strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ld-brand small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.ld-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ld-link,
+.ld-logout {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ld-link:hover,
+.ld-logout:hover {
+  background: var(--marca-soft);
+  color: var(--marca);
+}
+
+.ld-link.activo {
+  background: var(--marca);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 10px 18px -12px rgba(111, 23, 56, 0.8);
+}
+
+.ld-link.activo::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--dorado);
+}
+
+.ld-logout {
+  margin-top: auto;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ld-layout a:focus-visible,
+.ld-layout button:focus-visible,
+.ld-layout select:focus-visible,
+.ld-layout summary:focus-visible {
+  outline: 2px solid var(--marca);
+  outline-offset: 2px;
+}
+
+/* ============ CONTENIDO ============ */
+
+.ld-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.ld-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface);
+  padding: 18px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.ld-header strong,
+.ld-header small {
+  display: block;
+}
+
+.ld-header strong {
+  font-weight: 700;
+}
+
+.ld-header small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 5px;
+}
+
+.ld-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ld-avatar {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--marca);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--dorado);
+}
+
+.ld-content {
+  padding: 28px;
+  max-width: 1500px;
+  margin: auto;
+}
+
+.ld-mobile-toggle {
+  display: none;
+}
+
+.ld-overlay {
+  display: none;
+}
+
+/* ============ RESPONSIVE ============ */
+
+@media (max-width: 800px) {
+  .ld-sidebar {
+    position: fixed;
+    top: 0;
+    left: -270px;
+    height: 100dvh;
+    z-index: 100;
+    transition: left 0.25s ease;
+  }
+
+  .ld-sidebar.abierto {
+    left: 0;
+  }
+
+  .ld-link.activo::before {
+    left: -14px;
+  }
+
+  .ld-mobile-toggle {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 101;
+    width: 40px;
+    height: 40px;
+    background: var(--marca);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px -10px rgba(111, 23, 56, 0.8);
+  }
+
+  .ld-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    border: none;
+    background: rgba(32, 33, 36, 0.45);
+  }
+
+  .ld-header {
+    padding: 20px 16px 20px 65px;
+  }
+
+  .ld-content {
+    padding: 20px 14px;
+  }
+}
+
+
+/* Iconos del menú lateral */
+
+.ld-link svg {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+/* Elemento seleccionado */
+
+.ld-link.activo svg {
+  color: #6f1738;
+}
+
+/* Efecto al pasar el cursor */
+
+.ld-link:hover svg {
+  transform: translateX(2px);
+}
+
+/* Iconos del encabezado */
+
+.ld-user > svg {
+  color: #6f1738;
+  flex-shrink: 0;
+}
+
+/* Botón de cierre de sesión */
+
+.ld-logout svg {
+  flex-shrink: 0;
+}

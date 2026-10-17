@@ -1,0 +1,73 @@
+/* Estilos temporales para dashboards */
+.dashboard-temp {
+  min-height: 100vh;
+  padding: 40px;
+  background: #faf7f8;
+  font-family: -apple-system, "Segoe UI", Inter, sans-serif;
+}
+
+.dashboard-temp header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e8e0e3;
+}
+
+.dashboard-temp h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #450b1e;
+}
+
+.dashboard-temp header button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #6b1a35;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dashboard-temp header button:hover {
+  background: #450b1e;
+}
+
+.dashboard-temp main {
+  max-width: 800px;
+}
+
+.dashboard-temp main > p {
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #3d3438;
+}
+
+.dashboard-temp main > p strong {
+  color: #6b1a35;
+}
+
+.info-box {
+  margin-top: 30px;
+  padding: 30px;
+  background: white;
+  border: 1px solid #e8e0e3;
+  border-radius: 12px;
+}
+
+.info-box h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+  color: #450b1e;
+}
+
+.info-box ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #6b5f65;
+  line-height: 1.8;
+}

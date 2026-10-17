@@ -1,0 +1,301 @@
+/* =========================================================
+   AYUDA DEL DOCENTE
+   ========================================================= */
+
+.ay-page {
+  --marca: #6f1738;
+  --marca-soft: #f5eaef;
+  --dorado: #b8862b;
+  --green: #386641;
+  --green-soft: #dce8d5;
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --line: #e7e4dc;
+  --line-soft: #f1efe9;
+  --ink: #202124;
+  --muted: #5f6368;
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--ink);
+}
+
+/* Encabezado */
+.ay-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ay-heading-icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  background: var(--marca);
+  color: #ffffff;
+  border-radius: 14px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--dorado);
+}
+
+.ay-heading h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  margin: 0 0 8px;
+}
+
+.ay-heading p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Paneles */
+.ay-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.ay-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ay-panel-heading > svg {
+  color: var(--marca);
+  flex-shrink: 0;
+}
+
+.ay-panel-heading h2 {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+
+.ay-panel-heading p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Pasos */
+.ay-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ay-step {
+  display: flex;
+  gap: 13px;
+  padding: 20px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.ay-step:hover {
+  border-color: #d9b9c6;
+  transform: translateY(-2px);
+}
+
+.ay-step-number {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  flex-shrink: 0;
+  background: var(--marca);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 50%;
+}
+
+.ay-step h3 {
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+
+.ay-step p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* Preguntas frecuentes */
+.ay-faq-list {
+  border-top: 1px solid var(--line);
+}
+
+.ay-faq-item {
+  border-bottom: 1px solid var(--line);
+}
+
+.ay-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  cursor: pointer;
+  padding: 20px 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  list-style: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ay-faq-item summary:hover {
+  background: var(--marca-soft);
+  color: var(--marca);
+}
+
+.ay-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.ay-faq-item summary svg {
+  flex-shrink: 0;
+  color: var(--marca);
+  transition: transform 0.2s;
+}
+
+.ay-faq-item[open] summary {
+  color: var(--marca);
+}
+
+.ay-faq-item[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.ay-faq-item p {
+  margin: 0;
+  padding: 0 35px 20px 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* Aviso de privacidad */
+.ay-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 23px;
+  background: #eef4ea;
+  border: 1px solid var(--green-soft);
+  border-left: 4px solid var(--green);
+  border-radius: 16px;
+}
+
+.ay-privacy > svg {
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.ay-privacy h2 {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: var(--green);
+}
+
+.ay-privacy p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #2f5a37;
+}
+
+/* Soporte */
+.ay-support {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.ay-support-icon {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: var(--marca-soft);
+  color: var(--marca);
+  border-radius: 14px;
+}
+
+.ay-support h2 {
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0 0 9px;
+}
+
+.ay-support p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 680px;
+}
+
+.ay-support-label {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--marca-soft);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--marca);
+}
+
+.ay-support-decoration {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--dorado);
+}
+
+/* Responsive */
+@media (max-width: 950px) {
+  .ay-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .ay-heading h1 {
+    font-size: 24px;
+  }
+
+  .ay-heading {
+    align-items: flex-start;
+  }
+
+  .ay-panel {
+    padding: 18px;
+  }
+
+  .ay-step {
+    padding: 16px;
+  }
+
+  .ay-support {
+    align-items: flex-start;
+  }
+
+  .ay-support-decoration {
+    display: none;
+  }
+
+  .ay-faq-item summary {
+    font-size: 13px;
+  }
+}

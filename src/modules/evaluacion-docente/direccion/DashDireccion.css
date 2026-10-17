@@ -1,0 +1,39 @@
+/* DASHBOARD DIRECCIÓN — solo lo propio de esta página (lo común está en LayoutDireccion.css) */
+
+.dad-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--marca);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dad-view-all:hover { text-decoration: underline; }
+
+.dad-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.dad-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--suave);
+  font-size: 13px;
+}
+
+.dad-summary svg { color: var(--marca); }
+
+@media (max-width: 650px) {
+  .dad-chart-container { height: 250px; }
+  .dad-toolbar { flex-direction: column; align-items: stretch; }
+  .dad-toolbar select { max-width: none; width: 100%; }
+}

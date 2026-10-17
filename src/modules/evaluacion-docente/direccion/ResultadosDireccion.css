@@ -1,0 +1,22 @@
+/* RESULTADOS INSTITUCIONALES — solo lo propio de esta página */
+
+.ri-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.ri-no-data {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  text-align: center;
+  color: var(--suave);
+  font-size: 13.5px;
+}
+
+@media (max-width: 650px) {
+  .ri-chart { height: 250px; }
+  .ri-clear-button { width: 100%; }
+  .ri-primary-button { width: 100%; }
+}
