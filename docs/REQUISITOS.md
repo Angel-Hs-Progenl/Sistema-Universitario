@@ -15,7 +15,7 @@ Los documentos originales no se incorporan a Git. Las descripciones siguientes c
 | Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación      | Implementada para validación local           |
 | Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                     | Implementada; emisión oficial externa        |
 | Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora  | Requisitos identificados; sin implementación |
-| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación | Requisitos identificados; sin implementación |
+| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación | Avance 55-60% (Fase 1 implementada para validación) |
 | Módulos futuros        | Por acordar con sus responsables                                             | Fuera de alcance hasta aprobarlos            |
 
 ## Titulación electrónica
@@ -69,11 +69,26 @@ Requisitos identificados: EVD-01 acceso y asignaciones; EVD-02 cuestionario vers
 
 Antes de desarrollar: acordar fórmula y ponderaciones, anonimato y tamaño mínimo de grupo, tratamiento de faltantes, periodos, importación de asignaciones, proveedor institucional de identidad, revisión humana de IA y retención de respuestas. No reutilizar la autenticación local como sustituto del SSO exigido para este módulo.
 
-## Becas para el equipo responsable
+## Becas (Avance 55% - 60% · Fase 1)
 
-Requisitos identificados: BEC-01 perfil personal/académico/socioeconómico; BEC-02 búsqueda y convocatorias; BEC-03 solicitud con documentos y seguimiento; BEC-04 estudio socioeconómico y comprobantes; BEC-05 formularios configurables; BEC-06 reglas mínimas por convocatoria; BEC-07 comité y dictamen manual; BEC-08 calendario de órdenes de cobro; BEC-09 renovación; BEC-10 exportación y estadísticas; BEC-11 roles administrador/evaluador/auditor/estudiante y 2FA; BEC-12 auditoría de cambios.
+Requisitos implementados en la entrega actual:
+- BEC-01: Perfil del aspirante con datos personales, académicos y socioeconómicos.
+- BEC-02: Buscador y catálogo de convocatorias con filtros por modalidad (Excelencia, Manutención, Transporte, Alimentación).
+- BEC-03: Solicitud digital con folio único, carga de comprobantes (PDF/JPG hasta 5 MB) y seguimiento en tiempo real.
+- BEC-04: Estudio socioeconómico digital con cálculo automático del índice de vulnerabilidad (10 - 100 pts).
+- BEC-05: Creador de convocatorias y gestor de formularios con preguntas personalizadas por tipo de apoyo.
+- BEC-06: Motor de reglas y filtros automáticos por promedio mínimo institucional.
+- BEC-07: Panel de dictaminación colegiada para comités con revisión de expedientes, comentarios y votación manual.
+- BEC-08: Calendario y emisión de órdenes de cobro foliadas con referencia institucional.
+- BEC-09: Proceso simplificado de renovación para becarios activos.
+- BEC-10: Tablero de control (Dashboard) con métricas en vivo y exportación oficial de reportes en CSV.
+- BEC-11: Roles dedicados (Administrador, Evaluador de Comité, Auditor Institucional y Estudiante).
+- BEC-12: Bitácora inmutable de auditoría (logs de quién, cuándo, acción, IP y expediente afectado).
 
-Antes de desarrollar: acordar criterios, presupuesto, modalidad de selección, apelación, doble postulación, comprobantes, reglas de renovación y quién autoriza órdenes. El texto no define una integración bancaria. La decisión de elegibilidad debe tener evidencia y responsable humano; no delegarla a una IA sin especificación y autorización institucional.
+Alcance reservado para Fase 2 (100% de operación institucional):
+- Conexión a pasarela bancaria SPEI para dispersión masiva de pagos.
+- Firma electrónica avanzada mediante e.firma / SAT para actas de dictamen.
+- Integración a padrón estatal y autenticación 2FA con proveedor institucional.
 
 ## Requisitos transversales
 

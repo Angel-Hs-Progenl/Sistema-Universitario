@@ -22,17 +22,48 @@ export const MODULES = [
       "vinculacion",
     ],
   },
+  {
+    id: "becas",
+    path: "/becas",
+    name: "Gestión de becas",
+    shortName: "Becas",
+    description:
+      "Convocatorias, estudio socioeconómico, dictamen, órdenes de cobro y renovación.",
+    area: "Becas y Apoyos Institucionales",
+    pages: {
+      solicitudes: "Mis solicitudes",
+      socioeconomico: "Estudio socioeconómico",
+      renovacion: "Renovación",
+      "admin-convocatorias": "Convocatorias y reglas",
+      dictamen: "Dictamen y selección",
+      "ordenes-cobro": "Órdenes de cobro",
+      dashboard: "Tablero y auditoría",
+    },
+    entityName: "Solicitud",
+    roles: [
+      "estudiante",
+      "escolares",
+      "administrador",
+      "evaluador",
+      "auditor",
+      "tesoreria",
+      "vinculacion",
+    ],
+  },
 ];
 
 export function homeShortcuts(role) {
   return role === "estudiante"
     ? [
-        { path: "/titulacion", label: "Mi solicitud" },
-        { path: "/titulacion/documentos", label: "Mis documentos" },
-        { path: "/titulacion/seguimiento", label: "Historial del trámite" },
+        { path: "/titulacion", label: "Mi solicitud de titulación" },
+        { path: "/becas", label: "Convocatorias de becas" },
+        { path: "/becas/solicitudes", label: "Mis solicitudes de beca" },
+        { path: "/becas/socioeconomico", label: "Estudio socioeconómico" },
       ]
     : [
         { path: "/titulacion", label: "Solicitudes de titulación" },
+        { path: "/becas/dictamen", label: "Dictamen de becas" },
+        { path: "/becas/dashboard", label: "Tablero y auditoría de becas" },
         { path: "/notificaciones", label: "Notificaciones" },
       ];
 }
@@ -58,7 +89,9 @@ export function breadcrumbsFor(pathname, authenticated, entityLabel) {
   if (!module) return [root, { label: "Página no encontrada" }];
   if (path === module.path) return [root, { label: module.name }];
   const leaf = module.pages?.[path.slice(module.path.length + 1)];
-  const isEntity = /^expediente\/\d+$/.test(path.slice(module.path.length + 1));
+  const isEntity = /^(?:expediente|solicitud)\/\d+$/.test(
+    path.slice(module.path.length + 1),
+  );
   if (!leaf && !isEntity) return [root, { label: "Página no encontrada" }];
   return [
     root,
@@ -71,6 +104,8 @@ export function pageTitleFor(pathname, authenticated, role) {
   const path = pathname.replace(/\/$/, "") || "/";
   if (path === "/titulacion")
     return `${role === "estudiante" ? "Mi expediente" : "Solicitudes"} · Titulación · UT de Oriental`;
+  if (path === "/becas")
+    return `${role === "estudiante" ? "Convocatorias" : "Gestión de becas"} · Becas · UT de Oriental`;
   const items = breadcrumbsFor(path, authenticated);
   return `${
     items

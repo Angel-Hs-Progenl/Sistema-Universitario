@@ -77,6 +77,8 @@ def clients(password_hash):
             "administrador",
             "tesoreria",
             "vinculacion",
+            "evaluador",
+            "auditor",
             "otro",
         ]:
             user = User(

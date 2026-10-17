@@ -72,5 +72,21 @@ test("Recuperación y ayuda pública regresan al acceso; roles de personal no en
     assert.ok(
       homeShortcuts(role).every((x) => x.path !== "/titulacion/perfil"),
     );
-  assert.equal(MODULES.length, 1);
+  assert.equal(MODULES.length, 2);
+});
+
+test("Navegación del módulo de becas resuelve migas y títulos de página", () => {
+  assert.deepEqual(breadcrumbsFor("/becas/solicitudes", true), [
+    { label: "Inicio", path: "/" },
+    { label: "Gestión de becas", path: "/becas" },
+    { label: "Mis solicitudes" },
+  ]);
+  assert.equal(
+    pageTitleFor("/becas", true, "estudiante"),
+    "Convocatorias · Becas · UT de Oriental",
+  );
+  assert.equal(
+    pageTitleFor("/becas", true, "administrador"),
+    "Gestión de becas · Becas · UT de Oriental",
+  );
 });

@@ -12,6 +12,15 @@ from app.core.security import hash_password, verify_password, ROLES
 from app.core.identity import institutional_email, normalize_phone
 from app.modules.titulacion.models import Application, Document, Event
 from app.modules.titulacion.domain import DOCUMENTS
+from app.modules.becas.models import (
+    ScholarshipCall,
+    ScholarshipApplication,
+    ScholarshipDocument,
+    ScholarshipSocioeconomic,
+    ScholarshipPaymentOrder,
+    ScholarshipAuditLog,
+)
+from app.modules.becas.domain import DOCUMENTOS as BECAS_DOCS
 
 
 def seed():
@@ -25,6 +34,8 @@ def seed():
             ("administrador", "Ángel · Demo"),
             ("tesoreria", "Daniel · Demo"),
             ("vinculacion", "Lucía · Demo"),
+            ("evaluador", "Roberto Méndez · Evaluador Becas"),
+            ("auditor", "Mónica Ruiz · Auditoría"),
             ("egresado2", "Diego Hernández · Demo"),
         ]:
             email = f"{role}@demo.uto.local"
@@ -87,18 +98,180 @@ def seed():
                             status="recibido",
                         )
                     )
-                if role != "estudiante":
+                    if role != "estudiante":
+                        db.add(
+                            Event(
+                                application_id=a.id,
+                                actor_id=user.id,
+                                action="En revisión",
+                                note="Expediente ficticio listo para probar las validaciones.",
+                            )
+                        )
+
+        # Seed Convocatorias de Becas UTO
+        calls_data = [
+            {
+                "code": "BECA-2026-I-ACAD-001",
+                "title": "Beca de Excelencia Académica Primavera 2026",
+                "modalidad": "academica",
+                "description": "Estímulo económico a estudiantes con trayectoria académica sobresaliente en el cuatrimestre anterior.",
+                "min_gpa": 9.0,
+                "amount": 4500.0,
+                "slots": 30,
+            },
+            {
+                "code": "BECA-2026-I-MANU-001",
+                "title": "Beca Institucional de Manutención UTO 2026",
+                "modalidad": "manutencion",
+                "description": "Apoyo prioritario para la permanencia de estudiantes en condiciones de vulnerabilidad socioeconómica.",
+                "min_gpa": 8.0,
+                "amount": 3600.0,
+                "slots": 75,
+            },
+            {
+                "code": "BECA-2026-I-TRAN-001",
+                "title": "Subsidio de Movilidad y Transporte Regional",
+                "modalidad": "transporte",
+                "description": "Subsidio para estudiantes que se trasladan diariamente desde municipios de la región de Oriental.",
+                "min_gpa": 8.0,
+                "amount": 2400.0,
+                "slots": 50,
+            },
+            {
+                "code": "BECA-2026-I-ALIM-001",
+                "title": "Beca de Comedor y Seguridad Alimentaria",
+                "modalidad": "alimentacion",
+                "description": "Subsidio alimentario para desayuno y comida en la cafetería universitaria durante el periodo escolar.",
+                "min_gpa": 7.5,
+                "amount": 1800.0,
+                "slots": 40,
+            },
+        ]
+        created_calls = {}
+        for cdata in calls_data:
+            existing_call = db.scalar(select(ScholarshipCall).where(ScholarshipCall.code == cdata["code"]))
+            if not existing_call:
+                new_call = ScholarshipCall(
+                    code=cdata["code"],
+                    title=cdata["title"],
+                    modalidad=cdata["modalidad"],
+                    description=cdata["description"],
+                    min_gpa=cdata["min_gpa"],
+                    amount=cdata["amount"],
+                    slots=cdata["slots"],
+                    is_active=True,
+                )
+                db.add(new_call)
+                db.flush()
+                created_calls[cdata["code"]] = new_call
+            else:
+                created_calls[cdata["code"]] = existing_call
+
+        mariana = db.scalar(select(User).where(User.email == "estudiante@demo.uto.local"))
+        diego = db.scalar(select(User).where(User.email == "egresado2@demo.uto.local"))
+        admin = db.scalar(select(User).where(User.email == "administrador@demo.uto.local"))
+
+        # Seed Mariana's socioeconomic profile and application
+        if mariana:
+            existing_socio = db.scalar(select(ScholarshipSocioeconomic).where(ScholarshipSocioeconomic.user_id == mariana.id))
+            if not existing_socio:
+                db.add(
+                    ScholarshipSocioeconomic(
+                        user_id=mariana.id,
+                        monthly_income=6500.0,
+                        monthly_expenses=5800.0,
+                        dependents_count=4,
+                        housing_type="rentada",
+                        vulnerability_score=75.0,
+                        details=json.dumps({
+                            "vivienda_material": "Concreto y tabique",
+                            "cuartos": 2,
+                            "servicios": ["agua", "luz", "drenaje"],
+                            "ocupacion_padres": "Comercio informal y labores del hogar",
+                            "ingreso_familiar_descripcion": "Ingreso variable por venta en tianguis regional",
+                        }, ensure_ascii=False),
+                    )
+                )
+
+            call_manu = created_calls.get("BECA-2026-I-MANU-001")
+            if call_manu:
+                app_manu = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.user_id == mariana.id, ScholarshipApplication.call_id == call_manu.id))
+                if not app_manu:
+                    app_manu = ScholarshipApplication(
+                        call_id=call_manu.id,
+                        user_id=mariana.id,
+                        status="revision",
+                        gpa=8.9,
+                        academic_term="4to Cuatrimestre",
+                        major="Ingeniería en Tecnologías de la Información",
+                        socioeconomic_score=75.0,
+                        committee_notes="Expediente completo. Pendiente de dictamen final en sesión de comité.",
+                    )
+                    db.add(app_manu)
+                    db.flush()
+                    app_manu.folio = f"BEC-2026-{app_manu.id:06d}"
+
+                    for kind in BECAS_DOCS[:3]:
+                        stored = uid() + ".pdf"
+                        content = sample_pdf(f"BECA-{kind['name']}")
+                        (DATA_DIR / "uploads" / stored).write_bytes(content)
+                        db.add(
+                            ScholarshipDocument(
+                                application_id=app_manu.id,
+                                kind=kind["id"],
+                                name=f"COMPROBANTE-{kind['id'].upper()}.pdf",
+                                stored_name=stored,
+                                mime="application/pdf",
+                                size=len(content),
+                                status="recibido",
+                            )
+                        )
+
+        # Seed Diego's scholarship application (aprobada) and payment order
+        if diego and admin:
+            call_acad = created_calls.get("BECA-2026-I-ACAD-001")
+            if call_acad:
+                app_acad = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.user_id == diego.id, ScholarshipApplication.call_id == call_acad.id))
+                if not app_acad:
+                    app_acad = ScholarshipApplication(
+                        call_id=call_acad.id,
+                        user_id=diego.id,
+                        status="aprobada",
+                        gpa=9.6,
+                        academic_term="7mo Cuatrimestre",
+                        major="Ingeniería en Tecnologías de la Información",
+                        socioeconomic_score=60.0,
+                        committee_notes="Aprobada por unanimidad por alto desempeño académico.",
+                    )
+                    db.add(app_acad)
+                    db.flush()
+                    app_acad.folio = f"BEC-2026-{app_acad.id:06d}"
+
+                    order = ScholarshipPaymentOrder(
+                        application_id=app_acad.id,
+                        folio_orden="ORD-BEC-2026-0001",
+                        amount=call_acad.amount,
+                        period="Primer Parcial - Mayo 2026",
+                        scheduled_date=now(),
+                        status="emitida",
+                        reference="UTO-SPEI-0002-0001",
+                    )
+                    db.add(order)
+
                     db.add(
-                        Event(
-                            application_id=a.id,
-                            actor_id=user.id,
-                            action="En revisión",
-                            note="Expediente ficticio listo para probar las validaciones.",
+                        ScholarshipAuditLog(
+                            user_id=admin.id,
+                            action="Dictamen de aprobación de beca",
+                            target_type="ScholarshipApplication",
+                            target_id=str(app_acad.id),
+                            details=f"Beca {app_acad.folio} aprobada con promedio 9.6.",
+                            ip_address="127.0.0.1",
                         )
                     )
+
         db.commit()
     print(
-        "Cuentas ficticias creadas. Consulta docs/OPERACION.md. No usar con datos reales."
+        "Cuentas ficticias y datos de becas creados. Consulta docs/OPERACION.md. No usar con datos reales."
     )
 
 

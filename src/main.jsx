@@ -9,6 +9,7 @@ import "./styles/tokens.css";
 import "./styles/app.css";
 import "./styles/layout.css";
 import "./styles/identity.css";
+import "./styles/becas.css";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>

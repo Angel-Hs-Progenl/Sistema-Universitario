@@ -47,7 +47,7 @@ def safe_next(value):
     return (
         value
         if re.fullmatch(
-            r"/(?:titulacion(?:/[a-zA-Z0-9/\-]+)?|notificaciones|cuenta|ayuda)?",
+            r"/(?:titulacion(?:/[a-zA-Z0-9/\-]+)?|becas(?:/[a-zA-Z0-9/\-]+)?|notificaciones|cuenta|ayuda)?",
             value or "",
         )
         else "/"

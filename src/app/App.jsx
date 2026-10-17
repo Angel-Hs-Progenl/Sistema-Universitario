@@ -10,6 +10,15 @@ const TitleLayout = lazy(() => import("../modules/titulacion/Layout"));
 const Workspace = lazy(() => import("../modules/titulacion/Workspace"));
 const Profile = lazy(() => import("../modules/titulacion/Profile"));
 const Account = lazy(() => import("../modules/auth/Account"));
+const BecasLayout = lazy(() => import("../modules/becas/Layout"));
+const Convocatorias = lazy(() => import("../modules/becas/Convocatorias"));
+const Solicitudes = lazy(() => import("../modules/becas/Solicitudes"));
+const EstudioSocioeconomico = lazy(() => import("../modules/becas/EstudioSocioeconomico"));
+const AdminConvocatorias = lazy(() => import("../modules/becas/AdminConvocatorias"));
+const PanelDictaminacion = lazy(() => import("../modules/becas/PanelDictaminacion"));
+const OrdenesCobro = lazy(() => import("../modules/becas/OrdenesCobro"));
+const Renovaciones = lazy(() => import("../modules/becas/Renovaciones"));
+const DashboardAuditoria = lazy(() => import("../modules/becas/DashboardAuditoria"));
 export default function App() {
   return (
     <AuthProvider>
@@ -57,6 +66,23 @@ export default function App() {
               <Route path="documentos" element={<Workspace />} />
               <Route path="seguimiento" element={<Workspace />} />
               <Route path="expediente/:id" element={<Workspace />} />
+            </Route>
+            <Route
+              path="becas"
+              element={
+                <Protected>
+                  <BecasLayout />
+                </Protected>
+              }
+            >
+              <Route index element={<Convocatorias />} />
+              <Route path="solicitudes" element={<Solicitudes />} />
+              <Route path="socioeconomico" element={<EstudioSocioeconomico />} />
+              <Route path="admin-convocatorias" element={<AdminConvocatorias />} />
+              <Route path="dictamen" element={<PanelDictaminacion />} />
+              <Route path="ordenes-cobro" element={<OrdenesCobro />} />
+              <Route path="renovacion" element={<Renovaciones />} />
+              <Route path="dashboard" element={<DashboardAuditoria />} />
             </Route>
             <Route
               path="*"

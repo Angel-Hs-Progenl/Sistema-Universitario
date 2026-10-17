@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   GraduationCap,
+  Award,
   ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../../app/Auth";
@@ -26,7 +27,7 @@ export default function Home() {
             <article className="module-launcher" key={m.id}>
               <div className="launcher-heading">
                 <span className="launcher-icon">
-                  <GraduationCap size={23} />
+                  {m.id === "becas" ? <Award size={23} /> : <GraduationCap size={23} />}
                 </span>
                 <span>{m.area}</span>
               </div>
@@ -39,7 +40,11 @@ export default function Home() {
               <p>{m.description}</p>
               <Link to={m.path} className="button button-primary">
                 {user.role === "estudiante"
-                  ? "Abrir mi expediente"
+                  ? m.id === "becas"
+                    ? "Consultar convocatorias"
+                    : "Abrir mi expediente"
+                  : m.id === "becas"
+                  ? "Gestionar becas"
                   : "Abrir solicitudes"}
                 <ArrowRight size={16} />
               </Link>
