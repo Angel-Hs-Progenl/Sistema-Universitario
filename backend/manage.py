@@ -7,7 +7,7 @@ import os
 from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from app.core.database import SessionLocal, DATA_DIR
-from app.core.models import User, Session, AccountEvent, uid
+from app.core.models import User, Session, AccountEvent, uid, now
 from app.core.security import hash_password, verify_password, ROLES
 from app.core.identity import institutional_email, normalize_phone
 from app.modules.titulacion.models import Application, Document, Event
