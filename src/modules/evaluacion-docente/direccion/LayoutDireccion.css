@@ -5,10 +5,10 @@
    Este archivo trae lo que comparten TODAS las pantallas de
    Dirección (tarjetas, botones, tablas, formularios, etiquetas).
    Los CSS de cada página solo tienen lo propio de esa página.
-   COLORES Y TIPOGRAFÍA: edita solo el primer bloque (.dir-layout).
+   COLORES Y TIPOGRAFÍA: edita las variables en .evaluacion-direccion.
    ========================================================= */
 
-.dir-layout {
+.evaluacion-direccion {
   /* Tipografía */
   --fuente: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
   
@@ -42,9 +42,7 @@
   
   --sombra: 0 1px 2px rgba(29, 31, 28, 0.05), 0 1px 3px rgba(29, 31, 28, 0.04);
   
-  display: flex;
-  min-height: 100vh;
-  min-height: 100dvh;
+  display: block;
   background: var(--bg);
   color: var(--texto);
   font-family: var(--fuente);
@@ -52,285 +50,50 @@
   -webkit-font-smoothing: antialiased;
 }
 
-.dir-layout *,
-.dir-layout *::before,
-.dir-layout *::after { box-sizing: border-box; }
+.evaluacion-direccion *,
+.evaluacion-direccion *::before,
+.evaluacion-direccion *::after { box-sizing: border-box; }
 
-.dir-layout :where(h1, h2, h3, p, ul, ol) { margin: 0; padding: 0; }
-.dir-layout :where(ul, ol) { list-style: none; }
-.dir-layout :where(button, input, select, textarea) { font-family: inherit; font-size: inherit; }
-.dir-layout :where(button) { cursor: pointer; }
-.dir-layout :where(a, button):focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+.evaluacion-direccion :where(h1, h2, h3, p, ul, ol) { margin: 0; padding: 0; }
+.evaluacion-direccion :where(ul, ol) { list-style: none; }
+.evaluacion-direccion :where(button, input, select, textarea) { font-family: inherit; font-size: inherit; }
+.evaluacion-direccion :where(button) { cursor: pointer; }
+.evaluacion-direccion :where(a, button):focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 
-/* ============ MENÚ LATERAL ============ */
-
-.dir-sidebar {
-  width: 264px;
-  height: 100vh;
-  height: 100dvh;
-  position: sticky;
-  top: 0;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--card);
-  border-right: 1px solid var(--linea);
-  z-index: 40;
+/* ============ LAYOUT HORIZONTAL COMO GESTIÓN DE BECAS ============ */
+/* Las clases module-layout, module-header, module-identity y module-nav
+   provienen del diseño compartido del portal universitario. */
+.evaluacion-direccion {
+  display: block;
+  min-height: 0;
+  width: 100%;
 }
 
-.dir-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 24px 20px;
-  border-bottom: 1px solid var(--linea-suave);
-}
-
-.dir-logo {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  border-radius: 11px;
-  background: var(--marca);
-  color: #fff;
-}
-
-.dir-brand-info {
+.evaluacion-direccion .module-header {
   min-width: 0;
 }
 
-.dir-brand-info strong, .dir-brand-info small {
-  display: block;
-}
-
-.dir-brand-info strong {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.dir-brand-info small {
-  margin-top: 3px;
-  color: var(--suave);
-  font-size: 12px;
-}
-
-.dir-nav-label {
-  padding: 22px 22px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--muy-suave);
-}
-
-.dir-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 12px 16px;
-  overflow-y: auto;
-}
-
-.dir-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 42px;
-  padding: 0 13px;
-  border-radius: 10px;
-  color: var(--suave);
-  text-decoration: none;
-  font-size: 13.5px;
-  font-weight: 500;
-  transition: background 0.15s, color 0.15s;
-}
-
-.dir-link svg {
-  flex-shrink: 0;
-}
-
-.dir-link:hover {
-  background: var(--bg);
-  color: var(--texto);
-}
-
-.dir-link.activo {
-  background: var(--marca-claro);
-  color: var(--marca);
-  font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--marca);
-}
-
-.dir-sidebar-bottom {
-  margin-top: auto;
-  padding: 14px 12px 20px;
-  border-top: 1px solid var(--linea-suave);
-}
-
-.dir-sidebar-role {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 13px 12px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--ok-txt);
-}
-
-.dir-logout {
-  width: 100%;
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 13px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--danger-txt);
-  font-size: 13.5px;
-  font-weight: 500;
-  text-align: left;
-  transition: background 0.15s;
-}
-
-.dir-logout:hover {
-  background: var(--danger-bg);
-}
-
-/* ============ CONTENIDO PRINCIPAL Y ENCABEZADO ============ */
-
-.dir-main {
-  flex: 1;
+.evaluacion-direccion .module-nav {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
 }
 
-.dir-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  height: 72px;
-  min-height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 0 32px;
-  background: var(--card);
-  border-bottom: 1px solid var(--linea);
-}
-
-.dir-header-title strong, .dir-header-title small {
-  display: block;
-}
-
-.dir-header-title strong {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.dir-header-title small {
-  margin-top: 3px;
-  color: var(--suave);
-  font-size: 12.5px;
-}
-
-.dir-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.dir-header-role {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--suave);
-}
-
-.dir-header-bell {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--linea);
-  border-radius: 10px;
-  color: var(--suave);
-  background: var(--card);
-}
-
-.dir-avatar {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--marca-claro);
-  color: var(--marca);
-  font-weight: 700;
-}
-
-.dir-content {
+.evaluacion-direccion .module-content {
+  min-width: 0;
   width: 100%;
-  max-width: 1480px;
-  margin: 0 auto;
-  padding: 32px;
 }
 
-.dir-mobile-toggle, .dir-overlay {
-  display: none;
-}
-
-@media (max-width: 1000px) {
-  .dir-sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100dvh;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
+@media (max-width: 900px) {
+  .evaluacion-direccion .module-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .dir-sidebar.abierto { transform: translateX(0); }
-
-  .dir-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(29, 31, 28, 0.45);
-    border: 0;
-    z-index: 30;
+  .evaluacion-direccion .module-nav a {
+    flex-shrink: 0;
   }
-
-  .dir-mobile-toggle {
-    display: grid;
-    place-items: center;
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    width: 42px;
-    height: 42px;
-    border: 1px solid var(--linea);
-    border-radius: 10px;
-    background: var(--card);
-    color: var(--marca);
-    z-index: 50;
-  }
-
-  .dir-header { padding-left: 75px; }
-  .dir-content { padding: 24px; }
-}
-
-@media (max-width: 600px) {
-  .dir-header { padding-right: 15px; }
-  .dir-header-title strong { font-size: 13px; }
-  .dir-header-title small,
-  .dir-header-role,
-  .dir-header-bell { display: none; }
-  .dir-content { padding: 16px; }
 }
 
 /* ============ PÁGINAS: ENCABEZADO, AVISO DE DEMOSTRACIÓN Y ETIQUETA DE PERIODO ============ */
@@ -1137,5 +900,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dir-layout *, .dir-layout *::before, .dir-layout *::after { transition: none !important; }
+  .evaluacion-direccion *, .evaluacion-direccion *::before, .evaluacion-direccion *::after { transition: none !important; }
 }

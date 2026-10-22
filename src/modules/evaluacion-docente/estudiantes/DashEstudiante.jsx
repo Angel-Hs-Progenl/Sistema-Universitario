@@ -136,10 +136,6 @@ function DashEstudianteV3() {
   
 const navigate = useNavigate();
 
-const volverAlPortal = () => {
-  navigate("/");
-};
-
 const evaluar = (id) => {
   navigate(`/evaluacion-docente/estudiante/evaluar/${id}`);
 };
@@ -163,12 +159,8 @@ const evaluar = (id) => {
   const puedeEvaluar = !terminado && !cerrado;
   const retomar = siguiente && estadoDe(siguiente) === "curso";
 
-  const iniciales = `${ESTUDIANTE_MOCK.nombre[0]}${ESTUDIANTE_MOCK.apellido[0]}`;
-
   return (
 <div className="v3-page v3-page-embedded">
-        {/* ============ SIDEBAR ============ */}
-
       {/* ============ CONTENIDO ============ */}
       <main className="v3-main">
         <div className="v3-wrap">
@@ -185,29 +177,6 @@ const evaluar = (id) => {
               </p>
             </div>
 
-            <div className="v3-user">
-              <div className="v3-user-info">
-                <strong>
-                  {ESTUDIANTE_MOCK.nombre} {ESTUDIANTE_MOCK.apellido}
-                </strong>
-                <span>
-                  {ESTUDIANTE_MOCK.carrera} · {ESTUDIANTE_MOCK.grupo}
-                </span>
-              </div>
-              <span className="v3-avatar" aria-hidden="true">
-                {iniciales}
-              </span>
-             
-<button
-  type="button"
-  className="v3-logout-mobile"
-  onClick={volverAlPortal}
-  aria-label="Volver al portal universitario"
->
-  {Icons.logout}
-</button>
-
-            </div>
           </header>
 
           {/* ----- Bloque superior: acción + resumen ----- */}

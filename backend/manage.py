@@ -1,5 +1,3 @@
-"""Herramientas locales. Ejecutar desde la raíz del repositorio."""
-
 import argparse
 import getpass
 import json
@@ -26,10 +24,13 @@ from app.modules.becas.domain import DOCUMENTOS as BECAS_DOCS
 def seed():
     if os.getenv("APP_ENV") == "production":
         raise SystemExit("El seed está prohibido en producción.")
+    if "docente" not in ROLES:
+        raise SystemExit("El rol 'docente' no está habilitado en app.core.security.ROLES.")
     password = hash_password("Demo-UTO-2026!")
     with SessionLocal() as db:
         for role, name in [
             ("estudiante", "Mariana López · Demo"),
+            ("docente", "Juan Pérez López · Demo"),
             ("escolares", "Andrea · Demo"),
             ("administrador", "Ángel · Demo"),
             ("tesoreria", "Daniel · Demo"),

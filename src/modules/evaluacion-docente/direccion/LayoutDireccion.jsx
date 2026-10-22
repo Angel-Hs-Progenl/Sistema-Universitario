@@ -1,234 +1,76 @@
 
-import { useState } from "react";
-import {
-  NavLink,
-  Outlet,
-  useNavigate
-} from "react-router-dom";
-
-import {
-  LayoutDashboard,
-  UsersRound,
-  GraduationCap,
-  BookOpen,
-  CalendarDays,
-  ClipboardList,
-  ChartNoAxesCombined,
-  FileCheck2,
-  ClipboardCheck,
-  LogOut,
-  Menu,
-  X,
-  ShieldCheck,
-  Bell
-} from "lucide-react";
-
+import { NavLink, Outlet } from "react-router-dom";
 import "./LayoutDireccion.css";
 
-// Opciones del menú de Dirección Académica
 const opciones = [
   {
     nombre: "Dashboard",
     ruta: "/evaluacion-docente/direccion",
-    icono: LayoutDashboard,
     exacta: true
   },
   {
     nombre: "Docentes",
-    ruta: "/evaluacion-docente/direccion/docentes",
-    icono: UsersRound
+    ruta: "/evaluacion-docente/direccion/docentes"
   },
   {
     nombre: "Estudiantes",
-    ruta: "/evaluacion-docente/direccion/estudiantes",
-    icono: GraduationCap
+    ruta: "/evaluacion-docente/direccion/estudiantes"
   },
   {
     nombre: "Grupos y asignaturas",
-    ruta: "/evaluacion-docente/direccion/grupos",
-    icono: BookOpen
+    ruta: "/evaluacion-docente/direccion/grupos"
   },
   {
     nombre: "Periodos académicos",
-    ruta: "/evaluacion-docente/direccion/periodos",
-    icono: CalendarDays
+    ruta: "/evaluacion-docente/direccion/periodos"
   },
   {
     nombre: "Cuestionarios",
-    ruta: "/evaluacion-docente/direccion/cuestionarios",
-    icono: ClipboardList
+    ruta: "/evaluacion-docente/direccion/cuestionarios"
   },
   {
     nombre: "Resultados",
-    ruta: "/evaluacion-docente/direccion/resultados",
-    icono: ChartNoAxesCombined
+    ruta: "/evaluacion-docente/direccion/resultados"
   },
   {
     nombre: "Reportes",
-    ruta: "/evaluacion-docente/direccion/reportes",
-    icono: FileCheck2
+    ruta: "/evaluacion-docente/direccion/reportes"
   },
   {
     nombre: "Planes de acción",
-    ruta: "/evaluacion-docente/direccion/planes-accion",
-    icono: ClipboardCheck
+    ruta: "/evaluacion-docente/direccion/planes-accion"
   }
 ];
 
 export default function LayoutDireccion() {
-  const [menuAbierto, setMenuAbierto] = useState(false);
-
-  const navigate = useNavigate();
-
-  // Regresar al Sistema Universitario sin cerrar sesión
-  const volverAlPortal = () => {
-    setMenuAbierto(false);
-    navigate("/");
-  };
-
   return (
-    <div className="dir-layout">
+    <div className="container module-layout evaluacion-direccion">
 
-      {/* BOTÓN DE MENÚ PARA CELULARES */}
-      <button
-        className="dir-mobile-toggle"
-        type="button"
-        onClick={() => setMenuAbierto(!menuAbierto)}
-        aria-label={
-          menuAbierto ? "Cerrar menú" : "Abrir menú"
-        }
-        aria-expanded={menuAbierto}
-      >
-        {menuAbierto ? (
-          <X size={23} />
-        ) : (
-          <Menu size={23} />
-        )}
-      </button>
-
-      {/* FONDO OSCURO EN CELULARES */}
-      {menuAbierto && (
-        <button
-          className="dir-overlay"
-          type="button"
-          aria-label="Cerrar menú lateral"
-          onClick={() => setMenuAbierto(false)}
-        />
-      )}
-
-      {/* MENÚ LATERAL */}
-      <aside
-        className={`dir-sidebar ${
-          menuAbierto ? "abierto" : ""
-        }`}
-      >
-        <div className="dir-brand">
-          <div className="dir-logo">
-            <GraduationCap size={24} />
-          </div>
-
-          <div className="dir-brand-info">
-            <strong>Evaluación Docente</strong>
-            <small>Dirección Académica</small>
-          </div>
+      <header className="module-header">
+        <div className="module-identity">
+          <span>03 /</span>
+          <strong>Evaluación Docente</strong>
         </div>
 
-        <div className="dir-nav-label">
-          MENÚ PRINCIPAL
-        </div>
-
-        {/* NAVEGACIÓN */}
         <nav
-          className="dir-nav"
+          className="module-nav"
           aria-label="Menú de Dirección Académica"
         >
-          {opciones.map((opcion) => {
-            const Icono = opcion.icono;
-
-            return (
-              <NavLink
-                key={opcion.ruta}
-                to={opcion.ruta}
-                end={opcion.exacta}
-                onClick={() => setMenuAbierto(false)}
-                className={({ isActive }) =>
-                  `dir-link ${isActive ? "activo" : ""}`
-                }
-              >
-                <Icono
-                  size={19}
-                  strokeWidth={1.8}
-                  aria-hidden="true"
-                />
-
-                <span>{opcion.nombre}</span>
-              </NavLink>
-            );
-          })}
+          {opciones.map((opcion) => (
+            <NavLink
+              key={opcion.ruta}
+              to={opcion.ruta}
+              end={opcion.exacta ?? false}
+            >
+              {opcion.nombre}
+            </NavLink>
+          ))}
         </nav>
+      </header>
 
-        {/* PARTE INFERIOR DEL MENÚ */}
-        <div className="dir-sidebar-bottom">
-          <div className="dir-sidebar-role">
-            <ShieldCheck size={18} />
-            <span>Administrador</span>
-          </div>
-
-          {/* VOLVER AL PORTAL */}
-          <button
-            className="dir-logout"
-            type="button"
-            onClick={volverAlPortal}
-          >
-            <LogOut size={19} />
-            Volver al portal
-          </button>
-        </div>
-      </aside>
-
-      {/* CONTENIDO PRINCIPAL */}
-      <div className="dir-main">
-
-        {/* BARRA SUPERIOR */}
-        <header className="dir-header">
-          <div className="dir-header-title">
-            <strong>
-              Plataforma de Evaluación Docente
-            </strong>
-
-            <small>
-              Universidad Tecnológica de Oriental
-            </small>
-          </div>
-
-          <div className="dir-header-actions">
-            <span className="dir-header-role">
-              Dirección Académica
-            </span>
-
-            <div
-              className="dir-header-bell"
-              title="Notificaciones (próximamente)"
-              aria-label="Notificaciones no disponibles"
-            >
-              <Bell size={19} />
-            </div>
-
-            <div
-              className="dir-avatar"
-              aria-label="Administrador"
-            >
-              <ShieldCheck size={21} />
-            </div>
-          </div>
-        </header>
-
-        {/* PÁGINA SELECCIONADA */}
-        <main className="dir-content">
-          <Outlet />
-        </main>
-
-      </div>
+      <section className="module-content">
+        <Outlet />
+      </section>
     </div>
   );
 }

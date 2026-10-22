@@ -394,3 +394,87 @@
     box-sizing: border-box;
   }
 }
+
+
+/* ENCABEZADO DE EVALUACIÓN DOCENTE - ESTUDIANTE */
+
+.evaluacion-estudiante {
+  min-width: 0;
+  padding-bottom: 32px;
+}
+
+/* ACCIONES Y NAVEGACIÓN COMPLEMENTARIA */
+
+.estudiante-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e3e3da;
+}
+
+.estudiante-rol {
+  font-size: 13px;
+  font-weight: 600;
+  color: #5f625c;
+}
+
+.estudiante-acciones-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.estudiante-accion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid #e3e3da;
+  border-radius: 9px;
+  background: #fff;
+  color: #6f1738;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.estudiante-accion:hover {
+  background: #f7ecf0;
+  border-color: #e8cdd7;
+}
+
+.estudiante-ayuda {
+  margin-top: 14px;
+  padding: 14px 18px;
+  border: 1px solid #e8cdd7;
+  border-radius: 10px;
+  background: #f7ecf0;
+  color: #6f1738;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.estudiante-contenido {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ADAPTACIÓN PARA CELULARES */
+
+@media (max-width: 650px) {
+  .estudiante-acciones {
+    align-items: flex-start;
+  }
+
+  .estudiante-acciones-botones {
+    width: 100%;
+  }
+
+  .estudiante-accion {
+    flex: 1;
+  }
+}

@@ -213,6 +213,8 @@ export default function Login() {
             <code>tesoreria@demo.uto.local</code>
             <code>vinculacion@demo.uto.local</code>
             <code>administrador@demo.uto.local</code>
+            <code>docente@demo.uto.local</code>
+
             <p>
               Contraseña: <code>Demo-UTO-2026!</code>
             </p>
