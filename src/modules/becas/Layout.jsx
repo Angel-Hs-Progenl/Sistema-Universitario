@@ -1,6 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../app/Auth";
-import AdvanceBanner from "./components/AdvanceBanner";
 
 export default function BecasLayout() {
   const { user } = useAuth();
@@ -39,7 +38,6 @@ export default function BecasLayout() {
         </nav>
       </header>
       <section className="module-content">
-        <AdvanceBanner />
         <Outlet />
       </section>
     </div>
