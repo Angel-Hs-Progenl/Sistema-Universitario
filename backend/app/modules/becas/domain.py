@@ -1,34 +1,11 @@
 """Dominio y reglas de negocio del módulo de becas UTO."""
 
+# Criterios e importes se capturan por convocatoria. No hay tarifas oficiales aquí.
 MODALIDADES = [
-    {
-        "id": "academica",
-        "name": "Excelencia Académica",
-        "description": "Para estudiantes con promedio sobresaliente de 9.0 o superior.",
-        "minGpa": 9.0,
-        "defaultAmount": 4500,
-    },
-    {
-        "id": "manutencion",
-        "name": "Apoyo a la Manutención",
-        "description": "Apoyo económico a estudiantes en situación de vulnerabilidad económica.",
-        "minGpa": 8.0,
-        "defaultAmount": 3600,
-    },
-    {
-        "id": "transporte",
-        "name": "Subsidio de Transporte y Movilidad",
-        "description": "Para estudiantes que se trasladan diariamente desde municipios alejados a Oriental.",
-        "minGpa": 8.0,
-        "defaultAmount": 2400,
-    },
-    {
-        "id": "alimentacion",
-        "name": "Beca de Comedor y Alimentación",
-        "description": "Subsidio para acceso al comedor universitario por vulnerabilidad alimentaria.",
-        "minGpa": 7.5,
-        "defaultAmount": 1800,
-    },
+    {"id": "academica", "name": "Excelencia académica"},
+    {"id": "manutencion", "name": "Apoyo a la manutención"},
+    {"id": "transporte", "name": "Transporte y movilidad"},
+    {"id": "alimentacion", "name": "Alimentación"},
 ]
 
 ESTADOS = {

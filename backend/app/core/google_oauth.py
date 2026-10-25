@@ -191,5 +191,5 @@ def callback(
         )
     response = RedirectResponse(ORIGIN + next_path, status_code=303)
     response.delete_cookie(COOKIE, path=COOKIE_PATH)
-    establish_session(db, response, user, "Acceso con Google institucional")
+    establish_session(db, response, user, "Acceso con Google institucional", auth_method="google")
     return response

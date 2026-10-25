@@ -2,6 +2,7 @@ import argparse
 import getpass
 import json
 import os
+from datetime import timedelta
 from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from app.core.database import SessionLocal, DATA_DIR
@@ -19,6 +20,7 @@ from app.modules.becas.models import (
     ScholarshipAuditLog,
 )
 from app.modules.becas.domain import DOCUMENTOS as BECAS_DOCS
+from app.modules.evaluacion_docente.demo import seed_evaluations
 
 
 def seed():
@@ -35,8 +37,8 @@ def seed():
             ("administrador", "Ángel · Demo"),
             ("tesoreria", "Daniel · Demo"),
             ("vinculacion", "Lucía · Demo"),
-            ("evaluador", "Roberto Méndez · Evaluador Becas"),
-            ("auditor", "Mónica Ruiz · Auditoría"),
+            ("evaluador", "Responsable de Becas · Demo"),
+            ("auditor", "Auditoría · Demo"),
             ("egresado2", "Diego Hernández · Demo"),
         ]:
             email = f"{role}@demo.uto.local"
@@ -154,13 +156,15 @@ def seed():
             if not existing_call:
                 new_call = ScholarshipCall(
                     code=cdata["code"],
-                    title=cdata["title"],
+                    title=cdata["title"] + " · Ejemplo",
                     modalidad=cdata["modalidad"],
-                    description=cdata["description"],
+                    description="Convocatoria ficticia para validar el flujo de becas. No representa un apoyo institucional vigente.",
                     min_gpa=cdata["min_gpa"],
                     amount=cdata["amount"],
                     slots=cdata["slots"],
                     is_active=True,
+                    start_date=now() - timedelta(days=1),
+                    end_date=now() + timedelta(days=45),
                 )
                 db.add(new_call)
                 db.flush()
@@ -206,7 +210,7 @@ def seed():
                         academic_term="4to Cuatrimestre",
                         major="Ingeniería en Tecnologías de la Información",
                         socioeconomic_score=75.0,
-                        committee_notes="Expediente completo. Pendiente de dictamen final en sesión de comité.",
+                        committee_notes="Ejemplo: completa los documentos y espera la revisión del área de becas.",
                     )
                     db.add(app_manu)
                     db.flush()
@@ -242,7 +246,7 @@ def seed():
                         academic_term="7mo Cuatrimestre",
                         major="Ingeniería en Tecnologías de la Información",
                         socioeconomic_score=60.0,
-                        committee_notes="Aprobada por unanimidad por alto desempeño académico.",
+                        committee_notes="Ejemplo de dictamen para desarrollo, sin validez institucional.",
                     )
                     db.add(app_acad)
                     db.flush()
@@ -252,10 +256,10 @@ def seed():
                         application_id=app_acad.id,
                         folio_orden="ORD-BEC-2026-0001",
                         amount=call_acad.amount,
-                        period="Primer Parcial - Mayo 2026",
+                        period="Periodo de demostración",
                         scheduled_date=now(),
-                        status="emitida",
-                        reference="UTO-SPEI-0002-0001",
+                        status="programada",
+                        reference="",
                     )
                     db.add(order)
 
@@ -270,6 +274,25 @@ def seed():
                         )
                     )
 
+                # El expediente demo aprobado debe respetar la evidencia exigida
+                # por el flujo. Agregar faltantes ficticios, sin sustituir archivos.
+                for kind in BECAS_DOCS:
+                    if not kind["required"]:
+                        continue
+                    present = db.scalar(select(ScholarshipDocument).where(
+                        ScholarshipDocument.application_id == app_acad.id,
+                        ScholarshipDocument.kind == kind["id"],
+                    ))
+                    if not present:
+                        stored = uid() + ".pdf"
+                        content = sample_pdf("BECA-EJEMPLO-" + kind["id"])
+                        (DATA_DIR / "uploads" / stored).write_bytes(content)
+                        db.add(ScholarshipDocument(application_id=app_acad.id,
+                            kind=kind["id"], name=f"EJEMPLO-{kind['id']}.pdf",
+                            stored_name=stored, mime="application/pdf", size=len(content),
+                            status="validado", note="Ejemplo ficticio, sin validez institucional."))
+
+        seed_evaluations(db)
         db.commit()
     print(
         "Cuentas ficticias y datos de becas creados. Consulta docs/OPERACION.md. No usar con datos reales."

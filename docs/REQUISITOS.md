@@ -10,13 +10,13 @@ Los documentos originales no se incorporan a Git. Las descripciones siguientes c
 
 ## Mapa del sistema
 
-| Área                   | Alcance                                                                      | Entrega actual                               |
-| ---------------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
-| Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación      | Implementada para validación local           |
-| Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                     | Implementada; emisión oficial externa        |
-| Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora  | Requisitos identificados; sin implementación |
-| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación | Avance 55-60% (Fase 1 implementada para validación) |
-| Módulos futuros        | Por acordar con sus responsables                                             | Fuera de alcance hasta aprobarlos            |
+| Área                   | Alcance                                                                      | Entrega actual                                           |
+| ---------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación      | Implementada para validación local                       |
+| Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                     | Implementada; emisión oficial externa                    |
+| Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora  | Flujo conectado implementado para validación; ver CR-010 |
+| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación | Flujo conectado implementado para validación; ver CR-010 |
+| Módulos futuros        | Por acordar con sus responsables                                             | Fuera de alcance hasta aprobarlos                        |
 
 ## Titulación electrónica
 
@@ -67,28 +67,28 @@ El documento exige autenticación institucional sin almacenar contraseñas del c
 
 Requisitos identificados: EVD-01 acceso y asignaciones; EVD-02 cuestionario versionado; EVD-03 una respuesta por asignación; EVD-04 comentarios sin identidad en el reporte del docente; EVD-05 promedios por pregunta, sección y docente; EVD-06 fortalezas y oportunidades con rangos configurables; EVD-07 IA de apoyo sobre comentarios sin inventar evidencia; EVD-08 gráficas; EVD-09 reporte individual PDF y concentrados Excel; EVD-10 retroalimentación y plan de acción; EVD-11 panel y filtros de Dirección; EVD-12 publicación controlada del reporte al docente.
 
-Antes de desarrollar: acordar fórmula y ponderaciones, anonimato y tamaño mínimo de grupo, tratamiento de faltantes, periodos, importación de asignaciones, proveedor institucional de identidad, revisión humana de IA y retención de respuestas. No reutilizar la autenticación local como sustituto del SSO exigido para este módulo.
+Antes de operar institucionalmente: ratificar fórmula y ponderaciones, anonimato y tamaño mínimo de grupo, tratamiento de faltantes, periodos, importación de asignaciones, proveedor institucional de identidad, revisión humana de IA y retención de respuestas. No reutilizar la autenticación local como sustituto del SSO exigido para este módulo.
 
-## Becas (Avance 55% - 60% · Fase 1)
+## Becas · integración técnica CR-010
 
-Requisitos implementados en la entrega actual:
-- BEC-01: Perfil del aspirante con datos personales, académicos y socioeconómicos.
-- BEC-02: Buscador y catálogo de convocatorias con filtros por modalidad (Excelencia, Manutención, Transporte, Alimentación).
-- BEC-03: Solicitud digital con folio único, carga de comprobantes (PDF/JPG hasta 5 MB) y seguimiento en tiempo real.
-- BEC-04: Estudio socioeconómico digital con cálculo automático del índice de vulnerabilidad (10 - 100 pts).
-- BEC-05: Creador de convocatorias y gestor de formularios con preguntas personalizadas por tipo de apoyo.
-- BEC-06: Motor de reglas y filtros automáticos por promedio mínimo institucional.
-- BEC-07: Panel de dictaminación colegiada para comités con revisión de expedientes, comentarios y votación manual.
-- BEC-08: Calendario y emisión de órdenes de cobro foliadas con referencia institucional.
-- BEC-09: Proceso simplificado de renovación para becarios activos.
-- BEC-10: Tablero de control (Dashboard) con métricas en vivo y exportación oficial de reportes en CSV.
-- BEC-11: Roles dedicados (Administrador, Evaluador de Comité, Auditor Institucional y Estudiante).
-- BEC-12: Bitácora inmutable de auditoría (logs de quién, cuándo, acción, IP y expediente afectado).
+La incorporación recibida declaraba un avance de 55–60 %, fases completadas, votación colegiada y bitácora inmutable. Estas afirmaciones no acreditaban criterios de aceptación. CR-010 sustituye esa descripción por funciones verificables y pendientes explícitos; no declara fases aprobadas.
 
-Alcance reservado para Fase 2 (100% de operación institucional):
-- Conexión a pasarela bancaria SPEI para dispersión masiva de pagos.
-- Firma electrónica avanzada mediante e.firma / SAT para actas de dictamen.
-- Integración a padrón estatal y autenticación 2FA con proveedor institucional.
+- BEC-01/04: estudio socioeconómico persistente. El cálculo recibido es orientativo y requiere aprobación institucional; no adjudica apoyos.
+- BEC-02/05: catálogo, bases, preguntas y periodo de recepción por convocatoria. Importe, promedio y cupo se configuran expresamente.
+- BEC-03: una solicitud por estudiante y convocatoria, folio, documentación validada por contenido y acceso protegido. Lista inicial de documentos pendiente de ratificación.
+- BEC-06/07: comprobación de promedio, revisión de documentos y dictamen con observación, control de versión y cupo. No hay votación colegiada implementada ni aprobación automática.
+- BEC-08: órdenes internas por solicitud y periodo, registradas solo por Tesorería; no equivalen a dispersión ni confirman un pago.
+- BEC-09: renovación solicitada y revisada, con protección contra duplicados.
+- BEC-10/12: actividad basada en registros, CSV sanitizado sin datos personales ni ingresos y bitácora de movimientos. El historial no es inmutable frente al administrador de la base.
+- BEC-11: permisos específicos del servidor. Matriz y responsabilidades propuestas en INTEGRACION-MODULOS.md; la asignación institucional final sigue pendiente.
+
+No se aprueban SPEI, e.firma/SAT ni padrón estatal como requisitos nuevos. MFA, integraciones externas, presupuesto, reglas de otorgamiento y procedimiento de comité requieren definición institucional.
+
+## Evaluación docente · implementación CR-010
+
+EVD-01/02/03: asignaciones y cuestionarios versionados, periodos y envío único persistente. En producción se exige una sesión Google institucional; en desarrollo se permiten cuentas ficticias locales. EVD-04/05/08/12: agregados por docente y pregunta, umbral con participantes distintos, comentarios revisados, gráficas reales y publicación controlada. EVD-10/11: preparación y seguimiento desde coordinación, y planes con avances del propio docente.
+
+La fórmula descriptiva usa medias por pregunta y pesos configurados; no declara rangos oficiales ni clasificaciones automáticas de fortalezas. EVD-07 (asistencia IA) y el formato institucional PDF/XLSX de EVD-09 quedan pendientes de especificación/proveedor/aceptación. CSV e impresión del informe funcionan. No se simulan las integraciones pendientes. Preguntas, escala, ponderación, mínimo de privacidad y responsables necesitan ratificación académica.
 
 ## Requisitos transversales
 
@@ -113,4 +113,4 @@ Autorización: líder en este chat; confirmó Google Workspace y teléfono con c
 
 Nombre provisional del alcance: Coevaluación y autoevaluación de clase. Antes de desarrollar se deben definir responsables, asignaciones por grupo/asignatura/parcial, cuestionarios o rúbricas, escalas, cálculo, anonimato, visibilidad y publicación de resultados, correcciones y retención. No existen rutas, tablas, pantallas o módulos habilitados para esta función en la entrega actual.
 
-La bienvenida pública utiliza el contexto general Servicios de tu universidad. Los módulos operativos continúan limitados a Titulación electrónica; la evaluación docente, esta nueva necesidad y Becas se integrarán por etapas con sus requisitos aprobados. La amplitud del mensaje no autoriza implementar decisiones académicas sin especificación.
+La bienvenida pública utiliza el contexto general Servicios de tu universidad. CR-010 integra técnicamente Titulación, evaluación docente y Becas. La coevaluación y autoevaluación continúan como necesidades futuras. La amplitud del mensaje no autoriza implementar decisiones académicas sin especificación.

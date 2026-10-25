@@ -1,5 +1,7 @@
 # Arquitectura de interfaz: acceso y espacio privado
 
+CR-010 integra los tres módulos en el mismo marco. Cada dominio declara sus rutas y recibe únicamente las pestañas de su rol desde shared/navigation.js. El inicio usa filas compactas de servicios habilitados. Los destinos previos pertinentes de evaluación se conservan; los perfiles apuntan a la cuenta común. [Flujos y límites](INTEGRACION-MODULOS.md).
+
 CR-008 amplía únicamente la bienvenida pública al portal completo: Servicios de tu universidad, con trámites, evaluaciones y apoyos como contexto. UniversityScene.jsx contiene la ilustración SVG original; WelcomeArt mantiene repetición y preferencia de movimiento. El home privado conserva solo módulos implementados. La mención del líder a coevaluación/autoevaluación por parcial se registra como alcance futuro en REQUISITOS.md, sin rutas o datos simulados.
 
 Actualización CR-007: los títulos de pestaña se derivan de shared/navigation.js; la carga diferida ocurre dentro del Shell y conserva el marco. En móvil, Ir al inicio de sesión permite enfocar el formulario sin recorrer la ilustración. La preferencia de movimiento vigente es CR-006, compartida desde el footer; sustituye las referencias históricas a detección automática del sistema. [Revisión integral](REVISION-INTEGRAL.md).

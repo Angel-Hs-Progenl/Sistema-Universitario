@@ -74,3 +74,15 @@ Retención, cifrado externo, programación, offsite y objetivos RPO/RTO deben de
 La versión actual no se presenta como lista para producción. Antes del uso real: aprobación de requisitos y aviso legal, logo/paleta autorizados, TLS y proxy con límite de cuerpo, SMTP probado, SSO/MFA según módulo, rate limit compartido, antivirus/cuotas/conciliación de archivos, base con mínimos privilegios, monitoreo y política de logs sin datos personales, restauración demostrada y pruebas de carga/seguridad/aceptación con las áreas.
 
 Para servir la build React, el servidor web debe redirigir rutas del cliente a index.html y enviar `/api` a FastAPI bajo el mismo origen. Definir CSP para contenido y fuentes del propio origen; las fuentes ya se alojan localmente. El servidor Vite es únicamente de desarrollo. No se ha desplegado ni publicado un sitio.
+
+## Operación de módulos integrados · CR-010
+
+La base local del líder se conserva en 127.0.0.1:5434; no requiere Docker en ese equipo. `./scripts/start-db.ps1` verifica la conexión y puede reutilizar el clúster existente; no lo inicializa ni lo borra. Compose usa 5433 por defecto y admite POSTGRES_PORT. Nunca ejecutar `docker compose down -v` para resolver una migración.
+
+Antes de actualizar, detén la API y frontend y ejecuta `python scripts/database.py migrate` con el Python de .venv. Crea respaldo de base y adjuntos en data/backups y comprueba la revisión de Alembic al terminar. Para una base nueva debe existir primero el usuario/base PostgreSQL. `alembic check` desde un proceso nuevo no debe proponer eliminar tablas ni recrear índices.
+
+Cuentas ficticias adicionales: docente@demo.uto.local (sus asignaturas, informes publicados y planes); evaluador@demo.uto.local (revisión de becas); auditor@demo.uto.local (actividad y bitácora). Contraseña demo común. El seed es idempotente y no reinicia evaluaciones enviadas. El umbral de dos participantes y la escala de sus ejemplos no son criterios oficiales.
+
+Las órdenes de Becas son registros internos programados por Tesorería; no contienen referencias SPEI fabricadas ni confirman pagos. La revisión de comentarios de evaluación es humana y previa a publicación. En producción, Evaluación docente requiere sesión Google institucional; configurar OAuth por el procedimiento de ACCESO-INSTITUCIONAL.md.
+
+La revisión local del 24/10/2026 creó un respaldo previo, restauró una copia en una base separada terminada en _test y verificó huellas de usuarios y tablas de Titulación antes/después de migrar, así como sus 10 adjuntos. No sustituye una política institucional de respaldo/retención, ni autoriza usar el clúster de desarrollo para producción.

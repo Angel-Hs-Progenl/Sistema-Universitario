@@ -26,6 +26,15 @@ from .domain import (
 router = APIRouter(prefix="/api/v1/titulacion", tags=["Titulación"])
 
 
+def title_user(user=Depends(current_user)):
+    require_role(user, "estudiante", "escolares", "administrador", "tesoreria", "vinculacion")
+    return user
+
+
+# Autorización cerrada por dominio, también para futuras incorporaciones de roles.
+router.dependencies.append(Depends(title_user))
+
+
 def get_app(db, id, user, lock=False):
     stmt = select(Application).where(Application.id == id)
     if lock:
