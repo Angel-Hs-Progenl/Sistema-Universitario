@@ -107,3 +107,11 @@ La necesidad de coevaluación/autoevaluación se registra para análisis posteri
 Cambio de presentación autorizado: dibujo vectorial original en Goshawk.jsx con alas anchas de extremos redondeados, cola barrada larga, ceja clara, pico curvo, pecho claro barrado y garras articuladas. El rótulo se centra dentro de la cara frontal y sigue su perspectiva. Se conservan plataforma, bandeja, documentos, logo del header, login, paleta y animación compartida. Sin nuevos recursos externos, dependencias, modelos, API o requisitos de negocio.
 
 La interpretación gráfica de la mascota sigue siendo una propuesta; no se declara una especie oficial de la universidad. Fuentes en DISENO.md y evidencia local en VALIDACION.md.
+
+## Registro CR-010 · Integración y corrección de los módulos recibidos
+
+24 de octubre de 2026. El líder autoriza en el chat resolver los problemas del pull, integrar los módulos, corregir las diferencias de diseño y resolver la base de datos. Corrección técnica dentro del stack y del monolito modular: permisos cerrados, carga de documentos, migraciones 0005–0007, persistencia de evaluación docente, navegación por rol, diseño compartido, arranque PostgreSQL y documentación de equipos.
+
+La asignación de responsabilidades, reglas académicas, documentación de becas y fórmula orientativa recibida siguen como propuestas pendientes de ratificación institucional. No se adoptan SPEI, SAT, padrón, proveedor IA o MFA como nuevos requisitos aprobados. Las interfaces identifican operaciones internas y no simulan dichas integraciones. No se sustituye el SSO de producción por contraseñas locales para evaluación.
+
+Análisis, matriz de permisos, flujos, límites y criterios: [INTEGRACION-MODULOS.md](INTEGRACION-MODULOS.md). Evidencia y pruebas: [VALIDACION.md](VALIDACION.md). Los datos existentes se respaldan y conservan; las pruebas usan una base separada. No se abrió una issue externa ni se publica un commit desde esta implementación. El registro conserva la autorización del líder, sin declarar fases formalmente aprobadas.

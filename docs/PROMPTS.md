@@ -165,3 +165,12 @@ y verifica permisos en FastAPI. No simules Google habilitado sin OAuth real.
 Para evidencia usa solo cuentas ficticias; los screenshots seleccionados
 van a docs/capturas. No publiques .env, tokens, HAR o estados del navegador.
 ```
+
+## Integrar cambios sobre CR-010
+
+```text
+Trabaja en el monolito existente. Lee INTEGRACION-MODULOS.md, ARQUITECTURA.md, DISENO.md y los requisitos de tu dominio. Reutiliza Shell, ModuleLayout, Work, ui.jsx, api.js y los tokens; declara rutas en tu módulo y navegación por tarea/rol en shared/navigation.js.
+No crees otro login, sidebar, paleta ni perfiles fijos en JSX. Usa datos de API y prueba carga, vacío, error y confirmación; nunca anuncies guardado sin una respuesta exitosa. Mantén tablas dentro de su región desplazable y formularios en una columna en móvil. Usa Modal/BusyButton/Field/ErrorSummary; evita alert/confirm y console.log de respuestas o expedientes.
+Verifica permisos en FastAPI, propietario, estado y versión. Registrar un rol exige migración y pruebas negativas en TODOS los módulos. Registrar un modelo exige incluirlo en Alembic y pasar alembic check desde un proceso nuevo. No uses create_all ni borres datos para migrar.
+Datos de demostración solo ficticios y marcados como ejemplo, en demo.py/fixtures; nunca en una carpeta data dentro del código. Conserva .gitignore de expedientes y secretos. Cambios de reglas institucionales necesitan revisión del líder y CASCADA.md. Entrega evidencia móvil/escritorio y pruebas relevantes sobre PostgreSQL separado; no llames producción a una prueba local.
+```

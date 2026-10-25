@@ -74,8 +74,8 @@ export default function Login() {
           Un espacio para tus trámites, evaluaciones y solicitudes de apoyo.
         </p>
         <p className="welcome-availability">
-          Por ahora, Titulación electrónica. Evaluaciones y becas se
-          incorporarán por etapas.
+          Titulación, evaluación docente y becas en un mismo portal, con accesos
+          según tu rol.
         </p>
         <WelcomeArt />
       </aside>

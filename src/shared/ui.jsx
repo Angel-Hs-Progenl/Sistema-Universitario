@@ -102,7 +102,9 @@ export function ErrorSummary({
               <a
                 href={`#${e.field}`}
                 onClick={(event) => {
-                  const field = document.getElementById(e.field);
+                  const field =
+                    document.getElementById(e.field) ||
+                    document.getElementById(e.field.split(".")[0]);
                   if (field) {
                     event.preventDefault();
                     field.focus();
@@ -179,19 +181,27 @@ export function useAsync(load, deps = []) {
   const [data, setData] = useState(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true);
+  const generation = useRef(0);
   async function refresh() {
+    const request = ++generation.current;
     setError("");
     setLoading(true);
     try {
-      setData(await load());
+      const result = await load();
+      if (request === generation.current) setData(result);
+      return result;
     } catch (e) {
-      setError(e.message);
+      if (request === generation.current) setError(e.message);
     } finally {
-      setLoading(false);
+      if (request === generation.current) setLoading(false);
     }
   }
   useEffect(() => {
+    setData(null);
     refresh();
+    return () => {
+      generation.current += 1;
+    };
   }, deps);
   return { data, setData, error, setError, loading, refresh };
 }

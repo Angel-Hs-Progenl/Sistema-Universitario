@@ -139,3 +139,19 @@ La coevaluación/autoevaluación por parcial queda registrada como necesidad fut
 - Capturas anónimas revisadas de escritorio/móvil actualizadas en docs/capturas/acceso.png y acceso-movil.png. Copias locales en output/qa/azor-cr009*.png, ignoradas. El resto de la composición, documentos, bandeja, login y logo del header se conserva.
 
 Propuesta gráfica pendiente de revisión del líder; no se declara identidad zoológica oficial de la mascota, aceptación institucional ni validación de producción. Sin commit o push.
+
+## Integración CR-010 · 24 de octubre de 2026
+
+Frontend: 12 pruebas aprobadas y compilación correcta. Guardia del repositorio: 3 pruebas unitarias aprobadas.
+
+- Compilación del frontend restaurada: se sustituyeron las vistas mock y los estilos propios por pantallas conectadas y componentes compartidos. No se añadieron excepciones de data/ al .gitignore.
+- Backend: **61 pruebas aprobadas en PostgreSQL 16**, con base uto_integracion_test separada de la aplicación. Incluye restricciones de rol, propiedad, archivos falsos/vacíos, vencimiento, versiones, orden duplicada, respuesta única concurrente, publicación, privacidad y planes.
+- SQLite temporal: **59 aprobadas y 2 omitidas**, correspondientes a concurrencia que se verifica en PostgreSQL. Se conserva una advertencia de deprecación de TestClient/httpx de las versiones instaladas; no se ocultó ni provocó fallos.
+- El límite de acceso sigue activo. La fixture limpia únicamente los intentos consumidos por sus sesiones de preparación; cada prueba ejerce el limitador real.
+- Migraciones: se ensayó la instalación desde cero en un proceso independiente sin importar app.main. Alembic registra todos los módulos y `alembic check` termina sin operaciones nuevas. Seed idempotente comprobado; no genera referencias bancarias ficticias.
+- Base local: respaldo previo 0003, migración a 0007 sin borrar registros; respaldo completo adicional antes de aplicar. Restauración en otra base, migración y comparación de huellas de usuarios/expedientes/documentos/eventos conservadas. Diez adjuntos previos coinciden byte por byte con la copia.
+- Navegador: estudiante consulta convocatorias, asignaciones y cuestionario; revisión previa con Escape y retorno de foco; docente consulta sus resultados publicados y descarga CSV; periodo no publicado bloquea resultados; coordinación registra un periodo, una asignación y una versión de cuestionario ficticios desde formularios reales. El editor usa campos para escala, secciones, preguntas y pesos. No se consumió la evaluación pendiente de la cuenta estudiante demo. Los borradores de coordinación no aparecen en las vistas del estudiante/docente; 9 regresiones de evaluación se repitieron en PostgreSQL tras este ajuste. El control de movimiento se desactivó y reactivó; quedó activado al terminar.
+- Cuestionario y pestañas de coordinación comprobados a 320/390/768/1440 px, sin desplazamiento horizontal global. Las pestañas locales se desplazan dentro de su contenedor. No equivale a auditoría WCAG completa ni prueba con usuarios institucionales.
+- Evidencia ficticia seleccionada en docs/capturas: inicio-integrado.jpg, becas-integrado.jpg, evaluacion-resultados.jpg, evaluacion-periodos.jpg evaluacion-movil.jpg y becas-expediente.jpg.
+
+Docker Desktop no está instalado en este equipo: se verificó PostgreSQL local. La configuración Compose se hizo coherente con .env.example, pero no se declara ejecutada aquí. Google OAuth, SMTP institucional, SPEI, SAT, padrón, MFA y proveedor IA no se probaron ni se simulan como servicios activos. Pendientes académicos y formatos de reporte en INTEGRACION-MODULOS.md. No es una validación de producción.

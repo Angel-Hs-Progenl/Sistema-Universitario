@@ -10,7 +10,10 @@ flowchart LR
   R -->|API v1 y cookie de sesión| F[FastAPI]
   F --> I[Identidad y permisos]
   F --> T[Titulación]
-  F -. futuras entregas .-> E[Evaluación docente y Becas]
+  F --> E[Evaluación docente]
+  F --> B[Becas]
+  E --> P
+  B --> P
   I --> P[(PostgreSQL)]
   T --> P
   T --> A[Archivos privados]
@@ -27,12 +30,16 @@ src/
   modules/
     home/               Inicio y ayuda
     auth/               Acceso y recuperación
-    titulacion/         Vistas del módulo
+    titulacion/         Expedientes y revisión por área
+    becas/              Convocatorias, solicitudes y revisión
+    evaluacion-docente/ Asignaciones, cuestionarios, informes y coordinación
 backend/
   app/
     core/               Configuración, DB, identidad y sesiones compartidas
     modules/
-      titulacion/       Modelos, dominio y router propios
+      titulacion/       Expedientes y documentos
+      becas/            Solicitudes, estudio y apoyos
+      evaluacion_docente/ Cuestionarios, periodos, respuestas y planes
     main.py             Registro de routers y middleware
   migrations/           Versiones Alembic revisadas por el líder
   tests/                Pruebas de API y seguridad
@@ -81,3 +88,13 @@ Decisiones registradas: ADR-001 monolito modular; ADR-002 React/JS y FastAPI/Pyt
 La arquitectura sigue siendo monolito modular. core/auth.py atiende acceso local, perfil y recuperación; core/identity.py concentra dominio y normalización; core/google_oauth.py gestiona Google OIDC; core/sessions.py crea la misma sesión para ambos métodos. core/models.py conserva usuarios, sesiones, vinculaciones, intentos OAuth y eventos de cuenta. No existe otro catálogo de roles o almacenamiento de sesión para Google.
 
 En frontend, shared/Brand.jsx sirve la identidad común; app/AccountMenu.jsx presenta la cuenta; modules/auth/Account.jsx permite editar el nombre visible. El perfil académico permanece en Titulación. La migración 0003 es aditiva. Los equipos consumen current_user/API y no implementan otro acceso. Configuración y protocolo de vinculación en [ACCESO-INSTITUCIONAL.md](ACCESO-INSTITUCIONAL.md); instalación en [INSTALACION.md](INSTALACION.md).
+
+## Integración CR-010
+
+Las rutas se extraen a cada dominio; el Shell conserva su Suspense durante la carga. `ModuleLayout` y `Work` complementan los componentes compartidos. La preferencia de movimiento permanece centralizada. Los módulos no incluyen otro login, identidad o CSS global por rol.
+
+Alembic registra explícitamente los modelos de los tres módulos. La migración 0005 incorpora Docente, el método de sesión y la integridad económica de Becas; 0006 añade evaluación. Los índices del ORM reflejan los nombres y tipos ya migrados. No se reescriben migraciones anteriores ni se borran registros.
+
+Evaluación conserva una definición inmutable de cuestionario por versión. El envío bloquea el periodo y usa una clave única por asignación; el cierre usa el mismo bloqueo. Los informes se calculan en el servidor con participantes distintos y comentarios revisados, sin identidad estudiantil. En producción se exige sesión Google; vincular Google no convierte una sesión de contraseña en SSO.
+
+Matriz, límites y recorridos: [INTEGRACION-MODULOS.md](INTEGRACION-MODULOS.md). La bitácora y la configuración de datos académicos siguen pendientes de ratificación institucional; no se presentan como decisiones oficiales.

@@ -8,6 +8,7 @@ from .core.google_oauth import router as google_router
 from .core.security import ORIGIN, PRODUCTION
 from .modules.titulacion.router import router as titles_router
 from .modules.becas.router import router as becas_router
+from .modules.evaluacion_docente.router import router as evaluations_router
 
 if PRODUCTION and not os.getenv("SMTP_HOST"):
     raise RuntimeError("Configura SMTP antes de producción.")
@@ -95,3 +96,4 @@ app.include_router(auth_router)
 app.include_router(google_router)
 app.include_router(titles_router)
 app.include_router(becas_router)
+app.include_router(evaluations_router)

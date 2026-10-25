@@ -1,5 +1,7 @@
 # Sistema de diseño de servicios universitarios
 
+**CR-010 · Módulos integrados:** Becas y Evaluación docente adoptan el Shell, ModuleLayout, encabezados de tarea y tokens comunes. El inicio muestra los módulos habilitados en filas compactas; los nuevos módulos usan bandejas, listas de documentos y cuestionarios por sección, sin dashboards decorativos ni paletas por rol. Detalles y permisos en [INTEGRACION-MODULOS.md](INTEGRACION-MODULOS.md).
+
 **CR-009 · Anatomía del azor y rótulo:** se redibuja solo el ave de la bienvenida en Goshawk.jsx. Referencias: [SEO/BirdLife, azor común](https://seo.org/ave/azor-comun/) y [Cornell Lab, American Goshawk](https://www.allaboutbirds.org/guide/American_Goshawk/id), consultadas el 13/10/2026; se observaron también las fotografías de su [galería](https://www.allaboutbirds.org/guide/American_Goshawk/photo-gallery). Se toman rasgos compartidos: alas anchas con extremos redondeados, cola larga, ceja clara, barrado del pecho y pico de rapaz. La paleta sigue siendo institucional propuesta, no reproducción cromática zoológica. El dibujo es original y no incorpora fotografías o trazados de las fuentes. No se asigna una especie oficial a la mascota universitaria.
 
 El texto UT DE ORIENTAL se centra en la cara frontal con textAnchor=middle, dominantBaseline=central y transformación que sigue la pendiente de la plataforma; conserva márgenes dentro de la franja. Plataforma, bandeja, documentos, composición, textos del acceso y movimiento CR-006/008 se conservan.

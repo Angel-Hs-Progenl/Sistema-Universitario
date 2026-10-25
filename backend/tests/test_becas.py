@@ -1,6 +1,9 @@
 """Pruebas del módulo de gestión de becas de la UT de Oriental."""
 
 import pytest
+from datetime import timedelta
+from app.core.models import now
+from app.modules.becas.domain import DOCUMENTOS
 from app.modules.becas.domain import calculate_vulnerability_score, evaluate_applicant_rules
 
 
@@ -50,8 +53,8 @@ def test_becas_full_flow(clients):
         "min_gpa": 9.0,
         "amount": 4500.0,
         "slots": 20,
-        "start_date": "2026-05-01T00:00:00Z",
-        "end_date": "2026-06-30T23:59:59Z",
+        "start_date": (now() - timedelta(days=1)).isoformat(),
+        "end_date": (now() + timedelta(days=30)).isoformat(),
         "custom_questions": ["¿Participas en proyectos de investigación?"],
     }
     # Student cannot create calls
@@ -91,7 +94,7 @@ def test_becas_full_flow(clients):
 
     # Duplicate application rejected
     res_dup = student.post("/api/v1/becas/solicitudes", json=app_payload)
-    assert res_dup.status_code == 400
+    assert res_dup.status_code == 409
 
     # 4. Upload document to application
     doc_res = student.post(
@@ -100,6 +103,24 @@ def test_becas_full_flow(clients):
         files={"file": ("kardex_oficial.pdf", b"%PDF-1.4 sample content", "application/pdf")},
     )
     assert doc_res.status_code == 200
+
+    # La aprobación exige evidencia completa, revisada por el área responsable.
+    for document in DOCUMENTOS:
+        if document["required"] and document["id"] != "kardex":
+            assert student.post(
+                f"/api/v1/becas/solicitudes/{app_id}/documentos",
+                data={"kind": document["id"]},
+                files={"file": ("ejemplo.pdf", b"%PDF-1.4 ejemplo ficticio", "application/pdf")},
+            ).status_code == 200
+    detail = evaluator.get(f"/api/v1/becas/solicitudes/{app_id}").json()
+    version = detail["version"]
+    for document in detail["documents"]:
+        reviewed = evaluator.post(
+            f"/api/v1/becas/solicitudes/{app_id}/documentos/{document['id']}/revision",
+            json={"status": "validado", "version": version},
+        )
+        assert reviewed.status_code == 200
+        version = reviewed.json()["version"]
 
     # 5. Evaluator runs automated rules check
     res_eval_rules = evaluator.post(f"/api/v1/becas/solicitudes/{app_id}/evaluar-reglas")
@@ -110,7 +131,7 @@ def test_becas_full_flow(clients):
     dictamen_payload = {
         "decision": "aprobada",
         "committee_notes": "Cumple ampliamente con el promedio y perfil socioeconómico.",
-        "score": 85.0,
+        "version": version,
     }
     res_dictamen = evaluator.post(f"/api/v1/becas/solicitudes/{app_id}/dictamen", json=dictamen_payload)
     assert res_dictamen.status_code == 200
@@ -122,7 +143,7 @@ def test_becas_full_flow(clients):
         "period": "Parcial 1 - Mayo 2026",
         "scheduled_date": "2026-05-15T12:00:00Z",
     }
-    res_order = admin.post("/api/v1/becas/ordenes-cobro/generar", json=order_payload)
+    res_order = clients["tesoreria"].post("/api/v1/becas/ordenes-cobro/generar", json=order_payload)
     assert res_order.status_code == 200
     assert "folio_orden" in res_order.json()
 

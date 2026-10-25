@@ -1,5 +1,8 @@
 export const ROLES = {
   estudiante: "Estudiante",
+  docente: "Docente",
+  evaluador: "Comité de Becas",
+  auditor: "Auditoría",
   escolares: "Servicios Escolares",
   administrador: "Administrador",
   tesoreria: "Tesorería",
