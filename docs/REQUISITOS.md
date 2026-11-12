@@ -15,7 +15,7 @@ Los documentos originales no se incorporan a Git. Las descripciones siguientes c
 | Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación      | Implementada para validación local           |
 | Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                     | Implementada; emisión oficial externa        |
 | Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora  | Requisitos identificados; sin implementación |
-| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación | Avance 75% (Fase 2 implementada para validación) |
+| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación | Avance 85% (Fase 2 extendida para validación) |
 | Módulos futuros        | Por acordar con sus responsables                                             | Fuera de alcance hasta aprobarlos            |
 
 ## Titulación electrónica
@@ -69,7 +69,7 @@ Requisitos identificados: EVD-01 acceso y asignaciones; EVD-02 cuestionario vers
 
 Antes de desarrollar: acordar fórmula y ponderaciones, anonimato y tamaño mínimo de grupo, tratamiento de faltantes, periodos, importación de asignaciones, proveedor institucional de identidad, revisión humana de IA y retención de respuestas. No reutilizar la autenticación local como sustituto del SSO exigido para este módulo.
 
-## Becas (Avance 75% · Fase 2)
+## Becas (Avance 85% · Fase 2 Extendida)
 
 Requisitos implementados en la entrega actual:
 - BEC-01: Perfil del aspirante con datos personales, académicos y socioeconómicos.
@@ -88,9 +88,11 @@ Requisitos implementados en la entrega actual:
 - BEC-14: Validación y dictamen del estudio socioeconómico por personal administrativo/evaluador con ajuste de puntaje y notas.
 - BEC-15: Registro de acta formal de sesión de comité (número de sesión ordinaria/extraordinaria, acuerdo y fecha de dictamen).
 - BEC-16: Resolución colegiada de solicitudes de renovación para personal con justificación de aprobación/rechazo.
+- BEC-17: Generación y consulta del Padrón Oficial de Beneficiarios con desglose nominal, académico, bancario y descarga en CSV institucional.
+- BEC-18: Gestión de dispersión por lote bancario SPEI con folio de lote (`batch_folio`), fecha de dispersión y notificación automática al estudiante.
 
 Alcance reservado para Fase 3 (100% de operación institucional):
-- Conexión a pasarela bancaria SPEI para dispersión masiva de pagos en tiempo real.
+- Conexión a pasarela bancaria directa (API STP / Webhooks bancarios).
 - Firma electrónica avanzada mediante e.firma / SAT para actas de dictamen.
 - Integración a padrón estatal y autenticación 2FA con proveedor institucional.
 

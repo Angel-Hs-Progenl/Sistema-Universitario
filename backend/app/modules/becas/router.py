@@ -323,7 +323,16 @@ def get_application_detail(
             "dependents_count": socio.dependents_count if socio else None,
             "housing_type": socio.housing_type if socio else None,
             "vulnerability_score": socio.vulnerability_score if socio else None,
+            "validation_status": socio.validation_status if socio else "pendiente",
+            "validation_notes": socio.validation_notes if socio else "",
+            "verified_score": socio.verified_score if socio else None,
         } if socio else None,
+        "bank_name": app.bank_name,
+        "bank_clabe": app.bank_clabe,
+        "bank_account_holder": app.bank_account_holder,
+        "dictamen_session": app.dictamen_session,
+        "dictamen_agreement": app.dictamen_agreement,
+        "dictamen_date": app.dictamen_date.isoformat() if app.dictamen_date else None,
         "documents": [
             {
                 "id": d.id,
@@ -625,6 +634,10 @@ def list_payment_orders(
             "scheduled_date": order.scheduled_date.isoformat(),
             "status": order.status,
             "reference": order.reference,
+            "bank_name": order.bank_name or app.bank_name,
+            "bank_clabe": order.bank_clabe or app.bank_clabe,
+            "batch_folio": order.batch_folio,
+            "dispersed_at": order.dispersed_at.isoformat() if order.dispersed_at else None,
         }
         for order, app, call, student in rows
     ]
@@ -667,6 +680,8 @@ def generate_payment_order(
         scheduled_date=sched_dt,
         status="programada",
         reference=f"UTO-SPEI-{app.id:04d}-{count + 1:04d}",
+        bank_name=app.bank_name,
+        bank_clabe=app.bank_clabe,
     )
     db.add(order)
 
@@ -690,6 +705,59 @@ def generate_payment_order(
     db.commit()
 
     return {"message": "Orden de cobro generada con éxito.", "folio_orden": folio_orden}
+
+
+class DisperseOrderPayload(BaseModel):
+    batch_folio: str = PydField(min_length=3, max_length=50)
+
+
+@router.post("/ordenes-cobro/{order_id}/dispersar")
+def disperse_payment_order(
+    order_id: int,
+    payload: DisperseOrderPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Tesorería o Administrador registra la dispersión bancaria SPEI para una orden de cobro."""
+    require_role(user, "administrador", "tesoreria")
+    order = db.get(ScholarshipPaymentOrder, order_id)
+    if not order:
+        raise HTTPException(404, "Orden de cobro no encontrada.")
+
+    app = db.get(ScholarshipApplication, order.application_id)
+    order.status = "dispersada"
+    order.batch_folio = payload.batch_folio
+    order.dispersed_at = now()
+    if app and not order.bank_clabe:
+        order.bank_name = app.bank_name
+        order.bank_clabe = app.bank_clabe
+
+    if app:
+        db.add(
+            Notification(
+                user_id=app.user_id,
+                message=f"Tu orden de pago {order.folio_orden} ha sido dispersada exitosamente vía SPEI (Lote {payload.batch_folio}).",
+            )
+        )
+
+    audit_becas(
+        db,
+        user,
+        f"Orden de cobro dispersada: {order.folio_orden}",
+        "ScholarshipPaymentOrder",
+        str(order.id),
+        f"Lote SPEI: {payload.batch_folio}, Monto: ${order.amount:.2f}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+
+    return {
+        "message": "Dispersión registrada con éxito.",
+        "folio_orden": order.folio_orden,
+        "batch_folio": order.batch_folio,
+        "dispersed_at": order.dispersed_at.isoformat(),
+    }
 
 
 # ---------------- RENOVACIONES ---------------- #
@@ -812,8 +880,46 @@ def get_dashboard_stats(
         "total_committed_funds": float(total_committed_funds),
         "by_modality": by_modality,
         "average_gpa": round(float(avg_gpa), 2),
-        "completion_progress_percent": 75,  # Avance fase 2 institucional
+        "completion_progress_percent": 85,  # Avance fase 2 extendida (85%)
     }
+
+
+@router.get("/padron-beneficiarios")
+def get_beneficiaries_padron(
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """Devuelve el padrón oficial de beneficiarios con estatus bancario y montos para auditoría."""
+    stmt = (
+        select(ScholarshipApplication, ScholarshipCall, User)
+        .join(ScholarshipCall, ScholarshipApplication.call_id == ScholarshipCall.id)
+        .join(User, ScholarshipApplication.user_id == User.id)
+        .where(ScholarshipApplication.status.in_(("aprobada", "renovada")))
+        .order_by(desc(ScholarshipApplication.updated_at))
+    )
+    rows = db.execute(stmt).all()
+    results = []
+    for app, call, applicant in rows:
+        results.append({
+            "id": app.id,
+            "folio": app.folio,
+            "student_name": applicant.name,
+            "student_email": applicant.email,
+            "major": app.major,
+            "academic_term": app.academic_term,
+            "gpa": app.gpa,
+            "call_code": call.code,
+            "call_title": call.title,
+            "modalidad": call.modalidad,
+            "amount": call.amount,
+            "status": app.status,
+            "has_bank_clabe": bool(app.bank_clabe),
+            "bank_name": app.bank_name or "Pendiente de captura",
+            "clabe_masked": f"***{app.bank_clabe[-4:]}" if app.bank_clabe else "Sin CLABE",
+            "dictamen_session": app.dictamen_session or "Sesión ordinaria",
+            "dictamen_date": app.dictamen_date.isoformat() if app.dictamen_date else None,
+        })
+    return results
 
 
 @router.get("/reportes/export")

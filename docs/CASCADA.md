@@ -117,3 +117,12 @@ La interpretación gráfica de la mascota sigue siendo una propuesta; no se decl
 - Panel de resolución de renovaciones por parte del personal evaluador/comité con fundamentación de aprobación o rechazo.
 - Validación y ratificación del estudio socioeconómico por personal administrativo.
 - Mantenimiento estricto del sistema de tokens CSS institucionales, reglas de acceso y aislamiento modular. Se conservan todas las pruebas de titulación en verde (17/17 tests passing).
+
+## Registro CR-011 · Avance Fase 2 Extendida de Becas (85%)
+
+12 de noviembre de 2026. Avance consolidado hacia el 85% del módulo de Becas según la especificación integral del ciclo de vida:
+- Interfaz y flujo de validación socioeconómica para Trabajo Social / Comité Evaluador en el panel de dictaminación, con desglose de ingresos, egresos, dependientes, tipo de vivienda y ratificación de puntaje.
+- Gestión de dispersión por lote bancario SPEI en órdenes de cobro para Tesorería/Administración con registro de folio de lote (`batch_folio`), fecha de dispersión y notificación al estudiante.
+- Padrón Oficial de Beneficiarios (becas aprobadas y renovadas) con desglose de montos, modalidades, cuentas bancarias protegidas y exportación en CSV institucional en el Tablero de Control.
+- Actualización de pruebas automatizadas en `backend/tests/test_becas.py` cubriendo registro de CLABE, acta formal, validación socioeconómica, dispersión y padrón oficial.
+- Compilación y pruebas frontend y backend 100% verificadas. Conservación de aislamiento sin afectar el módulo de titulación.

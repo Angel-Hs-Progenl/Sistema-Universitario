@@ -41,6 +41,14 @@ export default function PanelDictaminacion() {
   const [formalMsg, setFormalMsg] = useState("");
   const [formalErr, setFormalErr] = useState("");
 
+  // Socioeconomic validation state
+  const [socioStatus, setSocioStatus] = useState("validado");
+  const [socioNotes, setSocioNotes] = useState("");
+  const [socioScoreVal, setSocioScoreVal] = useState("");
+  const [savingSocio, setSavingSocio] = useState(false);
+  const [socioMsg, setSocioMsg] = useState("");
+  const [socioErr, setSocioErr] = useState("");
+
   const {
     data: applications,
     loading,
@@ -103,6 +111,31 @@ export default function PanelDictaminacion() {
       });
       setRunningRules(false);
     }, 400);
+  }
+
+  async function handleSocioValidate(e) {
+    e.preventDefault();
+    if (!appDetail?.applicant?.id) return;
+    setSavingSocio(true);
+    setSocioErr("");
+    setSocioMsg("");
+    try {
+      await api("/becas/socioeconomico/validar", {
+        method: "POST",
+        body: {
+          user_id: appDetail.applicant.id,
+          validation_status: socioStatus,
+          validation_notes: socioNotes,
+          verified_score: socioScoreVal ? parseFloat(socioScoreVal) : undefined,
+        },
+      });
+      setSocioMsg("Validación socioeconómica registrada exitosamente.");
+      refreshDetail();
+    } catch (err) {
+      setSocioErr(err.message);
+    } finally {
+      setSavingSocio(false);
+    }
   }
 
   async function handleFormalSubmit(e) {
@@ -382,6 +415,99 @@ export default function PanelDictaminacion() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Estudio Socioeconómico y Validación */}
+              <div
+                style={{
+                  border: "1px solid var(--line)",
+                  borderRadius: "var(--radius)",
+                  padding: "16px",
+                  background: "var(--surface)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                  <h4 style={{ margin: 0, color: "var(--brand)" }}>Estudio Socioeconómico del Aspirante</h4>
+                  {appDetail.socioeconomic && (
+                    <span className={`badge ${appDetail.socioeconomic.validation_status === "validado" ? "badge-validado" : appDetail.socioeconomic.validation_status === "observado" ? "badge-rechazado" : "badge-pendiente"}`}>
+                      {appDetail.socioeconomic.validation_status === "validado" ? "Perfil Validado" : appDetail.socioeconomic.validation_status === "observado" ? "Con Observaciones" : "Pendiente de Validación"}
+                    </span>
+                  )}
+                </div>
+
+                {appDetail.socioeconomic ? (
+                  <div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px", marginBottom: "14px", background: "var(--canvas)", padding: "12px", borderRadius: "var(--radius)" }}>
+                      <div>
+                        <small style={{ color: "var(--muted)" }}>Ingreso Familiar</small>
+                        <p style={{ margin: "2px 0 0 0", fontWeight: "700" }}>${appDetail.socioeconomic.monthly_income?.toLocaleString("es-MX")} MXN</p>
+                      </div>
+                      <div>
+                        <small style={{ color: "var(--muted)" }}>Gastos Familiares</small>
+                        <p style={{ margin: "2px 0 0 0", fontWeight: "700" }}>${appDetail.socioeconomic.monthly_expenses?.toLocaleString("es-MX")} MXN</p>
+                      </div>
+                      <div>
+                        <small style={{ color: "var(--muted)" }}>Dependientes</small>
+                        <p style={{ margin: "2px 0 0 0", fontWeight: "700" }}>{appDetail.socioeconomic.dependents_count} personas</p>
+                      </div>
+                      <div>
+                        <small style={{ color: "var(--muted)" }}>Tipo de Vivienda</small>
+                        <p style={{ margin: "2px 0 0 0", fontWeight: "700", textTransform: "capitalize" }}>{appDetail.socioeconomic.housing_type}</p>
+                      </div>
+                      <div>
+                        <small style={{ color: "var(--muted)" }}>Score Vulnerabilidad</small>
+                        <p style={{ margin: "2px 0 0 0", fontWeight: "700", color: "var(--brand)" }}>{appDetail.socioeconomic.verified_score || appDetail.socioeconomic.vulnerability_score} pts</p>
+                      </div>
+                    </div>
+
+                    {appDetail.socioeconomic.validation_notes && (
+                      <p style={{ margin: "0 0 12px 0", fontSize: "0.8125rem", color: "var(--muted)" }}>
+                        <strong>Notas previas de Trabajo Social:</strong> {appDetail.socioeconomic.validation_notes}
+                      </p>
+                    )}
+
+                    <form onSubmit={handleSocioValidate} style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px dashed var(--line)", paddingTop: "12px" }}>
+                      <strong style={{ fontSize: "0.875rem" }}>Validar estudio socioeconómico (Trabajo Social):</strong>
+                      {socioMsg && <div className="alert success">{socioMsg}</div>}
+                      {socioErr && <Alert>{socioErr}</Alert>}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div className="field">
+                          <label>Dictamen socioeconómico</label>
+                          <select value={socioStatus} onChange={(e) => setSocioStatus(e.target.value)} style={{ padding: "8px" }}>
+                            <option value="validado">Validar perfil (Conforme)</option>
+                            <option value="observado">Marcar con observaciones (Inconforme)</option>
+                          </select>
+                        </div>
+                        <Field
+                          label="Puntaje ratificado (opcional)"
+                          type="number"
+                          min="10"
+                          max="100"
+                          placeholder={String(appDetail.socioeconomic.vulnerability_score || 50)}
+                          value={socioScoreVal}
+                          onChange={(e) => setSocioScoreVal(e.target.value)}
+                        />
+                      </div>
+                      <Field
+                        as="textarea"
+                        rows={2}
+                        label="Observaciones de Trabajo Social"
+                        placeholder="Comentarios sobre comprobantes de ingresos, dependientes o situación de vulnerabilidad…"
+                        value={socioNotes}
+                        onChange={(e) => setSocioNotes(e.target.value)}
+                      />
+                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <BusyButton busy={savingSocio} busyText="Validando…" type="submit" className="button button-secondary" style={{ fontSize: "0.8125rem" }}>
+                          Guardar validación socioeconómica
+                        </BusyButton>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--muted)" }}>
+                    El aspirante aún no completa su estudio socioeconómico digital en plataforma.
+                  </p>
+                )}
               </div>
 
               {/* Formulario de Dictamen */}

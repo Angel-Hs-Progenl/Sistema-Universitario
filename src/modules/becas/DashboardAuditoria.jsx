@@ -30,6 +30,38 @@ export default function DashboardAuditoria() {
     []
   );
 
+  const { data: padron, loading: loadingPadron } = useAsync(
+    () => api("/becas/padron-beneficiarios"),
+    []
+  );
+
+  function handleExportPadron() {
+    if (!padron || padron.length === 0) return;
+    const headers = ["Folio", "Estudiante", "Correo", "Carrera", "Cuatrimestre", "Promedio", "Convocatoria", "Modalidad", "Monto", "Estado", "Banco", "CLABE"];
+    const rows = padron.map((b) => [
+      b.folio,
+      `"${b.student_name}"`,
+      b.student_email,
+      `"${b.major}"`,
+      `"${b.academic_term}"`,
+      b.gpa,
+      `"${b.call_title}"`,
+      b.modalidad,
+      b.amount,
+      b.status,
+      `"${b.bank_name}"`,
+      b.clabe_masked,
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `padron_oficial_becarios_uto_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   function handleCsvExport() {
     setDownloadingCsv(true);
     window.location.href = "/api/v1/becas/reportes/export";
@@ -243,6 +275,94 @@ export default function DashboardAuditoria() {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* Padrón Oficial de Beneficiarios */}
+      <section
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--line)",
+          padding: "20px",
+          borderRadius: "var(--radius)",
+          marginBottom: "24px",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--brand)" }}>
+              <UserCheck size={20} />
+              <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Padrón Oficial de Beneficiarios (Becas Otorgadas)</h3>
+            </div>
+            <p style={{ margin: "4px 0 0 0", fontSize: "0.875rem", color: "var(--muted)" }}>
+              Relación nominal de estudiantes con dictamen favorable para entrega a Tesorería y Contraloría Universitaria.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="button button-primary"
+            style={{ fontSize: "0.8125rem" }}
+            onClick={handleExportPadron}
+            disabled={!padron || padron.length === 0}
+          >
+            <Download size={14} /> Descargar Padrón Oficial (CSV)
+          </button>
+        </div>
+
+        {loadingPadron && <p>Cargando padrón oficial…</p>}
+
+        {padron && (
+          <div className="audit-table-wrapper">
+            <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "var(--canvas)", textAlign: "left", fontSize: "0.8125rem" }}>
+                  <th style={{ padding: "10px 12px" }}>Folio Beca</th>
+                  <th style={{ padding: "10px 12px" }}>Estudiante</th>
+                  <th style={{ padding: "10px 12px" }}>Carrera</th>
+                  <th style={{ padding: "10px 12px" }}>Promedio</th>
+                  <th style={{ padding: "10px 12px" }}>Convocatoria</th>
+                  <th style={{ padding: "10px 12px" }}>Monto</th>
+                  <th style={{ padding: "10px 12px" }}>Datos Bancarios</th>
+                  <th style={{ padding: "10px 12px" }}>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {padron.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ padding: "20px", textAlign: "center", color: "var(--muted)" }}>
+                      Aún no hay becas con dictamen favorable en el padrón institucional.
+                    </td>
+                  </tr>
+                ) : (
+                  padron.map((b) => (
+                    <tr key={b.id} style={{ borderTop: "1px solid var(--line)" }}>
+                      <td style={{ padding: "10px 12px", fontWeight: "700" }}>{b.folio}</td>
+                      <td style={{ padding: "10px 12px" }}>
+                        <div style={{ fontWeight: "600", fontSize: "0.875rem" }}>{b.student_name}</div>
+                        <small style={{ color: "var(--muted)" }}>{b.student_email}</small>
+                      </td>
+                      <td style={{ padding: "10px 12px", fontSize: "0.8125rem" }}>{b.major} ({b.academic_term})</td>
+                      <td style={{ padding: "10px 12px", fontWeight: "700" }}>{b.gpa.toFixed(1)}</td>
+                      <td style={{ padding: "10px 12px", fontSize: "0.8125rem" }}>{b.call_title}</td>
+                      <td style={{ padding: "10px 12px", fontWeight: "700", color: "var(--brand)" }}>
+                        ${b.amount.toLocaleString("es-MX")}
+                      </td>
+                      <td style={{ padding: "10px 12px", fontSize: "0.8125rem" }}>
+                        {b.has_bank_clabe ? (
+                          <span><strong>{b.bank_name}</strong> ({b.clabe_masked})</span>
+                        ) : (
+                          <span style={{ color: "var(--error)" }}>Pendiente de CLABE</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "10px 12px" }}>
+                        <span className="badge badge-validado">{b.status}</span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* Historial de Auditoría (Logs) */}

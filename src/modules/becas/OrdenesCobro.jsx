@@ -25,6 +25,12 @@ export default function OrdenesCobro() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Dispersión SPEI state
+  const [disperseOrderId, setDisperseOrderId] = useState(null);
+  const [batchFolio, setBatchFolio] = useState("LOTE-SPEI-UTO-01");
+  const [dispersing, setDispersing] = useState(false);
+  const [disperseErr, setDisperseErr] = useState("");
+
   const { data: orders, loading, error, refresh: refreshOrders } = useAsync(
     () => api("/becas/ordenes-cobro"),
     []
@@ -59,6 +65,25 @@ export default function OrdenesCobro() {
       setErrorMsg(err.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDisperse(e) {
+    e.preventDefault();
+    setDispersing(true);
+    setDisperseErr("");
+    try {
+      const res = await api(`/becas/ordenes-cobro/${disperseOrderId}/dispersar`, {
+        method: "POST",
+        body: { batch_folio: batchFolio },
+      });
+      setSuccessMsg(`Dispersión exitosa. Lote: ${res.batch_folio}`);
+      setDisperseOrderId(null);
+      refreshOrders();
+    } catch (err) {
+      setDisperseErr(err.message);
+    } finally {
+      setDispersing(false);
     }
   }
 
@@ -166,15 +191,16 @@ export default function OrdenesCobro() {
                 <th style={{ padding: "10px 12px" }}>Convocatoria</th>
                 <th style={{ padding: "10px 12px" }}>Periodo</th>
                 <th style={{ padding: "10px 12px" }}>Monto</th>
-                <th style={{ padding: "10px 12px" }}>Fecha programada</th>
+                <th style={{ padding: "10px 12px" }}>Cuenta bancaria</th>
                 <th style={{ padding: "10px 12px" }}>Referencia SPEI</th>
                 <th style={{ padding: "10px 12px" }}>Estado</th>
+                {user.role !== "estudiante" && <th style={{ padding: "10px 12px", textAlign: "right" }}>Acción</th>}
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ padding: "20px", textAlign: "center", color: "var(--muted)" }}>
+                  <td colSpan={user.role !== "estudiante" ? 10 : 9} style={{ padding: "20px", textAlign: "center", color: "var(--muted)" }}>
                     No hay órdenes de cobro emitidas para el periodo actual.
                   </td>
                 </tr>
@@ -189,13 +215,43 @@ export default function OrdenesCobro() {
                     <td style={{ padding: "12px", fontWeight: "700", color: "var(--brand)" }}>
                       ${ord.amount.toLocaleString("es-MX")}
                     </td>
-                    <td style={{ padding: "12px", fontSize: "0.8125rem" }}>{date(ord.scheduled_date)}</td>
+                    <td style={{ padding: "12px", fontSize: "0.8125rem" }}>
+                      {ord.bank_name ? (
+                        <span><strong>{ord.bank_name}</strong> (***{ord.bank_clabe ? ord.bank_clabe.slice(-4) : "----"})</span>
+                      ) : (
+                        <span style={{ color: "var(--muted)" }}>Sin CLABE</span>
+                      )}
+                    </td>
                     <td style={{ padding: "12px", fontFamily: "monospace", fontSize: "0.8125rem" }}>
                       {ord.reference}
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <span className="badge badge-validado">{ord.status}</span>
+                      <span className={`badge ${ord.status === "dispersada" ? "badge-validado" : "badge-pendiente"}`}>
+                        {ord.status === "dispersada" ? "Dispersada" : "Programada"}
+                      </span>
+                      {ord.batch_folio && (
+                        <small style={{ display: "block", color: "var(--muted)", fontSize: "0.75rem" }}>
+                          Lote: {ord.batch_folio}
+                        </small>
+                      )}
                     </td>
+                    {user.role !== "estudiante" && (
+                      <td style={{ padding: "12px", textAlign: "right" }}>
+                        {ord.status !== "dispersada" && (
+                          <button
+                            type="button"
+                            className="button button-primary"
+                            style={{ fontSize: "0.75rem", padding: "4px 8px" }}
+                            onClick={() => {
+                              setDisperseOrderId(ord.id);
+                              setDisperseErr("");
+                            }}
+                          >
+                            <CreditCard size={14} /> Dispersar SPEI
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -255,6 +311,39 @@ export default function OrdenesCobro() {
               </button>
               <BusyButton busy={saving} busyText="Generando orden…" type="submit" className="button button-primary">
                 Confirmar y foliar orden de cobro
+              </BusyButton>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Modal Dispersión SPEI */}
+      {disperseOrderId && (
+        <Modal title="Registrar Dispersión SPEI (Tesorería)" onClose={() => setDisperseOrderId(null)}>
+          <form onSubmit={handleDisperse} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--muted)" }}>
+              Al confirmar la dispersión, la orden de cobro quedará registrada como pagada con su folio de lote bancario y se enviará notificación automática al alumno beneficiario.
+            </p>
+            {disperseErr && <Alert>{disperseErr}</Alert>}
+            <Field
+              label="Folio o ID de Lote Bancario SPEI *"
+              required
+              value={batchFolio}
+              onChange={(e) => setBatchFolio(e.target.value)}
+              placeholder="Ej. SPEI-UTO-2026-LOTE01"
+              hint="Referencia provista por el portal de banca empresarial o STP."
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "8px" }}>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => setDisperseOrderId(null)}
+                disabled={dispersing}
+              >
+                Cancelar
+              </button>
+              <BusyButton busy={dispersing} busyText="Dispersando…" type="submit" className="button button-primary">
+                Confirmar dispersión bancaria
               </BusyButton>
             </div>
           </form>
