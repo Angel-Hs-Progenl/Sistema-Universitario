@@ -1,8 +1,14 @@
 import { useState } from "react";
-import { RefreshCw, CheckCircle, Award, Calendar, AlertCircle } from "lucide-react";
+import { RefreshCw, CheckCircle, Award, Calendar, AlertCircle, ThumbsUp, ThumbsDown } from "lucide-react";
 import { api, date } from "../../shared/api";
 import { useAuth } from "../../app/Auth";
 import { Modal, Field, BusyButton, Alert, useAsync } from "../../shared/ui";
+
+const RENEWAL_STATUS_BADGE = {
+  solicitada: { cls: "badge-revision", label: "Solicitada" },
+  aprobada_renovacion: { cls: "badge-validado", label: "Aprobada" },
+  rechazada_renovacion: { cls: "badge-rechazado", label: "Rechazada" },
+};
 
 export default function Renovaciones() {
   const { user } = useAuth();
@@ -15,6 +21,14 @@ export default function Renovaciones() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Staff resolve state
+  const [resolveRenewalId, setResolveRenewalId] = useState(null);
+  const [resolveDecision, setResolveDecision] = useState("aprobada_renovacion");
+  const [resolveNotes, setResolveNotes] = useState("");
+  const [savingResolve, setSavingResolve] = useState(false);
+  const [resolveMsg, setResolveMsg] = useState("");
+  const [resolveErr, setResolveErr] = useState("");
 
   const { data: renewals, loading: loadingRenewals, refresh: refreshRenewals } = useAsync(
     () => api("/becas/renovaciones"),
@@ -29,6 +43,28 @@ export default function Renovaciones() {
   const approvedApps = (myApps || []).filter(
     (app) => app.status === "aprobada" || app.status === "renovada"
   );
+
+  const pendingRenewals = (renewals || []).filter((r) => r.status === "solicitada");
+
+  async function handleResolve(e) {
+    e.preventDefault();
+    setSavingResolve(true);
+    setResolveErr("");
+    setResolveMsg("");
+    try {
+      await api(`/becas/renovaciones/${resolveRenewalId}/resolver`, {
+        method: "POST",
+        body: { decision: resolveDecision, resolution_notes: resolveNotes },
+      });
+      setResolveMsg("Resolución registrada correctamente.");
+      refreshRenewals();
+      setTimeout(() => { setResolveRenewalId(null); setResolveMsg(""); }, 1500);
+    } catch (err) {
+      setResolveErr(err.message);
+    } finally {
+      setSavingResolve(false);
+    }
+  }
 
   async function handleRenewal(e) {
     e.preventDefault();
@@ -204,12 +240,13 @@ export default function Renovaciones() {
                   <th style={{ padding: "10px 12px" }}>Cuatrimestre</th>
                   <th style={{ padding: "10px 12px" }}>Estado</th>
                   <th style={{ padding: "10px 12px" }}>Fecha</th>
+                  {user.role !== "estudiante" && <th style={{ padding: "10px 12px", textAlign: "right" }}>Acción</th>}
                 </tr>
               </thead>
               <tbody>
                 {renewals.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: "20px", textAlign: "center", color: "var(--muted)" }}>
+                    <td colSpan={user.role !== "estudiante" ? 8 : 7} style={{ padding: "20px", textAlign: "center", color: "var(--muted)" }}>
                       No se han registrado solicitudes de renovación en este periodo.
                     </td>
                   </tr>
@@ -222,9 +259,31 @@ export default function Renovaciones() {
                       <td style={{ padding: "12px", fontWeight: "600" }}>{r.current_gpa.toFixed(1)}</td>
                       <td style={{ padding: "12px" }}>{r.academic_term}</td>
                       <td style={{ padding: "12px" }}>
-                        <span className="badge badge-revision">{r.status}</span>
+                        <span className={`badge ${RENEWAL_STATUS_BADGE[r.status]?.cls || "badge-revision"}`}>
+                          {RENEWAL_STATUS_BADGE[r.status]?.label || r.status}
+                        </span>
                       </td>
                       <td style={{ padding: "12px", fontSize: "0.8125rem" }}>{date(r.created_at)}</td>
+                      {user.role !== "estudiante" && (
+                        <td style={{ padding: "12px", textAlign: "right" }}>
+                          {r.status === "solicitada" && (
+                            <button
+                              type="button"
+                              className="button button-primary"
+                              style={{ fontSize: "0.8125rem" }}
+                              onClick={() => {
+                                setResolveRenewalId(r.id);
+                                setResolveDecision("aprobada_renovacion");
+                                setResolveNotes("");
+                                setResolveMsg("");
+                                setResolveErr("");
+                              }}
+                            >
+                              Resolver
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -233,6 +292,66 @@ export default function Renovaciones() {
           </div>
         )}
       </section>
+
+      {/* Modal de Resolución de Renovación (staff) */}
+      {resolveRenewalId && (
+        <Modal title="Resolver Solicitud de Renovación" onClose={() => setResolveRenewalId(null)}>
+          <form onSubmit={handleResolve} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--muted)" }}>
+              Emite la resolución de esta solicitud de renovación. La decisión quedará registrada y el estudiante podrá consultarla en su expediente.
+            </p>
+            {resolveMsg && <div className="alert success">{resolveMsg}</div>}
+            {resolveErr && <Alert>{resolveErr}</Alert>}
+            <div className="field">
+              <label>Decisión *</label>
+              <div style={{ display: "flex", gap: "12px", marginTop: "6px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", padding: "8px 14px", border: `2px solid ${resolveDecision === "aprobada_renovacion" ? "var(--green)" : "var(--line)"}`, borderRadius: "var(--radius)", background: resolveDecision === "aprobada_renovacion" ? "#f0faf0" : "var(--surface)" }}>
+                  <input
+                    type="radio"
+                    name="resolveDecision"
+                    value="aprobada_renovacion"
+                    checked={resolveDecision === "aprobada_renovacion"}
+                    onChange={(e) => setResolveDecision(e.target.value)}
+                  />
+                  <ThumbsUp size={16} color="var(--green)" /> Aprobar renovación
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", padding: "8px 14px", border: `2px solid ${resolveDecision === "rechazada_renovacion" ? "var(--error)" : "var(--line)"}`, borderRadius: "var(--radius)", background: resolveDecision === "rechazada_renovacion" ? "#fff5f5" : "var(--surface)" }}>
+                  <input
+                    type="radio"
+                    name="resolveDecision"
+                    value="rechazada_renovacion"
+                    checked={resolveDecision === "rechazada_renovacion"}
+                    onChange={(e) => setResolveDecision(e.target.value)}
+                  />
+                  <ThumbsDown size={16} color="var(--error)" /> Rechazar renovación
+                </label>
+              </div>
+            </div>
+            <Field
+              as="textarea"
+              rows={3}
+              label="Justificación de la resolución *"
+              required
+              value={resolveNotes}
+              onChange={(e) => setResolveNotes(e.target.value)}
+              placeholder="Fundamentar la decisión con base en los criterios de la convocatoria…"
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+              <button type="button" className="button button-secondary" onClick={() => setResolveRenewalId(null)}>
+                Cancelar
+              </button>
+              <BusyButton
+                busy={savingResolve}
+                busyText="Registrando resolución…"
+                type="submit"
+                className="button button-primary"
+              >
+                Emitir resolución
+              </BusyButton>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

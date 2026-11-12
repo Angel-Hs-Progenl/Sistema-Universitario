@@ -107,3 +107,13 @@ La necesidad de coevaluación/autoevaluación se registra para análisis posteri
 Cambio de presentación autorizado: dibujo vectorial original en Goshawk.jsx con alas anchas de extremos redondeados, cola barrada larga, ceja clara, pico curvo, pecho claro barrado y garras articuladas. El rótulo se centra dentro de la cara frontal y sigue su perspectiva. Se conservan plataforma, bandeja, documentos, logo del header, login, paleta y animación compartida. Sin nuevos recursos externos, dependencias, modelos, API o requisitos de negocio.
 
 La interpretación gráfica de la mascota sigue siendo una propuesta; no se declara una especie oficial de la universidad. Fuentes en DISENO.md y evidencia local en VALIDACION.md.
+
+## Registro CR-010 · Avance Fase 2 de Becas (75%)
+
+12 de noviembre de 2026. Avance iterativo del módulo de gestión de becas de la UT de Oriental en la rama `feat/modulo-becas`:
+- Migración 0005 de Alembic con persistencia para datos bancarios, actas formales de comité, validación socioeconómica y resolución de renovaciones.
+- Captura de cuenta bancaria y CLABE interbancaria (18 dígitos con algoritmo de dígito verificador y catálogo de 9 bancos en México) para estudiantes con beca aprobada.
+- Registro de acta formal de dictaminación de sesión colegiada (número de sesión, acuerdo y fecha de dictamen).
+- Panel de resolución de renovaciones por parte del personal evaluador/comité con fundamentación de aprobación o rechazo.
+- Validación y ratificación del estudio socioeconómico por personal administrativo.
+- Mantenimiento estricto del sistema de tokens CSS institucionales, reglas de acceso y aislamiento modular. Se conservan todas las pruebas de titulación en verde (17/17 tests passing).

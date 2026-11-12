@@ -10,6 +10,7 @@ import {
   Sliders,
   DollarSign,
   UserCheck,
+  ClipboardList,
 } from "lucide-react";
 import { api, date } from "../../shared/api";
 import { Modal, Field, BusyButton, Alert, useAsync } from "../../shared/ui";
@@ -31,6 +32,14 @@ export default function PanelDictaminacion() {
   const [savingDictamen, setSavingDictamen] = useState(false);
   const [dictamenSuccess, setDictamenSuccess] = useState("");
   const [dictamenError, setDictamenError] = useState("");
+
+  // Acta formal state
+  const [dictamenSession, setDictamenSession] = useState("");
+  const [dictamenAgreement, setDictamenAgreement] = useState("");
+  const [dictamenDateStr, setDictamenDateStr] = useState("");
+  const [savingFormal, setSavingFormal] = useState(false);
+  const [formalMsg, setFormalMsg] = useState("");
+  const [formalErr, setFormalErr] = useState("");
 
   const {
     data: applications,
@@ -94,6 +103,29 @@ export default function PanelDictaminacion() {
       });
       setRunningRules(false);
     }, 400);
+  }
+
+  async function handleFormalSubmit(e) {
+    e.preventDefault();
+    setSavingFormal(true);
+    setFormalErr("");
+    setFormalMsg("");
+    try {
+      await api(`/becas/solicitudes/${selectedAppId}/dictamen-formal`, {
+        method: "POST",
+        body: {
+          dictamen_session: dictamenSession,
+          dictamen_agreement: dictamenAgreement,
+          dictamen_date: dictamenDateStr || undefined,
+        },
+      });
+      setFormalMsg("Acta formal registrada correctamente.");
+      refreshDetail();
+    } catch (err) {
+      setFormalErr(err.message);
+    } finally {
+      setSavingFormal(false);
+    }
   }
 
   async function handleDictamenSubmit(e) {
@@ -410,6 +442,76 @@ export default function PanelDictaminacion() {
                   </BusyButton>
                 </div>
               </form>
+
+              {/* Acta Formal de Sesión */}
+              {appDetail.status === "aprobada" && (
+                <div
+                  style={{
+                    borderTop: "2px solid var(--line)",
+                    paddingTop: "20px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", color: "var(--brand)" }}>
+                    <ClipboardList size={18} />
+                    <h4 style={{ margin: 0 }}>Registro de Acta Formal de Sesión</h4>
+                  </div>
+                  {appDetail.dictamen_session && (
+                    <div
+                      style={{
+                        background: "var(--canvas)",
+                        padding: "10px 14px",
+                        borderRadius: "var(--radius)",
+                        marginBottom: "12px",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      <strong>Sesión registrada:</strong> {appDetail.dictamen_session}
+                      {appDetail.dictamen_agreement && (
+                        <span style={{ marginLeft: "12px" }}>
+                          | <strong>Acuerdo:</strong> {appDetail.dictamen_agreement}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <form onSubmit={handleFormalSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {formalMsg && <div className="alert success">{formalMsg}</div>}
+                    {formalErr && <Alert>{formalErr}</Alert>}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <Field
+                        label="Número o nombre de sesión"
+                        required
+                        value={dictamenSession}
+                        onChange={(e) => setDictamenSession(e.target.value)}
+                        placeholder="Ej. Sesión Ordinaria 03/2026"
+                        hint="Identificador del acta de sesión de Comité."
+                      />
+                      <Field
+                        label="Número de acuerdo"
+                        required
+                        value={dictamenAgreement}
+                        onChange={(e) => setDictamenAgreement(e.target.value)}
+                        placeholder="Ej. Acuerdo 12-B"
+                      />
+                    </div>
+                    <Field
+                      label="Fecha de sesión"
+                      type="date"
+                      value={dictamenDateStr}
+                      onChange={(e) => setDictamenDateStr(e.target.value)}
+                    />
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <BusyButton
+                        busy={savingFormal}
+                        busyText="Guardando acta…"
+                        type="submit"
+                        className="button button-primary"
+                      >
+                        <ClipboardList size={16} /> Registrar acta formal
+                      </BusyButton>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           )}
         </Modal>

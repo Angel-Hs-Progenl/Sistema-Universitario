@@ -10,6 +10,8 @@ import {
   Eye,
   ShieldCheck,
   MessageSquare,
+  CreditCard,
+  Building2,
 } from "lucide-react";
 import { api, date } from "../../shared/api";
 import { useAuth } from "../../app/Auth";
@@ -24,6 +26,18 @@ export default function Solicitudes() {
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState("");
   const [uploadErr, setUploadErr] = useState("");
+
+  // Bank data form state
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [bankAppId, setBankAppId] = useState(null);
+  const [bankName, setBankName] = useState("");
+  const [bankClabe, setBankClabe] = useState("");
+  const [bankHolder, setBankHolder] = useState("");
+  const [savingBank, setSavingBank] = useState(false);
+  const [bankMsg, setBankMsg] = useState("");
+  const [bankErr, setBankErr] = useState("");
+
+  const { data: banks } = useAsync(() => api("/becas/bancos"), []);
 
   const { data: applications, loading, error, refresh: refreshList } = useAsync(
     () => api("/becas/solicitudes"),
@@ -66,6 +80,26 @@ export default function Solicitudes() {
       setUploadErr(err.message);
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleBankSave(e) {
+    e.preventDefault();
+    setSavingBank(true);
+    setBankErr("");
+    setBankMsg("");
+    try {
+      const res = await api(`/becas/solicitudes/${bankAppId}/datos-bancarios`, {
+        method: "PUT",
+        body: { bank_name: bankName, bank_clabe: bankClabe, bank_account_holder: bankHolder },
+      });
+      setBankMsg(`Datos guardados correctamente. Banco detectado: ${res.bank_name}`);
+      refreshList();
+      setTimeout(() => { setShowBankModal(false); setBankMsg(""); }, 1800);
+    } catch (err) {
+      setBankErr(err.message);
+    } finally {
+      setSavingBank(false);
     }
   }
 
@@ -140,7 +174,25 @@ export default function Solicitudes() {
                   <td style={{ padding: "12px", fontWeight: "600" }}>{app.gpa.toFixed(1)}</td>
                   <td style={{ padding: "12px" }}>{getStatusBadge(app.status)}</td>
                   <td style={{ padding: "12px", fontSize: "0.8125rem" }}>{date(app.created_at)}</td>
-                  <td style={{ padding: "12px", textAlign: "right" }}>
+                  <td style={{ padding: "12px", textAlign: "right", display: "flex", gap: "6px", justifyContent: "flex-end", alignItems: "center" }}>
+                    {app.status === "aprobada" && !app.bank_clabe && (
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        style={{ fontSize: "0.8125rem" }}
+                        onClick={() => {
+                          setBankAppId(app.id);
+                          setBankName("");
+                          setBankClabe("");
+                          setBankHolder("");
+                          setBankErr("");
+                          setBankMsg("");
+                          setShowBankModal(true);
+                        }}
+                      >
+                        <CreditCard size={14} /> Registrar CLABE
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="button button-secondary"
@@ -200,6 +252,30 @@ export default function Solicitudes() {
                   <p style={{ margin: "2px 0 0 0", fontWeight: "600" }}>{appDetail.gpa.toFixed(1)}</p>
                 </div>
               </div>
+
+              {/* Datos bancarios registrados */}
+              {appDetail.bank_clabe && (
+                <div
+                  style={{
+                    background: "var(--canvas)",
+                    padding: "12px 16px",
+                    borderRadius: "var(--radius)",
+                    display: "flex",
+                    gap: "12px",
+                    alignItems: "center",
+                    border: "1px solid var(--line)",
+                  }}
+                >
+                  <Building2 size={18} color="var(--green)" />
+                  <div>
+                    <small style={{ color: "var(--muted)" }}>Datos bancarios registrados para dispersión</small>
+                    <p style={{ margin: "2px 0 0 0", fontWeight: "600" }}>
+                      {appDetail.bank_name} — CLABE: {appDetail.bank_clabe}
+                    </p>
+                    <small style={{ color: "var(--muted)" }}>Titular: {appDetail.bank_account_holder}</small>
+                  </div>
+                </div>
+              )}
 
               {/* Buzón de avisos / Observaciones del comité */}
               {appDetail.committee_notes && (
@@ -347,6 +423,66 @@ export default function Solicitudes() {
               </div>
             </div>
           )}
+        </Modal>
+      )}
+
+      {/* Modal de Datos Bancarios */}
+      {showBankModal && (
+        <Modal title="Datos Bancarios para Dispersión" onClose={() => setShowBankModal(false)}>
+          <form onSubmit={handleBankSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--muted)" }}>
+              Estos datos serán usados por Tesorería para la dispersión de tu beca vía SPEI. Captura exactamente la CLABE de 18 dígitos que recibes en tu estado de cuenta.
+            </p>
+            {bankMsg && <div className="alert success">{bankMsg}</div>}
+            {bankErr && <Alert>{bankErr}</Alert>}
+            <div className="field">
+              <label>Banco *</label>
+              <select
+                required
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                style={{ padding: "8px", borderRadius: "var(--radius)", border: "1px solid var(--line)" }}
+              >
+                <option value="">Selecciona tu banco…</option>
+                {(banks || []).map((b) => (
+                  <option key={b.id} value={b.name}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+            <Field
+              label="CLABE Interbancaria (18 dígitos) *"
+              required
+              maxLength={18}
+              value={bankClabe}
+              onChange={(e) => setBankClabe(e.target.value.replace(/\D/g, ""))}
+              placeholder="18 dígitos numéricos"
+              hint="La misma que usas para recibir transferencias SPEI."
+            />
+            <Field
+              label="Nombre del titular de la cuenta *"
+              required
+              value={bankHolder}
+              onChange={(e) => setBankHolder(e.target.value)}
+              placeholder="Tal como aparece en tu estado de cuenta"
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => setShowBankModal(false)}
+              >
+                Cancelar
+              </button>
+              <BusyButton
+                busy={savingBank}
+                busyText="Guardando…"
+                type="submit"
+                className="button button-primary"
+              >
+                <CreditCard size={16} /> Guardar datos bancarios
+              </BusyButton>
+            </div>
+          </form>
         </Modal>
       )}
     </div>

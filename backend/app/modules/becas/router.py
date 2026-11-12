@@ -25,8 +25,12 @@ from .domain import (
     ESTADOS,
     DOCUMENTOS,
     ESTADOS_ORDEN,
+    VALIDATION_ESTADOS,
+    RENEWAL_ESTADOS,
+    BANCOS_MEXICO,
     calculate_vulnerability_score,
     evaluate_applicant_rules,
+    validate_clabe,
 )
 
 router = APIRouter(prefix="/api/v1/becas", tags=["Becas"])
@@ -521,6 +525,9 @@ def get_socioeconomic(
         "housing_type": socio.housing_type,
         "vulnerability_score": socio.vulnerability_score,
         "details": json.loads(socio.details or "{}"),
+        "validation_status": socio.validation_status,
+        "validation_notes": socio.validation_notes,
+        "verified_score": socio.verified_score,
         "updated_at": socio.updated_at.isoformat(),
     }
 
@@ -805,7 +812,7 @@ def get_dashboard_stats(
         "total_committed_funds": float(total_committed_funds),
         "by_modality": by_modality,
         "average_gpa": round(float(avg_gpa), 2),
-        "completion_progress_percent": 55,  # Avance fase 1 institucional
+        "completion_progress_percent": 75,  # Avance fase 2 institucional
     }
 
 
@@ -889,3 +896,224 @@ def get_audit_logs(
         }
         for log, user_actor in rows
     ]
+
+
+# ---------------- DATOS BANCARIOS (CLABE) ---------------- #
+
+class BankDataPayload(BaseModel):
+    bank_name: str = PydField(min_length=2, max_length=50)
+    bank_clabe: str = PydField(min_length=18, max_length=18)
+    bank_account_holder: str = PydField(min_length=3, max_length=150)
+
+
+@router.put("/solicitudes/{app_id}/datos-bancarios")
+def update_bank_data(
+    app_id: int,
+    payload: BankDataPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Registra o actualiza los datos bancarios (CLABE) de un aspirante para su beca."""
+    app = db.get(ScholarshipApplication, app_id)
+    if not app:
+        raise HTTPException(404, "Solicitud no encontrada.")
+    if user.role == "estudiante" and app.user_id != user.id:
+        raise HTTPException(403, "No puedes modificar esta solicitud.")
+
+    clabe_check = validate_clabe(payload.bank_clabe)
+    if not clabe_check["valid"]:
+        raise HTTPException(400, clabe_check["error"])
+
+    app.bank_name = payload.bank_name
+    app.bank_clabe = payload.bank_clabe
+    app.bank_account_holder = payload.bank_account_holder
+    app.updated_at = now()
+
+    audit_becas(
+        db,
+        user,
+        f"Datos bancarios actualizados para {app.folio}",
+        "ScholarshipApplication",
+        str(app.id),
+        f"Banco: {payload.bank_name}, CLABE: ***{payload.bank_clabe[-4:]}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {
+        "message": "Datos bancarios registrados correctamente.",
+        "bank_name": clabe_check.get("bank_name", payload.bank_name),
+        "bank_code": clabe_check.get("bank_code"),
+    }
+
+
+@router.get("/bancos")
+def list_banks():
+    """Catálogo de bancos registrados en México (STP/SPEI)."""
+    return BANCOS_MEXICO
+
+
+# ---------------- VALIDACIÓN SOCIOECONÓMICA (TRABAJO SOCIAL) ---------------- #
+
+class ValidateSocioPayload(BaseModel):
+    user_id: str
+    validation_status: str  # "validado" o "observado"
+    validation_notes: str = ""
+    verified_score: float | None = None
+
+
+@router.post("/socioeconomico/validar")
+def validate_socioeconomic(
+    payload: ValidateSocioPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Personal de Trabajo Social o Evaluador valida el perfil socioeconómico de un estudiante."""
+    require_role(user, "administrador", "evaluador", "escolares")
+    socio = db.scalar(
+        select(ScholarshipSocioeconomic).where(ScholarshipSocioeconomic.user_id == payload.user_id)
+    )
+    if not socio:
+        raise HTTPException(404, "Estudio socioeconómico no encontrado para este usuario.")
+
+    if payload.validation_status not in ("validado", "observado"):
+        raise HTTPException(400, "Estado de validación no válido. Usa 'validado' u 'observado'.")
+
+    socio.validation_status = payload.validation_status
+    socio.verified_by_user_id = user.id
+    socio.validation_notes = payload.validation_notes
+    if payload.verified_score is not None:
+        socio.verified_score = float(payload.verified_score)
+    socio.updated_at = now()
+
+    target_user = db.get(User, payload.user_id)
+    if target_user:
+        status_label = VALIDATION_ESTADOS.get(payload.validation_status, payload.validation_status)
+        db.add(
+            Notification(
+                user_id=payload.user_id,
+                message=(
+                    f"Tu estudio socioeconómico ha sido {status_label.lower()}. "
+                    + (payload.validation_notes or "")
+                ).strip(),
+            )
+        )
+
+    audit_becas(
+        db,
+        user,
+        f"Validación socioeconómica: {payload.validation_status}",
+        "ScholarshipSocioeconomic",
+        payload.user_id,
+        f"Notas: {payload.validation_notes}, Score verificado: {payload.verified_score}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": "Validación registrada.", "validation_status": socio.validation_status}
+
+
+# ---------------- RESOLUCIÓN DE RENOVACIONES (PERSONAL) ---------------- #
+
+class ResolveRenewalPayload(BaseModel):
+    decision: str  # "aprobada_renovacion" | "rechazada_renovacion"
+    resolution_notes: str = PydField(min_length=3)
+
+
+@router.post("/renovaciones/{renewal_id}/resolver")
+def resolve_renewal(
+    renewal_id: int,
+    payload: ResolveRenewalPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Personal de becas resuelve (aprueba o rechaza) una solicitud de renovación de beca."""
+    require_role(user, "administrador", "evaluador", "escolares")
+    renewal = db.get(ScholarshipRenewal, renewal_id)
+    if not renewal:
+        raise HTTPException(404, "Solicitud de renovación no encontrada.")
+
+    if payload.decision not in ("aprobada_renovacion", "rechazada_renovacion"):
+        raise HTTPException(400, "Decisión no válida. Usa 'aprobada_renovacion' o 'rechazada_renovacion'.")
+
+    renewal.status = payload.decision
+    renewal.reviewed_by_user_id = user.id
+    renewal.reviewed_at = now()
+    renewal.resolution_notes = payload.resolution_notes
+
+    # Si se aprueba, actualizar la solicitud original
+    if payload.decision == "aprobada_renovacion":
+        original_app = db.get(ScholarshipApplication, renewal.original_application_id)
+        if original_app:
+            original_app.status = "renovada"
+            original_app.updated_at = now()
+
+    decision_label = RENEWAL_ESTADOS.get(payload.decision, payload.decision)
+    db.add(
+        Notification(
+            user_id=renewal.user_id,
+            message=f"Tu solicitud de renovación fue {decision_label.lower()}. {payload.resolution_notes}",
+        )
+    )
+
+    audit_becas(
+        db,
+        user,
+        f"Renovación resuelta: {payload.decision}",
+        "ScholarshipRenewal",
+        str(renewal.id),
+        f"Decisión: {payload.decision}, Notas: {payload.resolution_notes}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": "Renovación resuelta con éxito.", "status": renewal.status}
+
+
+# ---------------- ACTA DE DICTAMEN FORMAL ---------------- #
+
+class DictamenFormalPayload(BaseModel):
+    dictamen_session: str = PydField(min_length=2, max_length=50)
+    dictamen_agreement: str = PydField(min_length=2, max_length=50)
+    dictamen_date: str
+
+
+@router.post("/solicitudes/{app_id}/dictamen-formal")
+def save_formal_dictamen(
+    app_id: int,
+    payload: DictamenFormalPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Registra los datos del acta formal de la sesión de dictaminación (sesión, acuerdo y fecha)."""
+    require_role(user, "administrador", "evaluador", "escolares")
+    app = db.get(ScholarshipApplication, app_id)
+    if not app:
+        raise HTTPException(404, "Solicitud no encontrada.")
+
+    try:
+        dict_dt = datetime.fromisoformat(payload.dictamen_date.replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(400, "Formato de fecha inválido. Usa formato ISO (AAAA-MM-DD).")
+
+    app.dictamen_session = payload.dictamen_session
+    app.dictamen_agreement = payload.dictamen_agreement
+    app.dictamen_date = dict_dt
+    app.updated_at = now()
+
+    audit_becas(
+        db,
+        user,
+        f"Acta de dictamen formal registrada: Sesión {payload.dictamen_session}",
+        "ScholarshipApplication",
+        str(app.id),
+        f"Acuerdo: {payload.dictamen_agreement}, Fecha sesión: {payload.dictamen_date}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {
+        "message": "Datos del acta de dictamen formal registrados.",
+        "session": payload.dictamen_session,
+        "agreement": payload.dictamen_agreement,
+    }

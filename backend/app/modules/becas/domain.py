@@ -121,3 +121,43 @@ def evaluate_applicant_rules(applicant_gpa: float, call_min_gpa: float):
         "meets_requirements": len(issues) == 0,
         "issues": issues,
     }
+
+
+VALIDATION_ESTADOS = {
+    "pendiente": "Pendiente de validación",
+    "validado": "Validado por Trabajo Social",
+    "observado": "Con observaciones",
+}
+
+RENEWAL_ESTADOS = {
+    "solicitada": "Solicitud de renovación",
+    "aprobada_renovacion": "Renovación aprobada",
+    "rechazada_renovacion": "Renovación rechazada",
+}
+
+# Banks commonly available in Mexico (simplified catalog)
+BANCOS_MEXICO = [
+    {"id": "002", "name": "BBVA"},
+    {"id": "012", "name": "BBVA Bancomer"},
+    {"id": "014", "name": "Santander"},
+    {"id": "021", "name": "HSBC"},
+    {"id": "036", "name": "Banorte"},
+    {"id": "058", "name": "Banregio"},
+    {"id": "072", "name": "Bancomext"},
+    {"id": "127", "name": "Azteca"},
+    {"id": "646", "name": "STP"},
+]
+
+
+def validate_clabe(clabe: str) -> dict:
+    """Validates a Mexican CLABE interbank key (18 digits with check digit)."""
+    if not clabe or not clabe.isdigit() or len(clabe) != 18:
+        return {"valid": False, "error": "La CLABE debe tener exactamente 18 dígitos numéricos."}
+    weights = [3, 7, 1] * 5 + [3, 7]
+    check_sum = sum((int(d) * w) % 10 for d, w in zip(clabe[:17], weights))
+    expected_digit = (10 - (check_sum % 10)) % 10
+    if int(clabe[17]) != expected_digit:
+        return {"valid": False, "error": "El dígito verificador de la CLABE no es correcto."}
+    bank_code = clabe[:3]
+    bank = next((b for b in BANCOS_MEXICO if b["id"] == bank_code), None)
+    return {"valid": True, "bank_code": bank_code, "bank_name": bank["name"] if bank else "Institución desconocida"}
