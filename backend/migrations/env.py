@@ -4,6 +4,7 @@ from app.core import models  # noqa: F401 - register shared tables for autogener
 from app.modules.titulacion import models as title_models  # noqa: F401 - register module tables
 from app.modules.becas import models as scholarship_models  # noqa: F401
 from app.modules.evaluacion_docente import models as evaluation_models  # noqa: F401
+from app.modules.autoevaluacion import models as self_evaluation_models  # noqa: F401
 
 target_metadata = Base.metadata
 if context.is_offline_mode():

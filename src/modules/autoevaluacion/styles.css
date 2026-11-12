@@ -1,0 +1,791 @@
+
+.self-evaluation-page {
+  width: 100%;
+  color: var(--ink);
+}
+
+.self-evaluation-page h1 {
+  margin-bottom: 12px;
+}
+
+.self-evaluation-page p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+
+.self-evaluation-heading {
+  margin-bottom: 28px;
+}
+
+.self-evaluation-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.self-evaluation-section h2 {
+  margin: 0 0 20px;
+}
+
+.self-evaluation-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.self-evaluation-field label,
+.self-evaluation-question-heading h3,
+.self-evaluation-options h4 {
+  font-weight: 600;
+}
+
+.self-evaluation-field input,
+.self-evaluation-field select,
+.self-evaluation-field textarea,
+.self-evaluation-option input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.self-evaluation-field textarea {
+  resize: vertical;
+}
+
+.self-evaluation-question {
+  padding: 20px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--canvas);
+}
+
+.self-evaluation-question-heading,
+.self-evaluation-inline-fields,
+.self-evaluation-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.self-evaluation-question-heading {
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.self-evaluation-question-heading h3 {
+  margin: 0;
+}
+
+.self-evaluation-inline-fields > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.self-evaluation-options {
+  margin-bottom: 18px;
+}
+
+.self-evaluation-option {
+  margin-bottom: 10px;
+}
+
+.self-evaluation-option input {
+  min-width: 0;
+}
+
+.self-evaluation-required {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.self-evaluation-required input {
+  accent-color: var(--brand);
+}
+
+.self-evaluation-primary,
+.self-evaluation-secondary,
+.self-evaluation-remove {
+  padding: 10px 16px;
+  border: 1px solid var(--brand);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+}
+
+.self-evaluation-primary {
+  display: block;
+  margin-top: 20px;
+  background: var(--brand);
+  color: white;
+}
+
+.self-evaluation-secondary {
+  margin-bottom: 16px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.self-evaluation-remove {
+  background: transparent;
+  color: var(--error);
+  border-color: var(--line);
+}
+
+.self-evaluation-primary:disabled,
+.self-evaluation-secondary:disabled,
+.self-evaluation-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.self-evaluation-error {
+  color: var(--error) !important;
+  margin-top: 12px;
+}
+
+.self-evaluation-success {
+  color: var(--green) !important;
+  margin-top: 12px;
+}
+
+.self-evaluation-list {
+  display: grid;
+  gap: 12px;
+}
+
+.self-evaluation-list-item {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.self-evaluation-list-item h3 {
+  margin: 0 0 8px;
+}
+
+.self-evaluation-list-item p {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .self-evaluation-section {
+    padding: 16px;
+  }
+
+  .self-evaluation-inline-fields,
+  .self-evaluation-option {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ESTILOS PARA RESPONDER EVALUACIONES */
+.self-evaluation-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--sage);
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.self-evaluation-notice strong {
+  display: block;
+  color: var(--green);
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.self-evaluation-notice p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.self-evaluation-check-icon {
+  color: var(--green);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.self-evaluation-questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.self-evaluation-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: border-color 0.2s;
+}
+
+.self-evaluation-card:hover {
+  border-color: var(--brand);
+}
+
+.self-evaluation-card.card-read-only {
+  background: var(--canvas);
+}
+
+.self-evaluation-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.self-evaluation-card-number {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.self-evaluation-badge-required {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--error);
+  background: #fdf2f2;
+  border: 1px solid #fecaca;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.self-evaluation-card-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 18px;
+  line-height: 1.4;
+}
+
+/* Escala numérica */
+.self-evaluation-scale-container {
+  margin-top: 10px;
+}
+
+.self-evaluation-scale-help {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.self-evaluation-scale-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.self-evaluation-scale-button {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.self-evaluation-scale-button:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.self-evaluation-scale-button.selected {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: white;
+}
+
+.self-evaluation-scale-pill {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+
+.self-evaluation-scale-pill.pill-selected {
+  background: var(--brand);
+  color: white;
+  border-color: var(--brand);
+}
+
+.self-evaluation-scale-pill.pill-disabled {
+  background: var(--canvas);
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* Opciones de selección */
+.self-evaluation-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.self-evaluation-option-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.self-evaluation-option-label:hover {
+  border-color: var(--brand);
+}
+
+.self-evaluation-option-label.option-selected {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  font-weight: 500;
+}
+
+.self-evaluation-option-label.option-disabled {
+  cursor: default;
+  background: var(--canvas);
+}
+
+.self-evaluation-option-label input[type="radio"],
+.self-evaluation-option-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Texto libre */
+.self-evaluation-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.self-evaluation-char-counter {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.self-evaluation-submitted-text {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+
+.self-evaluation-submitted-text p {
+  margin: 0;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.self-evaluation-error-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fdf2f2;
+  border: 1px solid var(--error);
+  color: var(--error);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.self-evaluation-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+}
+
+/* MODAL Y CONFIRMACIÓN */
+.self-evaluation-modal-content {
+  padding: 8px 0;
+}
+
+.self-evaluation-modal-warning {
+  background: #fffbeb;
+  border-left: 4px solid var(--gold);
+  padding: 12px 16px;
+  margin: 16px 0 20px;
+  font-size: 14px;
+  color: #92400e;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* ADMINISTRACIÓN Y ASIGNACIONES */
+.self-evaluation-admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.self-evaluation-admin-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.self-evaluation-admin-card:hover {
+  border-color: var(--brand);
+}
+
+.self-evaluation-admin-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.self-evaluation-admin-card h3 {
+  font-size: 19px;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.self-evaluation-admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.self-evaluation-student-select-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.self-evaluation-student-checklist {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  divide-y: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+
+.self-evaluation-student-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.self-evaluation-student-item:last-child {
+  border-bottom: none;
+}
+
+.self-evaluation-student-item:hover {
+  background: var(--brand-soft);
+}
+
+.self-evaluation-student-item.already-assigned {
+  background: var(--canvas);
+  cursor: default;
+}
+
+.self-evaluation-student-item input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+  margin: 0;
+}
+
+.self-evaluation-student-item div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* RESULTADOS Y MÉTRICAS */
+.self-evaluation-back-nav {
+  margin-bottom: 16px;
+}
+
+.self-evaluation-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.self-evaluation-back-link:hover {
+  text-decoration: underline;
+}
+
+.self-evaluation-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.self-evaluation-metric-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+}
+
+.metric-icon-assigned {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.metric-icon-submitted {
+  background: var(--sage);
+  color: var(--green);
+}
+
+.metric-icon-pending {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.metric-icon-rate {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.metric-label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.self-evaluation-table-wrapper {
+  overflow-x: auto;
+}
+
+.self-evaluation-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.self-evaluation-table th,
+.self-evaluation-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.self-evaluation-table th {
+  background: var(--canvas);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.self-evaluation-table tr:hover td {
+  background: var(--brand-soft);
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.button-small {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* HISTORIAL */
+.self-evaluation-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.self-evaluation-history-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.self-evaluation-history-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.self-evaluation-history-summary h2 {
+  font-size: 18px;
+  margin: 6px 0;
+}
+
+.self-evaluation-history-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.work-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+.self-evaluation-history-details {
+  border-top: 1px solid var(--line);
+  background: var(--canvas);
+  padding: 20px 24px;
+}
+
+.self-evaluation-history-details h3 {
+  font-size: 15px;
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+
+.self-evaluation-answers-dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.self-evaluation-answer-item {
+  display: grid;
+  grid-template-columns: minmax(140px, auto) 1fr;
+  gap: 12px;
+  font-size: 14px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.self-evaluation-answer-item:last-child {
+  border-bottom: none;
+}
+
+.self-evaluation-answer-item dt {
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.self-evaluation-answer-item dd {
+  margin: 0;
+  color: var(--ink);
+}
+
+@media (max-width: 768px) {
+  .self-evaluation-admin-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .self-evaluation-admin-actions {
+    justify-content: stretch;
+  }
+
+  .self-evaluation-admin-actions > * {
+    flex: 1;
+    text-align: center;
+  }
+
+  .self-evaluation-history-summary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .self-evaluation-history-actions {
+    justify-content: stretch;
+  }
+
+  .self-evaluation-history-actions > * {
+    flex: 1;
+    text-align: center;
+  }
+
+  .self-evaluation-answer-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

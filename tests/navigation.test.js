@@ -138,7 +138,7 @@ test("Recuperación y ayuda pública regresan al acceso; roles de personal no en
     );
   assert.deepEqual(
     MODULES.map((m) => m.id),
-    ["titulacion", "becas", "evaluacion-docente"],
+    ["titulacion", "becas", "evaluacion-docente", "autoevaluacion"],
   );
 });
 
@@ -155,5 +155,42 @@ test("Navegación del módulo de becas resuelve migas y títulos de página", ()
   assert.equal(
     pageTitleFor("/becas", true, "administrador"),
     "Gestión de becas · Becas · UT de Oriental",
+  );
+});
+
+test("Navegación del módulo de autoevaluación resuelve migas, pestañas y accesos directos", () => {
+  assert.deepEqual(breadcrumbsFor("/autoevaluacion/mis-evaluaciones", true), [
+    { label: "Inicio", path: "/" },
+    { label: "Autoevaluación", path: "/autoevaluacion" },
+    { label: "Mis autoevaluaciones" },
+  ]);
+  assert.deepEqual(breadcrumbsFor("/autoevaluacion/evaluar/5", true), [
+    { label: "Inicio", path: "/" },
+    { label: "Autoevaluación", path: "/autoevaluacion" },
+    { label: "Responder autoevaluación" },
+  ]);
+  assert.deepEqual(breadcrumbsFor("/autoevaluacion/resultados/3", true), [
+    { label: "Inicio", path: "/" },
+    { label: "Autoevaluación", path: "/autoevaluacion" },
+    { label: "Resultados" },
+  ]);
+  assert.deepEqual(moduleLinks("autoevaluacion", "estudiante"), [
+    ["/autoevaluacion/mis-evaluaciones", "Mis autoevaluaciones"],
+    ["/autoevaluacion/historial", "Historial"],
+  ]);
+  assert.deepEqual(moduleLinks("autoevaluacion", "administrador"), [
+    ["/autoevaluacion/evaluaciones", "Evaluaciones"],
+    ["/autoevaluacion/cuestionarios", "Cuestionarios"],
+  ]);
+  assert.deepEqual(moduleLinks("autoevaluacion", "docente"), []);
+  assert.ok(
+    homeShortcuts("estudiante").some(
+      (s) => s.path === "/autoevaluacion/mis-evaluaciones",
+    ),
+  );
+  assert.ok(
+    homeShortcuts("administrador").some(
+      (s) => s.path === "/autoevaluacion/evaluaciones",
+    ),
   );
 });

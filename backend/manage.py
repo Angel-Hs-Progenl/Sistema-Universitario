@@ -21,6 +21,7 @@ from app.modules.becas.models import (
 )
 from app.modules.becas.domain import DOCUMENTOS as BECAS_DOCS
 from app.modules.evaluacion_docente.demo import seed_evaluations
+from app.modules.autoevaluacion.demo import seed_autoevaluacion
 
 
 def seed():
@@ -293,6 +294,7 @@ def seed():
                             status="validado", note="Ejemplo ficticio, sin validez institucional."))
 
         seed_evaluations(db)
+        seed_autoevaluacion(db)
         db.commit()
     print(
         "Cuentas ficticias y datos de becas creados. Consulta docs/OPERACION.md. No usar con datos reales."
