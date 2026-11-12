@@ -24,17 +24,17 @@ Copy-Item .env.example .env
 
 Editar `.env` localmente. Si usas una instalación PostgreSQL, crear una base vacía y un usuario para desarrollo; completar DATABASE_URL con sus credenciales. La URL debe usar `postgresql+psycopg`. Nunca utilizar una base institucional existente para las pruebas.
 
-Si usas Compose, agregar `POSTGRES_PASSWORD` a `.env` y utilizar esa misma contraseña en DATABASE_URL para el usuario `uto`, base `uto`, host `127.0.0.1` y puerto `5432`. La contraseña se elige localmente y no se publica. Luego:
+Si usas Compose, agregar `POSTGRES_PASSWORD` a `.env` y utilizar esa misma contraseña en DATABASE_URL para el usuario `uto`, base `uto`, host `127.0.0.1` y puerto `5433`. La contraseña se elige localmente y no se publica. Luego:
 
 ```powershell
-docker compose up -d db
+docker compose up -d --wait db
 docker compose ps
-.venv/Scripts/alembic.exe -c backend/alembic.ini upgrade head
+.venv/Scripts/python.exe scripts/database.py migrate
 .venv/Scripts/python.exe backend/manage.py seed-demo
 ./scripts/start-local.ps1
 ```
 
-Esperar que PostgreSQL esté healthy antes de migrar. Si no usas Docker, omitir los dos primeros comandos. Abrir http://127.0.0.1:5173/. La API se consulta en http://127.0.0.1:8000/api/docs.
+La base debe estar healthy antes de migrar. `scripts/database.py migrate` crea un respaldo privado de base y adjuntos antes de aplicar cambios; utiliza pg_dump 16 local o el contenedor db de Compose. No borra ni recrea la base. Si no usas Docker, omitir los dos primeros comandos. Abrir http://127.0.0.1:5173/. La API se consulta en http://127.0.0.1:8000/api/docs.
 
 El script inicia frontend y API ocultos y registra sus procesos, incluidos los launchers de Python de Windows. Para detenerlos: `./scripts/start-local.ps1 -Stop`. PostgreSQL se administra por separado. No ejecutar dos instancias en los mismos puertos; un puerto ocupado se informa y no se mata otro proceso automáticamente.
 
@@ -105,14 +105,14 @@ Reutilizar `Protected`, Shell, AccountMenu, Brand, Breadcrumbs, `shared/api.js`,
 
 ## Colores y prompts
 
-| Token | Color | Uso |
-| --- | --- | --- |
-| brand | #6F1738 | Identidad y acción principal |
-| gold | #B8862B | Acentos; no texto pequeño sobre blanco |
-| sage | #DCE8D5 | Superficies de apoyo |
-| green | #386641 | Confirmación y foco |
-| canvas | #F7F6F2 | Lienzo |
-| ink | #202124 | Texto |
+| Token  | Color   | Uso                                    |
+| ------ | ------- | -------------------------------------- |
+| brand  | #6F1738 | Identidad y acción principal           |
+| gold   | #B8862B | Acentos; no texto pequeño sobre blanco |
+| sage   | #DCE8D5 | Superficies de apoyo                   |
+| green  | #386641 | Confirmación y foco                    |
+| canvas | #F7F6F2 | Lienzo                                 |
+| ink    | #202124 | Texto                                  |
 
 La fuente de verdad es `src/styles/tokens.css`. Los colores del logo oficial y del botón de Google son recursos de sus titulares, no nuevas paletas de módulo. Copiar los bloques de PROMPTS.md y completar tarea, rol, requisito, API y criterio de aceptación antes de pedir código a una IA.
 
@@ -136,3 +136,11 @@ Preparar solamente los archivos de la entrega, revisar el diff, ejecutar `python
 - 8000/5173 ocupado: detener tu instancia anterior; no matar procesos de otro proyecto.
 - Google deshabilitado: falta configurar OAuth institucional. Seguir desarrollando con cuentas ficticias.
 - `.env` o documentos en Git: revisar SECURITY.md; .gitignore no elimina archivos ya versionados.
+
+## Actualizar una copia existente tras integrar módulos
+
+Primero detén la API y el frontend con `./scripts/start-local.ps1 -Stop`. Arranca la base configurada con `./scripts/start-db.ps1`: reutiliza la conexión existente, el clúster local del proyecto o Compose, según el entorno. Ejecuta `python scripts/database.py migrate`, comprueba `alembic -c backend/alembic.ini check`, instala dependencias con `npm ci` y arranca con `./scripts/start-local.ps1`. Usa los ejecutables de .venv para Python/Alembic.
+
+El puerto de Compose es 5433 por defecto y se cambia con POSTGRES_PORT; ajusta también DATABASE_URL. Una instalación local existente conserva su puerto (en el equipo del líder: 5434). No copiar su `.env`, clúster, contraseñas o archivos. El script de arranque detecta registros de procesos caducados y verifica el esquema antes de iniciar los servidores. No elimina procesos ajenos.
+
+El seed agrega `docente@demo.uto.local`, `evaluador@demo.uto.local` y `auditor@demo.uto.local`. Misma contraseña ficticia de desarrollo. Incluye evaluación por responder y resultados publicados de ejemplo, sin reiniciar periodos o respuestas que ya existan. No ejecutar en producción.

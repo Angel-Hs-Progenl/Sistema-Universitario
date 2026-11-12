@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import {
-  ArrowRight,
   ArrowUpRight,
   GraduationCap,
   Award,
+  ClipboardCheck,
   ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../../app/Auth";
@@ -24,29 +24,26 @@ export default function Home() {
         <section className="home-modules" aria-labelledby="modules-title">
           <h2 id="modules-title">Servicios disponibles</h2>
           {MODULES.filter((m) => m.roles.includes(user.role)).map((m) => (
-            <article className="module-launcher" key={m.id}>
-              <div className="launcher-heading">
-                <span className="launcher-icon">
-                  {m.id === "becas" ? <Award size={23} /> : <GraduationCap size={23} />}
+            <article className="home-service" key={m.id}>
+              <Link className="home-service-link" to={m.path}>
+                <span className="launcher-icon" aria-hidden="true">
+                  {m.id === "becas" ? (
+                    <Award size={23} />
+                  ) : m.id === "evaluacion-docente" ? (
+                    <ClipboardCheck size={23} />
+                  ) : (
+                    <GraduationCap size={23} />
+                  )}
                 </span>
-                <span>{m.area}</span>
-              </div>
-              <h3>
-                <Link to={m.path}>
-                  {m.name}
-                  <ArrowUpRight size={20} />
-                </Link>
-              </h3>
-              <p>{m.description}</p>
-              <Link to={m.path} className="button button-primary">
-                {user.role === "estudiante"
-                  ? m.id === "becas"
-                    ? "Consultar convocatorias"
-                    : "Abrir mi expediente"
-                  : m.id === "becas"
-                  ? "Gestionar becas"
-                  : "Abrir solicitudes"}
-                <ArrowRight size={16} />
+                <div>
+                  <span className="home-service-area">{m.area}</span>
+                  <h3>{m.name}</h3>
+                  <p>{m.description}</p>
+                  <span className="text-link">
+                    {m.actions[user.role] || m.actions.default}
+                  </span>
+                </div>
+                <ArrowUpRight size={20} aria-hidden="true" />
               </Link>
             </article>
           ))}

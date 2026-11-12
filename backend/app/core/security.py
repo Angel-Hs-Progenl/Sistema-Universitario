@@ -9,8 +9,10 @@ from sqlalchemy.orm import Session as DBSession
 from .database import get_db
 from .models import Session, User
 
+
 ROLES = {
     "estudiante": "Estudiante",
+    "docente": "Docente",
     "escolares": "Servicios Escolares",
     "administrador": "Administrador",
     "tesoreria": "Tesorería",
@@ -18,6 +20,7 @@ ROLES = {
     "evaluador": "Comité Evaluador de Becas",
     "auditor": "Auditor Institucional",
 }
+
 PRODUCTION = os.getenv("APP_ENV") == "production"
 ORIGIN = os.getenv("APP_ORIGIN", "http://127.0.0.1:5173").rstrip("/")
 if PRODUCTION and not ORIGIN.startswith("https://"):

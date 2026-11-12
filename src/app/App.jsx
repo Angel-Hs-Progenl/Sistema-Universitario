@@ -1,24 +1,20 @@
 import { lazy } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import { AuthProvider, Protected } from "./Auth";
+import RoleRoute from "./RoleRoute";
 import Shell from "./Shell";
 import { NavigationProvider } from "./Navigation";
 import Home from "../modules/home/Home";
 import Login, { Recover } from "../modules/auth/Login";
 import { Help, Privacy, Notifications } from "../modules/home/Information";
+import { scholarshipRoutes } from "../modules/becas/routes";
+import { evaluationRoutes } from "../modules/evaluacion-docente/routes";
+import { selfEvaluationRoutes } from "../modules/autoevaluacion/routes";
+import { MODULES } from "../../shared/navigation";
 const TitleLayout = lazy(() => import("../modules/titulacion/Layout"));
 const Workspace = lazy(() => import("../modules/titulacion/Workspace"));
 const Profile = lazy(() => import("../modules/titulacion/Profile"));
 const Account = lazy(() => import("../modules/auth/Account"));
-const BecasLayout = lazy(() => import("../modules/becas/Layout"));
-const Convocatorias = lazy(() => import("../modules/becas/Convocatorias"));
-const Solicitudes = lazy(() => import("../modules/becas/Solicitudes"));
-const EstudioSocioeconomico = lazy(() => import("../modules/becas/EstudioSocioeconomico"));
-const AdminConvocatorias = lazy(() => import("../modules/becas/AdminConvocatorias"));
-const PanelDictaminacion = lazy(() => import("../modules/becas/PanelDictaminacion"));
-const OrdenesCobro = lazy(() => import("../modules/becas/OrdenesCobro"));
-const Renovaciones = lazy(() => import("../modules/becas/Renovaciones"));
-const DashboardAuditoria = lazy(() => import("../modules/becas/DashboardAuditoria"));
 export default function App() {
   return (
     <AuthProvider>
@@ -56,9 +52,9 @@ export default function App() {
             <Route
               path="titulacion"
               element={
-                <Protected>
+                <RoleRoute roles={MODULES[0].roles}>
                   <TitleLayout />
-                </Protected>
+                </RoleRoute>
               }
             >
               <Route index element={<Workspace />} />
@@ -67,32 +63,15 @@ export default function App() {
               <Route path="seguimiento" element={<Workspace />} />
               <Route path="expediente/:id" element={<Workspace />} />
             </Route>
-            <Route
-              path="becas"
-              element={
-                <Protected>
-                  <BecasLayout />
-                </Protected>
-              }
-            >
-              <Route index element={<Convocatorias />} />
-              <Route path="solicitudes" element={<Solicitudes />} />
-              <Route path="socioeconomico" element={<EstudioSocioeconomico />} />
-              <Route path="admin-convocatorias" element={<AdminConvocatorias />} />
-              <Route path="dictamen" element={<PanelDictaminacion />} />
-              <Route path="ordenes-cobro" element={<OrdenesCobro />} />
-              <Route path="renovacion" element={<Renovaciones />} />
-              <Route path="dashboard" element={<DashboardAuditoria />} />
-            </Route>
+            {scholarshipRoutes}
+            {evaluationRoutes}
+            {selfEvaluationRoutes}
             <Route
               path="*"
               element={
                 <div className="container narrow-page">
-                  <span className="eyebrow">404</span>
                   <h1>Página no encontrada</h1>
-                  <p>
-                    Vuelve al inicio para encontrar el servicio que necesitas.
-                  </p>
+                  <p>Revisa la dirección o vuelve al inicio del portal.</p>
                   <Link className="button button-primary" to="/">
                     Volver al inicio
                   </Link>

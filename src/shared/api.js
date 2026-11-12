@@ -40,6 +40,30 @@ export async function api(path, options = {}) {
       note: "observación",
       reference: "referencia institucional",
       delivery: "indicaciones de entrega",
+      title: "el nombre",
+      description: "las bases de la convocatoria",
+      min_gpa: "el promedio mínimo",
+      gpa: "el promedio",
+      current_gpa: "el promedio del nuevo periodo",
+      amount: "el importe del apoyo",
+      slots: "el número de apoyos",
+      start_date: "la fecha de apertura",
+      end_date: "la fecha de cierre",
+      academic_term: "el periodo académico",
+      major: "el programa educativo",
+      monthly_income: "el ingreso mensual",
+      monthly_expenses: "el gasto mensual",
+      dependents_count: "el número de personas dependientes",
+      minimum_responses: "el mínimo de participantes",
+      questionnaire_id: "el cuestionario",
+      teacher_id: "la cuenta del docente",
+      student_id: "la cuenta del estudiante",
+      subject: "la asignatura",
+      group_name: "el grupo",
+      action: "la acción del plan",
+      evidence: "el avance del plan",
+      due_date: "la fecha acordada",
+      public_comment: "el comentario para publicar",
     };
     const instructions = {
       name: "Escribe tu nombre completo, entre 3 y 150 caracteres.",
@@ -53,12 +77,28 @@ export async function api(path, options = {}) {
         "Escribe un teléfono de 10 a 20 caracteres. Puedes usar +, espacios, paréntesis y guiones.",
       domicilio: "Escribe tu domicilio completo, entre 10 y 400 caracteres.",
       display_name: "Escribe un nombre visible de 1 a 80 caracteres.",
+      monthly_income:
+        "Escribe el ingreso mensual en pesos, sin negativos y con máximo dos decimales.",
+      monthly_expenses:
+        "Escribe el gasto mensual en pesos, sin negativos y con máximo dos decimales.",
+      amount: "Escribe un importe mayor que cero y con máximo dos decimales.",
+      gpa: "Escribe un promedio entre 6 y 10.",
+      current_gpa: "Escribe el promedio del nuevo periodo, entre 6 y 10.",
+      min_gpa: "Escribe el promedio mínimo de la convocatoria, entre 6 y 10.",
+      minimum_responses:
+        "Define el mínimo de participantes por docente, entre 2 y 500.",
+      options:
+        "Revisa el valor y la etiqueta de cada opción. Usa valores únicos de 1 a 10.",
+      questions:
+        "Revisa el texto, la sección y el peso de cada pregunta. Incluye las tres secciones y usa pesos mayores que cero.",
+      custom_questions:
+        "Escribe hasta 20 preguntas adicionales, una por línea y de hasta 300 caracteres.",
     };
     const fieldErrors = data.errors?.map((e) => ({
       field: e.field,
       message:
-        instructions[e.field] ||
-        `Revisa ${labels[e.field] || "este campo"}. El dato no cumple el formato solicitado.`,
+        instructions[e.field.split(".")[0]] ||
+        `Revisa ${labels[e.field.split(".")[0]] || "este campo"}. El dato no cumple el formato solicitado.`,
     }));
     const fields = fieldErrors?.map((e) => e.message).join(" ");
     const error = new Error(

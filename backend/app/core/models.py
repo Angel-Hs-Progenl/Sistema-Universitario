@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Text, ForeignKey, Integer, Boolean, DateTime
+from sqlalchemy import String, Text, ForeignKey, Integer, Boolean, DateTime, Index, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from .database import Base
 
@@ -23,12 +23,13 @@ class User(Base):
     profile: Mapped[str] = mapped_column(Text, default="{}")
     display_name: Mapped[str] = mapped_column(String(80), default="")
     login_phone: Mapped[str | None] = mapped_column(
-        String(16), nullable=True, unique=True
+        String(16), nullable=True
     )
     google_sub: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, unique=True
+        String(255), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    __table_args__ = (Index("unique_login_phone", "login_phone", unique=True), Index("unique_google_sub", "google_sub", unique=True), CheckConstraint("role IN ('estudiante','docente','escolares','administrador','tesoreria','vinculacion','evaluador','auditor')", name="valid_role"))
 
 
 class Session(Base):
@@ -39,6 +40,7 @@ class Session(Base):
     )
     csrf: Mapped[str] = mapped_column(String(64))
     expires: Mapped[int] = mapped_column(Integer)
+    auth_method: Mapped[str] = mapped_column(String(20), default="password")
 
 
 class Reset(Base):
@@ -75,5 +77,6 @@ class Notification(Base):
         ForeignKey("title_applications.id"), nullable=True
     )
     message: Mapped[str] = mapped_column(Text)
+    target_path: Mapped[str] = mapped_column(String(240), default="")
     seen: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)

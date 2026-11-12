@@ -74,8 +74,8 @@ export default function Login() {
           Un espacio para tus trámites, evaluaciones y solicitudes de apoyo.
         </p>
         <p className="welcome-availability">
-          Por ahora, Titulación electrónica. Evaluaciones y becas se
-          incorporarán por etapas.
+          Titulación, evaluación docente y becas en un mismo portal, con accesos
+          según tu rol.
         </p>
         <WelcomeArt />
       </aside>
@@ -213,6 +213,8 @@ export default function Login() {
             <code>tesoreria@demo.uto.local</code>
             <code>vinculacion@demo.uto.local</code>
             <code>administrador@demo.uto.local</code>
+            <code>docente@demo.uto.local</code>
+
             <p>
               Contraseña: <code>Demo-UTO-2026!</code>
             </p>

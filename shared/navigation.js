@@ -1,18 +1,13 @@
-// Registro compartido: solo publicar módulos implementados y habilitados.
+// Registro único del portal. La API comprueba los permisos independientemente.
 export const MODULES = [
   {
     id: "titulacion",
     path: "/titulacion",
     name: "Titulación electrónica",
     shortName: "Titulación",
+    area: "Servicios Escolares",
     description:
       "Expediente, revisión de documentos y seguimiento del trámite.",
-    area: "Servicios Escolares",
-    pages: {
-      perfil: "Datos del egresado",
-      documentos: "Documentos",
-      seguimiento: "Historial",
-    },
     entityName: "Expediente",
     roles: [
       "estudiante",
@@ -21,24 +16,23 @@ export const MODULES = [
       "tesoreria",
       "vinculacion",
     ],
+    pages: {
+      perfil: "Datos del egresado",
+      documentos: "Documentos",
+      seguimiento: "Historial",
+    },
+    actions: {
+      estudiante: "Abrir mi expediente",
+      default: "Abrir solicitudes",
+    },
   },
   {
     id: "becas",
     path: "/becas",
     name: "Gestión de becas",
     shortName: "Becas",
-    description:
-      "Convocatorias, estudio socioeconómico, dictamen, órdenes de cobro y renovación.",
-    area: "Becas y Apoyos Institucionales",
-    pages: {
-      solicitudes: "Mis solicitudes",
-      socioeconomico: "Estudio socioeconómico",
-      renovacion: "Renovación",
-      "admin-convocatorias": "Convocatorias y reglas",
-      dictamen: "Dictamen y selección",
-      "ordenes-cobro": "Órdenes de cobro",
-      dashboard: "Tablero y auditoría",
-    },
+    area: "Becas y apoyos",
+    description: "Convocatorias, solicitudes y seguimiento de apoyos.",
     entityName: "Solicitud",
     roles: [
       "estudiante",
@@ -47,25 +41,201 @@ export const MODULES = [
       "evaluador",
       "auditor",
       "tesoreria",
-      "vinculacion",
     ],
+    pages: {
+      solicitudes: "Mis solicitudes",
+      socioeconomico: "Estudio socioeconómico",
+      renovacion: "Renovaciones",
+      "admin-convocatorias": "Administrar convocatorias",
+      dictamen: "Revisar solicitudes",
+      "ordenes-cobro": "Órdenes de cobro",
+      dashboard: "Actividad de becas",
+    },
+    actions: {
+      estudiante: "Consultar convocatorias",
+      auditor: "Consultar actividad",
+      tesoreria: "Consultar órdenes",
+      default: "Gestionar becas",
+    },
+  },
+  {
+    id: "evaluacion-docente",
+    path: "/evaluacion-docente",
+    name: "Evaluación docente",
+    shortName: "Evaluación",
+    area: "Área académica",
+    description: "Evaluaciones de asignaturas, resultados y planes de mejora.",
+    roles: ["estudiante", "docente", "administrador"],
+    pages: {
+      estudiante: "Mis evaluaciones",
+      "estudiante/mis-evaluaciones": "Mis evaluaciones",
+      "estudiante/perfil": "Mi cuenta",
+      docente: "Mis resultados",
+      "docente/resultados": "Mis resultados",
+      "docente/comentarios": "Comentarios revisados",
+      "docente/reporte": "Informe de resultados",
+      "docente/perfil": "Mi cuenta",
+      "docente/ayuda": "Ayuda",
+      "docente/asignaturas": "Mis asignaturas",
+      "docente/planes": "Mi plan de mejora",
+      direccion: "Periodos de evaluación",
+      "direccion/periodos": "Periodos de evaluación",
+      "direccion/cuestionarios": "Cuestionarios",
+      "direccion/grupos": "Asignaciones",
+      "direccion/docentes": "Docentes",
+      "direccion/estudiantes": "Estudiantes",
+      "direccion/comentarios": "Revisar comentarios",
+      "direccion/resultados": "Resultados por periodo",
+      "direccion/reportes": "Informes",
+      "direccion/planes-accion": "Planes de mejora",
+    },
+    actions: {
+      estudiante: "Abrir mis evaluaciones",
+      docente: "Consultar mis resultados",
+      administrador: "Preparar evaluación",
+    },
+  },
+  {
+    id: "autoevaluacion",
+    path: "/autoevaluacion",
+    name: "Autoevaluación",
+    shortName: "Autoevaluación",
+    area: "Área académica",
+    description:
+      "Reflexiona sobre tu desempeño académico y registra tus avances.",
+    roles: ["estudiante", "administrador"],
+    pages: {
+      cuestionarios: "Cuestionarios",
+      evaluaciones: "Evaluaciones",
+      "mis-evaluaciones": "Mis autoevaluaciones",
+      evaluar: "Responder autoevaluación",
+      historial: "Historial",
+    },
+    actions: {
+      estudiante: "Consultar mis autoevaluaciones",
+      administrador: "Administrar autoevaluaciones",
+    },
   },
 ];
 
-export function homeShortcuts(role) {
-  return role === "estudiante"
-    ? [
-        { path: "/titulacion", label: "Mi solicitud de titulación" },
-        { path: "/becas", label: "Convocatorias de becas" },
-        { path: "/becas/solicitudes", label: "Mis solicitudes de beca" },
-        { path: "/becas/socioeconomico", label: "Estudio socioeconómico" },
-      ]
-    : [
-        { path: "/titulacion", label: "Solicitudes de titulación" },
-        { path: "/becas/dictamen", label: "Dictamen de becas" },
-        { path: "/becas/dashboard", label: "Tablero y auditoría de becas" },
-        { path: "/notificaciones", label: "Notificaciones" },
+export function moduleLinks(module, role) {
+  if (!MODULES.find((m) => m.id === module)?.roles.includes(role)) return [];
+  if (module === "becas") {
+    if (role === "estudiante")
+      return [
+        ["/becas", "Convocatorias"],
+        ["/becas/solicitudes", "Mis solicitudes"],
+        ["/becas/socioeconomico", "Estudio socioeconómico"],
+        ["/becas/renovacion", "Renovaciones"],
+        ["/becas/ordenes-cobro", "Órdenes de cobro"],
       ];
+    if (role === "tesoreria")
+      return [["/becas/ordenes-cobro", "Órdenes de cobro"]];
+    if (role === "auditor")
+      return [
+        ["/becas/dashboard", "Actividad"],
+        ["/becas/ordenes-cobro", "Órdenes de cobro"],
+      ];
+    return [
+      ["/becas", "Catálogo"],
+      ["/becas/dictamen", "Solicitudes"],
+      ["/becas/admin-convocatorias", "Administrar convocatorias"],
+      ["/becas/renovacion", "Renovaciones"],
+      ["/becas/ordenes-cobro", "Órdenes de cobro"],
+      ["/becas/dashboard", "Actividad"],
+    ];
+  }
+  if (module === "evaluacion-docente") {
+    if (role === "estudiante")
+      return [["/evaluacion-docente", "Mis evaluaciones"]];
+    if (role === "docente")
+      return [
+        ["/evaluacion-docente/docente/resultados", "Resultados"],
+        ["/evaluacion-docente/docente/asignaturas", "Asignaturas"],
+        ["/evaluacion-docente/docente/planes", "Plan de mejora"],
+      ];
+    return [
+      ["/evaluacion-docente/direccion/periodos", "Periodos"],
+      ["/evaluacion-docente/direccion/cuestionarios", "Cuestionarios"],
+      ["/evaluacion-docente/direccion/grupos", "Asignaciones"],
+      ["/evaluacion-docente/direccion/comentarios", "Comentarios"],
+      ["/evaluacion-docente/direccion/resultados", "Resultados"],
+      ["/evaluacion-docente/direccion/planes-accion", "Planes de mejora"],
+      ["/evaluacion-docente/direccion/docentes", "Docentes"],
+      ["/evaluacion-docente/direccion/estudiantes", "Estudiantes"],
+    ];
+  }
+  if (module === "autoevaluacion") {
+    if (role === "estudiante")
+      return [
+        ["/autoevaluacion/mis-evaluaciones", "Mis autoevaluaciones"],
+        ["/autoevaluacion/historial", "Historial"],
+      ];
+
+    return [
+      ["/autoevaluacion/evaluaciones", "Evaluaciones"],
+      ["/autoevaluacion/cuestionarios", "Cuestionarios"],
+    ];
+  }
+  return [
+    ["/titulacion", role === "estudiante" ? "Mi expediente" : "Solicitudes"],
+  ];
+}
+
+export function homeShortcuts(role) {
+  const shortcuts = [];
+  if (MODULES[0].roles.includes(role))
+    shortcuts.push({
+      path: "/titulacion",
+      label:
+        role === "estudiante"
+          ? "Mi solicitud de titulación"
+          : "Solicitudes de titulación",
+    });
+  if (role === "estudiante")
+    shortcuts.push(
+      { path: "/becas/solicitudes", label: "Mis solicitudes de beca" },
+      { path: "/evaluacion-docente", label: "Mis evaluaciones" },
+    );
+  else if (["escolares", "administrador", "evaluador"].includes(role))
+    shortcuts.push({
+      path: "/becas/dictamen",
+      label: "Revisar solicitudes de beca",
+    });
+  if (role === "auditor")
+    shortcuts.push({ path: "/becas/dashboard", label: "Actividad de becas" });
+  if (role === "tesoreria")
+    shortcuts.push({
+      path: "/becas/ordenes-cobro",
+      label: "Órdenes de cobro de becas",
+    });
+  if (role === "docente")
+    shortcuts.push(
+      {
+        path: "/evaluacion-docente/docente/resultados",
+        label: "Mis resultados",
+      },
+      {
+        path: "/evaluacion-docente/docente/planes",
+        label: "Mi plan de mejora",
+      },
+    );
+  if (role === "administrador")
+    shortcuts.push({
+      path: "/evaluacion-docente/direccion/periodos",
+      label: "Preparar evaluación docente",
+    });
+  if (role === "estudiante")
+    shortcuts.push({
+      path: "/autoevaluacion/mis-evaluaciones",
+      label: "Mis autoevaluaciones",
+    });
+  if (role === "administrador")
+    shortcuts.push({
+      path: "/autoevaluacion/evaluaciones",
+      label: "Administrar autoevaluaciones",
+    });
+  return [...shortcuts, { path: "/notificaciones", label: "Notificaciones" }];
 }
 
 export function breadcrumbsFor(pathname, authenticated, entityLabel) {
@@ -86,13 +256,42 @@ export function breadcrumbsFor(pathname, authenticated, entityLabel) {
   const module = MODULES.find(
     (m) => path === m.path || path.startsWith(`${m.path}/`),
   );
-  if (!module) return [root, { label: "Página no encontrada" }];
+  const unknown = [root, { label: "Página no encontrada" }];
+  if (!module) return unknown;
   if (path === module.path) return [root, { label: module.name }];
-  const leaf = module.pages?.[path.slice(module.path.length + 1)];
-  const isEntity = /^(?:expediente|solicitud)\/\d+$/.test(
-    path.slice(module.path.length + 1),
-  );
-  if (!leaf && !isEntity) return [root, { label: "Página no encontrada" }];
+  const sub = path.slice(module.path.length + 1);
+  if (
+    module.id === "evaluacion-docente" &&
+    /^estudiante\/evaluar\/\d+$/.test(sub)
+  )
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Responder evaluación" },
+    ];
+  if (
+    module.id === "autoevaluacion" &&
+    /^evaluar\/\d+$/.test(sub)
+  ) {
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Responder autoevaluación" },
+    ];
+  }
+  if (
+    module.id === "autoevaluacion" &&
+    /^resultados\/\d+$/.test(sub)
+  ) {
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Resultados" },
+    ];
+  }
+  const leaf = module.pages?.[sub];
+  const isEntity = /^(?:expediente|solicitud)\/\d+$/.test(sub);
+  if (!leaf && !isEntity) return unknown;
   return [
     root,
     { label: module.name, path: module.path },
@@ -106,11 +305,46 @@ export function pageTitleFor(pathname, authenticated, role) {
     return `${role === "estudiante" ? "Mi expediente" : "Solicitudes"} · Titulación · UT de Oriental`;
   if (path === "/becas")
     return `${role === "estudiante" ? "Convocatorias" : "Gestión de becas"} · Becas · UT de Oriental`;
-  const items = breadcrumbsFor(path, authenticated);
+  if (path === "/evaluacion-docente")
+    return `${role === "estudiante" ? "Mis evaluaciones" : role === "docente" ? "Mis resultados" : "Periodos de evaluación"} · Evaluación docente · UT de Oriental`;
   return `${
-    items
+    breadcrumbsFor(path, authenticated)
       .slice(authenticated ? 1 : 0)
       .map((item) => item.label)
       .join(" · ") || "Inicio"
   } · UT de Oriental`;
+}
+
+export function notificationDestination(notification, role) {
+  const target =
+    notification.target_path ||
+    (notification.application_id
+      ? `/titulacion/expediente/${notification.application_id}`
+      : "");
+  const module = MODULES.find(
+    (m) => target === m.path || target.startsWith(`${m.path}/`),
+  );
+  if (!module?.roles.includes(role)) return null;
+  if (
+    /^\/becas\/(?:solicitud\/|renovacion)/.test(target) &&
+    !["estudiante", "escolares", "administrador", "evaluador"].includes(role)
+  )
+    return null;
+  if (module.id === "evaluacion-docente" && role !== "docente") return null;
+  // Solo rutas internas conocidas; nunca URLs externas, fragmentos ni protocolos.
+  if (
+    !/^\/(?:titulacion\/expediente\/\d+|becas\/(?:solicitud\/\d+|renovacion|ordenes-cobro)|evaluacion-docente\/docente\/resultados\?periodo=\d+)$/.test(
+      target,
+    )
+  )
+    return null;
+  return {
+    path: target,
+    label:
+      module.id === "evaluacion-docente"
+        ? "Consultar resultados"
+        : module.id === "becas"
+          ? "Consultar en Becas"
+          : "Consultar expediente",
+  };
 }

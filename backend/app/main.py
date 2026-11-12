@@ -8,6 +8,14 @@ from .core.google_oauth import router as google_router
 from .core.security import ORIGIN, PRODUCTION
 from .modules.titulacion.router import router as titles_router
 from .modules.becas.router import router as becas_router
+from .modules.evaluacion_docente.router import router as evaluations_router
+from .modules.autoevaluacion.router import router as autoevaluacion_router
+
+ALLOWED_ORIGINS = {ORIGIN}
+
+if not PRODUCTION:
+    ALLOWED_ORIGINS.add("http://127.0.0.1:8000")
+    ALLOWED_ORIGINS.add("http://localhost:8000")
 
 if PRODUCTION and not os.getenv("SMTP_HOST"):
     raise RuntimeError("Configura SMTP antes de producción.")
@@ -23,7 +31,7 @@ app = FastAPI(
 async def security(request: Request, call_next):
     if request.method not in ["GET", "HEAD", "OPTIONS"]:
         origin = request.headers.get("origin")
-        if origin and origin.rstrip("/") != ORIGIN:
+        if origin and origin.rstrip("/") not in ALLOWED_ORIGINS:
             return JSONResponse({"detail": "Origen no autorizado."}, status_code=403)
         if request.headers.get("sec-fetch-site") == "cross-site":
             return JSONResponse(
@@ -95,3 +103,5 @@ app.include_router(auth_router)
 app.include_router(google_router)
 app.include_router(titles_router)
 app.include_router(becas_router)
+app.include_router(evaluations_router)
+app.include_router(autoevaluacion_router)

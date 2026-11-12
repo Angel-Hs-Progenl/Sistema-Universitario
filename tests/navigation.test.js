@@ -5,6 +5,8 @@ import {
   homeShortcuts,
   MODULES,
   pageTitleFor,
+  moduleLinks,
+  notificationDestination,
 } from "../shared/navigation.js";
 
 test("Migas jerárquicas conservan regreso al módulo y la página actual", () => {
@@ -14,6 +16,68 @@ test("Migas jerárquicas conservan regreso al módulo y la página actual", () =
     { label: "Documentos" },
   ]);
   assert.equal(breadcrumbsFor("/titulacion/", true).length, 2);
+});
+
+test("Los avisos enlazan al módulo y tarea permitidos, sin rutas externas", () => {
+  assert.equal(
+    notificationDestination({ application_id: 2 }, "estudiante").path,
+    "/titulacion/expediente/2",
+  );
+  assert.equal(
+    notificationDestination({ target_path: "/becas/solicitud/3" }, "estudiante")
+      .path,
+    "/becas/solicitud/3",
+  );
+  assert.equal(
+    notificationDestination({ target_path: "/becas/solicitud/3" }, "auditor"),
+    null,
+  );
+  assert.equal(
+    notificationDestination(
+      { target_path: "/evaluacion-docente/docente/resultados?periodo=2" },
+      "docente",
+    ).label,
+    "Consultar resultados",
+  );
+  assert.equal(notificationDestination({ application_id: 2 }, "docente"), null);
+  assert.equal(notificationDestination({}, "estudiante"), null);
+  for (const target_path of [
+    "https://ejemplo.invalid/",
+    "//ejemplo.invalid/",
+    "/becas/../cuenta",
+    "/becas/solicitud/3?url=https://ejemplo.invalid",
+  ])
+    assert.equal(notificationDestination({ target_path }, "estudiante"), null);
+});
+
+test("Los nuevos roles no reciben accesos de otros dominios", () => {
+  for (const role of ["docente", "evaluador", "auditor"]) {
+    assert.ok(
+      homeShortcuts(role).every((item) => !item.path.startsWith("/titulacion")),
+    );
+  }
+  assert.deepEqual(moduleLinks("becas", "vinculacion"), []);
+  assert.deepEqual(moduleLinks("becas", "docente"), []);
+  assert.deepEqual(moduleLinks("evaluacion-docente", "auditor"), []);
+  assert.deepEqual(moduleLinks("becas", "tesoreria"), [
+    ["/becas/ordenes-cobro", "Órdenes de cobro"],
+  ]);
+});
+
+test("Evaluación y Becas conservan contexto en rutas de trabajo", () => {
+  assert.equal(
+    breadcrumbsFor("/evaluacion-docente/estudiante/evaluar/17", true).at(-1)
+      .label,
+    "Responder evaluación",
+  );
+  assert.equal(
+    breadcrumbsFor("/becas/solicitud/9", true, "BEC-EJEMPLO").at(-1).label,
+    "BEC-EJEMPLO",
+  );
+  assert.equal(
+    pageTitleFor("/evaluacion-docente", true, "docente"),
+    "Mis resultados · Evaluación docente · UT de Oriental",
+  );
 });
 
 test("Las pestañas distinguen tarea y rol sin incluir datos personales", () => {
@@ -72,7 +136,10 @@ test("Recuperación y ayuda pública regresan al acceso; roles de personal no en
     assert.ok(
       homeShortcuts(role).every((x) => x.path !== "/titulacion/perfil"),
     );
-  assert.equal(MODULES.length, 2);
+  assert.deepEqual(
+    MODULES.map((m) => m.id),
+    ["titulacion", "becas", "evaluacion-docente", "autoevaluacion"],
+  );
 });
 
 test("Navegación del módulo de becas resuelve migas y títulos de página", () => {
@@ -88,5 +155,42 @@ test("Navegación del módulo de becas resuelve migas y títulos de página", ()
   assert.equal(
     pageTitleFor("/becas", true, "administrador"),
     "Gestión de becas · Becas · UT de Oriental",
+  );
+});
+
+test("Navegación del módulo de autoevaluación resuelve migas, pestañas y accesos directos", () => {
+  assert.deepEqual(breadcrumbsFor("/autoevaluacion/mis-evaluaciones", true), [
+    { label: "Inicio", path: "/" },
+    { label: "Autoevaluación", path: "/autoevaluacion" },
+    { label: "Mis autoevaluaciones" },
+  ]);
+  assert.deepEqual(breadcrumbsFor("/autoevaluacion/evaluar/5", true), [
+    { label: "Inicio", path: "/" },
+    { label: "Autoevaluación", path: "/autoevaluacion" },
+    { label: "Responder autoevaluación" },
+  ]);
+  assert.deepEqual(breadcrumbsFor("/autoevaluacion/resultados/3", true), [
+    { label: "Inicio", path: "/" },
+    { label: "Autoevaluación", path: "/autoevaluacion" },
+    { label: "Resultados" },
+  ]);
+  assert.deepEqual(moduleLinks("autoevaluacion", "estudiante"), [
+    ["/autoevaluacion/mis-evaluaciones", "Mis autoevaluaciones"],
+    ["/autoevaluacion/historial", "Historial"],
+  ]);
+  assert.deepEqual(moduleLinks("autoevaluacion", "administrador"), [
+    ["/autoevaluacion/evaluaciones", "Evaluaciones"],
+    ["/autoevaluacion/cuestionarios", "Cuestionarios"],
+  ]);
+  assert.deepEqual(moduleLinks("autoevaluacion", "docente"), []);
+  assert.ok(
+    homeShortcuts("estudiante").some(
+      (s) => s.path === "/autoevaluacion/mis-evaluaciones",
+    ),
+  );
+  assert.ok(
+    homeShortcuts("administrador").some(
+      (s) => s.path === "/autoevaluacion/evaluaciones",
+    ),
   );
 });

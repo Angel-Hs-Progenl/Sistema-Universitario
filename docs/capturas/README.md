@@ -33,3 +33,21 @@ Bandeja con etiquetas persistentes, conteo de resultados y filtros. Cuenta admin
 Resumen del estudiante, con tareas de preparación y menos instrucciones repetidas.
 
 ![Expediente revisado](expediente.png)
+
+## Integración de módulos · CR-010
+
+24 de octubre de 2026. Capturas locales con cuentas y registros ficticios marcados como Demo/Ejemplo. Se revisan antes de preparar el índice. No muestran credenciales, expedientes reales ni configuración privada.
+
+![Inicio con los tres módulos según rol](inicio-integrado.jpg)
+
+![Convocatorias de Becas con el diseño compartido](becas-integrado.jpg)
+
+![Informe publicado del docente ficticio](evaluacion-resultados.jpg)
+
+![Preparación y publicación de periodos](evaluacion-periodos.jpg)
+
+![Evaluaciones en móvil](evaluacion-movil.jpg)
+
+Los PNG anteriores se conservan como evidencia histórica de CR-005/007/009. Los JPG de esta sección corresponden a la integración actual. No representan una aprobación institucional ni operación con datos reales.
+
+![Expediente ficticio de Becas y observación registrada](becas-expediente.jpg)

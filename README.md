@@ -4,7 +4,7 @@ La [revisión integral CR-007](docs/REVISION-INTEGRAL.md) registra investigació
 
 Las animaciones empiezan activadas. Puedes desactivarlas o volver a activarlas desde el footer; el navegador conserva esta preferencia de apariencia al navegar y recargar.
 
-Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. La bienvenida presenta el portal completo con el azor mensajero; el inicio privado ofrece únicamente Titulación electrónica. Los enlaces internos conservan su destino al iniciar sesión. Evaluación docente y Becas tienen requisitos identificados; coevaluación y autoevaluación por parcial son necesidades futuras señaladas por el líder. Se incorporarán por etapas, después de definir y aprobar su alcance.
+Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. La bienvenida presenta el portal completo con el azor mensajero; el inicio privado ofrece Titulación, Becas y Evaluación docente según el rol. Los enlaces internos conservan su destino al iniciar sesión. Los tres módulos comparten sesión, navegación, componentes y base de datos; coevaluación y autoevaluación por parcial son necesidades futuras señaladas por el líder. Las necesidades futuras se incorporarán después de definir y aprobar su alcance.
 
 **Para los equipos:** empieza por [clonar e instalar](docs/INSTALACION.md), revisa [la arquitectura modular](docs/ARQUITECTURA.md) y utiliza los [prompts comunes](docs/PROMPTS.md). Cada equipo amplía esta aplicación; no entrega otro login, backend o diseño independiente.
 
@@ -16,7 +16,9 @@ Esta entrega es una versión funcional para desarrollo y validación institucion
 
 ## Empezar
 
-Requisitos: Node.js 24 LTS, Python 3.12 y PostgreSQL 16. Instala PostgreSQL localmente o utiliza `docker compose up -d db` después de definir `POSTGRES_PASSWORD` en `.env`.
+La integración CR-010 corrige los módulos recibidos y conecta sus operaciones al servidor. Consulta [flujos, permisos y límites](docs/INTEGRACION-MODULOS.md). Evaluación docente ya guarda respuestas; las integraciones institucionales externas siguen pendientes.
+
+Requisitos: Node.js 24 LTS, Python 3.12 y PostgreSQL 16. Instala PostgreSQL localmente o utiliza `docker compose up -d db` después de definir `POSTGRES_PASSWORD` en `.env`. Compose publica la base en **5433**; `DATABASE_URL` y `POSTGRES_PORT` deben coincidir. Una instalación PostgreSQL existente puede usar otro puerto.
 
 ```powershell
 git clone https://github.com/Angel-Hs-Progenl/Sistema-Universitario.git
@@ -27,23 +29,27 @@ python -m venv .venv
 Copy-Item .env.example .env
 ```
 
-Configura `DATABASE_URL` en `.env` con una base vacía destinada al proyecto. No uses una base institucional existente.
+Configura `DATABASE_URL` en `.env` con una base del proyecto; en una instalación nueva créala vacía. `database.py migrate` respalda base y adjuntos antes de migrar. No uses una base institucional existente.
 
 ```powershell
-.\.venv\Scripts\alembic.exe -c backend/alembic.ini upgrade head
+.\scripts\start-db.ps1
+.\.venv\Scripts\python.exe scripts/database.py migrate
 .\.venv\Scripts\python.exe backend/manage.py seed-demo
 .\scripts\start-local.ps1
 ```
 
 Abre [la aplicación local](http://127.0.0.1:5173/) y [la documentación de la API](http://127.0.0.1:8000/api/docs).
 
-El seed es opcional, idempotente y exclusivo de desarrollo. Cuenta estudiante: `estudiante@demo.uto.local`; contraseña ficticia: `Demo-UTO-2026!`. En [operación](docs/OPERACION.md) están los demás roles y la forma de crear cuentas propias.
+El seed es opcional, idempotente y exclusivo de desarrollo. Incluye un periodo de evaluación por responder y otro con resultados ficticios publicados; no reinicia respuestas existentes. Cuenta estudiante: `estudiante@demo.uto.local`; contraseña ficticia: `Demo-UTO-2026!`. En [operación](docs/OPERACION.md) están los demás roles y la forma de crear cuentas propias.
 
 El teléfono reservado de prueba `+12025550100` accede a esa misma cuenta con la contraseña demo, después de ejecutar seed-demo. Es una vinculación ficticia y no envía SMS. Los correos demo se usan solo en desarrollo; las cuentas institucionales se provisionan con `@utdeoriental.edu.mx`.
 
 Para detener los dos servidores: `./scripts/start-local.ps1 -Stop`. También puedes iniciar el frontend con `npm run dev` y el backend con `.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --no-access-log` en terminales separadas.
 
 ## Qué funciona
+
+- Becas: convocatorias con fechas, estudio, solicitud, adjuntos revisados, dictamen con cupo, órdenes internas exclusivas de Tesorería, renovación y actividad.
+- Evaluación docente: cuestionarios versionados, periodos, asignaciones, respuestas únicas, revisión de comentarios, publicación por docente, gráficas y planes de mejora. CSV e impresión; sin éxito simulado ni datos mock en las pantallas.
 
 - Inicio de servicios, acceso y recuperación de contraseña con token de un solo uso.
 - Acceso con teléfono vinculado y contraseña del portal; menú de cuenta y edición de nombre visible.
@@ -70,9 +76,10 @@ La recuperación sin SMTP escribe los enlaces en `data/outbox/` solamente en des
 | [Trabajo en GitHub](CONTRIBUTING.md)                     | Ramas, pull requests, revisión e integración             |
 | [Operación](docs/OPERACION.md)                           | Inicio, cuentas, migraciones, respaldos y pendientes     |
 | [Investigación](docs/INVESTIGACION.md)                   | Fuentes y decisiones respaldadas                         |
+| [Integración de módulos](docs/INTEGRACION-MODULOS.md)    | Roles, flujos, rutas, migraciones y límites de CR-010    |
 | [Validación](docs/VALIDACION.md)                         | Pruebas ejecutadas y límites de verificación             |
-| [Instalación para equipos](docs/INSTALACION.md)          | Clonar, levantar PostgreSQL, ejecutar y entregar módulos  |
-| [Acceso institucional](docs/ACCESO-INSTITUCIONAL.md)      | Google, teléfono vinculado, perfil y operación segura     |
+| [Instalación para equipos](docs/INSTALACION.md)          | Clonar, levantar PostgreSQL, ejecutar y entregar módulos |
+| [Acceso institucional](docs/ACCESO-INSTITUCIONAL.md)     | Google, teléfono vinculado, perfil y operación segura    |
 
 ## Comprobar cambios
 
@@ -105,6 +112,10 @@ La revisión CR-004 utiliza navegación superior compartida y una bienvenida SVG
 
 CR-005 añade la marca del azor junto a UT de Oriental y el giro desde el PNG oficial aportado por el líder. La marca es una propuesta del portal, pendiente de autorización institucional; no sustituye el escudo oficial. Con movimiento reducido se realiza un cambio estático. [Recursos y procedencia](public/brand/README.md).
 
-![Inicio privado](docs/capturas/inicio.png)
+![Inicio privado con módulos integrados](docs/capturas/inicio-integrado.jpg)
 
 ![Menú de cuenta y Titulación](docs/capturas/cuenta-menu.png)
+
+![Becas integradas](docs/capturas/becas-integrado.jpg)
+
+![Resultados de evaluación docente](docs/capturas/evaluacion-resultados.jpg)

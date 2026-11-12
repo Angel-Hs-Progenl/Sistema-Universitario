@@ -73,6 +73,7 @@ def clients(password_hash):
     with SessionLocal() as db:
         for role in [
             "estudiante",
+            "docente",
             "escolares",
             "administrador",
             "tesoreria",
@@ -101,6 +102,9 @@ def clients(password_hash):
         assert response.status_code == 200, response.text
         client.headers["X-CSRF-Token"] = response.json()["csrf"]
         result[role] = client
+    # Las sesiones de preparación no consumen el presupuesto del caso probado.
+    # El limitador real sigue activo para las peticiones que realiza cada test.
+    attempts.clear()
     yield result
     for c in result.values():
         c.close()

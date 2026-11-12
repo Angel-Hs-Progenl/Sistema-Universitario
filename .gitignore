@@ -34,6 +34,7 @@ browser-state*.json
 *.cer
 
 # Expedientes, adjuntos, sesiones, buzones y respaldos
+# CR-010: no guardar fixtures de código en carpetas data; usar demo.py/fixtures ficticios.
 data/
 uploads/
 outbox/
