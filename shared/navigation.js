@@ -95,6 +95,27 @@ export const MODULES = [
       administrador: "Preparar evaluación",
     },
   },
+  {
+    id: "autoevaluacion",
+    path: "/autoevaluacion",
+    name: "Autoevaluación",
+    shortName: "Autoevaluación",
+    area: "Área académica",
+    description:
+      "Reflexiona sobre tu desempeño académico y registra tus avances.",
+    roles: ["estudiante", "administrador"],
+    pages: {
+      cuestionarios: "Cuestionarios",
+      evaluaciones: "Evaluaciones",
+      "mis-evaluaciones": "Mis autoevaluaciones",
+      evaluar: "Responder autoevaluación",
+      historial: "Historial",
+    },
+    actions: {
+      estudiante: "Consultar mis autoevaluaciones",
+      administrador: "Administrar autoevaluaciones",
+    },
+  },
 ];
 
 export function moduleLinks(module, role) {
@@ -142,6 +163,18 @@ export function moduleLinks(module, role) {
       ["/evaluacion-docente/direccion/planes-accion", "Planes de mejora"],
       ["/evaluacion-docente/direccion/docentes", "Docentes"],
       ["/evaluacion-docente/direccion/estudiantes", "Estudiantes"],
+    ];
+  }
+  if (module === "autoevaluacion") {
+    if (role === "estudiante")
+      return [
+        ["/autoevaluacion/mis-evaluaciones", "Mis autoevaluaciones"],
+        ["/autoevaluacion/historial", "Historial"],
+      ];
+
+    return [
+      ["/autoevaluacion/evaluaciones", "Evaluaciones"],
+      ["/autoevaluacion/cuestionarios", "Cuestionarios"],
     ];
   }
   return [
@@ -192,6 +225,16 @@ export function homeShortcuts(role) {
       path: "/evaluacion-docente/direccion/periodos",
       label: "Preparar evaluación docente",
     });
+  if (role === "estudiante")
+    shortcuts.push({
+      path: "/autoevaluacion/mis-evaluaciones",
+      label: "Mis autoevaluaciones",
+    });
+  if (role === "administrador")
+    shortcuts.push({
+      path: "/autoevaluacion/evaluaciones",
+      label: "Administrar autoevaluaciones",
+    });
   return [...shortcuts, { path: "/notificaciones", label: "Notificaciones" }];
 }
 
@@ -226,6 +269,26 @@ export function breadcrumbsFor(pathname, authenticated, entityLabel) {
       { label: module.name, path: module.path },
       { label: "Responder evaluación" },
     ];
+  if (
+    module.id === "autoevaluacion" &&
+    /^evaluar\/\d+$/.test(sub)
+  ) {
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Responder autoevaluación" },
+    ];
+  }
+  if (
+    module.id === "autoevaluacion" &&
+    /^resultados\/\d+$/.test(sub)
+  ) {
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Resultados" },
+    ];
+  }
   const leaf = module.pages?.[sub];
   const isEntity = /^(?:expediente|solicitud)\/\d+$/.test(sub);
   if (!leaf && !isEntity) return unknown;
