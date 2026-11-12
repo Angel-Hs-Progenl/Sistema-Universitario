@@ -126,3 +126,12 @@ La interpretación gráfica de la mascota sigue siendo una propuesta; no se decl
 - Padrón Oficial de Beneficiarios (becas aprobadas y renovadas) con desglose de montos, modalidades, cuentas bancarias protegidas y exportación en CSV institucional en el Tablero de Control.
 - Actualización de pruebas automatizadas en `backend/tests/test_becas.py` cubriendo registro de CLABE, acta formal, validación socioeconómica, dispersión y padrón oficial.
 - Compilación y pruebas frontend y backend 100% verificadas. Conservación de aislamiento sin afectar el módulo de titulación.
+
+## Registro CR-012 · Pagos en Línea Gobierno de Puebla y Porcentajes de Pago
+
+12 de noviembre de 2026. Ajuste autorizado de reglas institucionales para la Universidad Tecnológica de Oriental:
+- Migración 0006 de Alembic (`0006_becas_puebla_descuentos.py`) añadiendo cuota base, porcentaje de beca, porcentaje a pagar por el estudiante y referencia oficial de Pagos en Línea del Gobierno de Puebla.
+- El Comité Evaluador dictamina asignando el porcentaje que cubrirá el estudiante (ej. 53%, 65%) y el porcentaje de descuento por beca otorgado.
+- El área de Tesorería es la responsable exclusiva de generar las órdenes de pago institucionales vinculadas a la cuota ordinaria de reinscripción ($1,850.00 MXN) calculando el monto neto a pagar.
+- Emisión de la referencia institucional / línea de captura para el portal oficial de **Pagos en Línea del Gobierno del Estado de Puebla** (`https://pagosenlinea.puebla.gob.mx/`).
+- Flujo de confirmación y validación de pago por Tesorería tras la liquidación en línea del estudiante.

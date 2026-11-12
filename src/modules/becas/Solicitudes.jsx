@@ -251,6 +251,14 @@ export default function Solicitudes() {
                   <small style={{ color: "var(--muted)" }}>Promedio registrado</small>
                   <p style={{ margin: "2px 0 0 0", fontWeight: "600" }}>{appDetail.gpa.toFixed(1)}</p>
                 </div>
+                {appDetail.student_percentage && (
+                  <div>
+                    <small style={{ color: "var(--muted)" }}>Esquema de beca (dictamen)</small>
+                    <p style={{ margin: "2px 0 0 0", fontWeight: "700", color: "var(--brand)" }}>
+                      Pagas {appDetail.student_percentage}% (Beca: {appDetail.discount_percentage}%)
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Datos bancarios registrados */}

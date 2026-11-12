@@ -194,6 +194,8 @@ def list_applications(
             "major": app.major,
             "socioeconomic_score": app.socioeconomic_score,
             "committee_notes": app.committee_notes,
+            "discount_percentage": app.discount_percentage,
+            "student_percentage": app.student_percentage,
             "created_at": app.created_at.isoformat(),
             "applicant": {
                 "id": applicant.id,
@@ -302,6 +304,8 @@ def get_application_detail(
         "socioeconomic_score": app.socioeconomic_score,
         "custom_answers": json.loads(app.custom_answers or "{}"),
         "committee_notes": app.committee_notes,
+        "discount_percentage": app.discount_percentage,
+        "student_percentage": app.student_percentage,
         "created_at": app.created_at.isoformat(),
         "call": {
             "id": call.id,
@@ -352,6 +356,8 @@ class DictamenPayload(BaseModel):
     decision: str  # "aprobada", "rechazada", "revision"
     committee_notes: str = PydField(min_length=3)
     score: float | None = None
+    discount_percentage: float | None = None
+    student_percentage: float | None = None
 
 
 @router.post("/solicitudes/{app_id}/dictamen")
@@ -374,6 +380,20 @@ def submit_dictamen(
     app.committee_notes = payload.committee_notes
     if payload.score is not None:
         app.socioeconomic_score = payload.score
+
+    # Asignación de porcentaje de beca / porcentaje a pagar por el estudiante
+    if payload.decision == "aprobada":
+        if payload.student_percentage is not None:
+            app.student_percentage = float(payload.student_percentage)
+            app.discount_percentage = round(100.0 - app.student_percentage, 1)
+        elif payload.discount_percentage is not None:
+            app.discount_percentage = float(payload.discount_percentage)
+            app.student_percentage = round(100.0 - app.discount_percentage, 1)
+        else:
+            # Por defecto 50% de beca / 50% de pago
+            app.discount_percentage = 50.0
+            app.student_percentage = 50.0
+
     app.updated_at = now()
 
     # Notificar al aspirante
@@ -630,10 +650,16 @@ def list_payment_orders(
             "call_title": call.title,
             "student_name": student.name,
             "amount": order.amount,
+            "cuota_base": order.cuota_base or (order.amount if not order.student_percentage else round(order.amount / (order.student_percentage / 100.0), 2)),
+            "discount_percentage": order.discount_percentage or (100.0 - (order.student_percentage or 50.0)),
+            "student_percentage": order.student_percentage or (app.student_percentage or 50.0),
             "period": order.period,
             "scheduled_date": order.scheduled_date.isoformat(),
             "status": order.status,
             "reference": order.reference,
+            "puebla_reference": order.puebla_reference or order.reference,
+            "puebla_url": order.puebla_url or "https://pagosenlinea.puebla.gob.mx/",
+            "paid_at": order.paid_at.isoformat() if order.paid_at else None,
             "bank_name": order.bank_name or app.bank_name,
             "bank_clabe": order.bank_clabe or app.bank_clabe,
             "batch_folio": order.batch_folio,
@@ -647,6 +673,8 @@ class GeneratePaymentOrderPayload(BaseModel):
     application_id: int
     period: str = PydField(min_length=2, max_length=50)
     scheduled_date: str
+    cuota_base: float = 1850.0
+    student_percentage: float | None = None
 
 
 @router.post("/ordenes-cobro/generar")
@@ -656,7 +684,8 @@ def generate_payment_order(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "administrador", "evaluador", "tesoreria", "escolares")
+    """Tesorería emite la orden de pago con línea de captura de Pagos en Línea del Gobierno de Puebla."""
+    require_role(user, "tesoreria", "administrador", "evaluador", "escolares")
     app = db.get(ScholarshipApplication, payload.application_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
@@ -665,46 +694,111 @@ def generate_payment_order(
 
     call = db.get(ScholarshipCall, app.call_id)
     count = db.scalar(select(func.count(ScholarshipPaymentOrder.id))) or 0
-    folio_orden = f"ORD-BEC-2026-{count + 1:04d}"
+    folio_orden = f"ORD-PUE-UTO-{count + 1:04d}"
 
     try:
         sched_dt = datetime.fromisoformat(payload.scheduled_date.replace("Z", "+00:00"))
     except ValueError:
         sched_dt = now()
 
+    # Cálculo porcentual institucional según dictamen
+    pct_pago = payload.student_percentage if payload.student_percentage is not None else (app.student_percentage or 50.0)
+    pct_beca = round(100.0 - pct_pago, 1)
+    cuota_base = float(payload.cuota_base or 1850.0)
+    monto_a_pagar = round(cuota_base * (pct_pago / 100.0), 2)
+
+    # Línea de captura institucional para Pagos en Línea del Gobierno de Puebla
+    puebla_ref = f"PUE-UTO-2026-{app.id:04d}-{count + 1:04d}"
+    puebla_url = "https://pagosenlinea.puebla.gob.mx/"
+
     order = ScholarshipPaymentOrder(
         application_id=app.id,
         folio_orden=folio_orden,
-        amount=call.amount,
+        amount=monto_a_pagar,
+        cuota_base=cuota_base,
+        discount_percentage=pct_beca,
+        student_percentage=pct_pago,
         period=payload.period,
         scheduled_date=sched_dt,
         status="programada",
-        reference=f"UTO-SPEI-{app.id:04d}-{count + 1:04d}",
+        reference=puebla_ref,
+        puebla_reference=puebla_ref,
+        puebla_url=puebla_url,
         bank_name=app.bank_name,
         bank_clabe=app.bank_clabe,
     )
     db.add(order)
 
-    # Notificar estudiante
+    # Notificar estudiante con datos del Gobierno de Puebla
     db.add(
         Notification(
             user_id=app.user_id,
-            message=f"Se programó una orden de pago ({folio_orden}) por ${call.amount:.2f} para tu beca.",
+            message=(
+                f"Tesorería emitió tu orden de pago ({folio_orden}) por ${monto_a_pagar:,.2f} MXN "
+                f"(cubres el {pct_pago:.1f}% con beca del {pct_beca:.1f}%). "
+                f"Realiza tu pago en Pagos en Línea del Gobierno de Puebla con la referencia: {puebla_ref}."
+            ),
         )
     )
 
     audit_becas(
         db,
         user,
-        f"Orden de cobro generada: {folio_orden}",
+        f"Orden de pago emitida por Tesorería: {folio_orden}",
         "ScholarshipPaymentOrder",
         str(app.id),
-        f"Monto: ${call.amount:.2f}, Periodo: {payload.period}",
+        f"Monto: ${monto_a_pagar:,.2f} (% a pagar: {pct_pago}%), Referencia Puebla: {puebla_ref}",
         request.client.host if request.client else "127.0.0.1",
     )
     db.commit()
 
-    return {"message": "Orden de cobro generada con éxito.", "folio_orden": folio_orden}
+    return {
+        "message": "Orden de pago emitida con éxito.",
+        "folio_orden": folio_orden,
+        "amount": monto_a_pagar,
+        "student_percentage": pct_pago,
+        "discount_percentage": pct_beca,
+        "puebla_reference": puebla_ref,
+        "puebla_url": puebla_url,
+    }
+
+
+@router.post("/ordenes-cobro/{order_id}/confirmar-pago")
+def confirm_puebla_payment(
+    order_id: int,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Tesorería valida que el alumno liquidó la orden a través de Pagos en Línea del Gobierno de Puebla."""
+    require_role(user, "tesoreria", "administrador")
+    order = db.get(ScholarshipPaymentOrder, order_id)
+    if not order:
+        raise HTTPException(404, "Orden de pago no encontrada.")
+
+    order.status = "pagada"
+    order.paid_at = now()
+
+    app = db.get(ScholarshipApplication, order.application_id)
+    if app:
+        db.add(
+            Notification(
+                user_id=app.user_id,
+                message=f"Tesorería validó tu pago ({order.folio_orden}). Tu reinscripción y beca están formalmente confirmadas.",
+            )
+        )
+
+    audit_becas(
+        db,
+        user,
+        f"Pago validado por Tesorería: {order.folio_orden}",
+        "ScholarshipPaymentOrder",
+        str(order.id),
+        f"Referencia Gob. Puebla: {order.puebla_reference}, Monto pagado: ${order.amount:,.2f}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": "Pago validado por Tesorería correctamente.", "status": order.status}
 
 
 class DisperseOrderPayload(BaseModel):

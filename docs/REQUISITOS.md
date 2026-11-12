@@ -90,6 +90,8 @@ Requisitos implementados en la entrega actual:
 - BEC-16: Resolución colegiada de solicitudes de renovación para personal con justificación de aprobación/rechazo.
 - BEC-17: Generación y consulta del Padrón Oficial de Beneficiarios con desglose nominal, académico, bancario y descarga en CSV institucional.
 - BEC-18: Gestión de dispersión por lote bancario SPEI con folio de lote (`batch_folio`), fecha de dispersión y notificación automática al estudiante.
+- BEC-19: Esquema de beca porcentual diferenciado (el dictamen asigna el porcentaje a pagar por el estudiante, ej. 53% o 65%, con el descuento de beca correspondiente).
+- BEC-20: Emisión de órdenes de pago por Tesorería vinculadas a Pagos en Línea del Gobierno de Puebla con línea de captura institucional y validación de pago recibido.
 
 Alcance reservado para Fase 3 (100% de operación institucional):
 - Conexión a pasarela bancaria directa (API STP / Webhooks bancarios).

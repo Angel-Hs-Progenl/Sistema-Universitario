@@ -29,6 +29,7 @@ export default function PanelDictaminacion() {
   const [decision, setDecision] = useState("aprobada");
   const [committeeNotes, setCommitteeNotes] = useState("");
   const [score, setScore] = useState("80");
+  const [studentPercentage, setStudentPercentage] = useState("53");
   const [savingDictamen, setSavingDictamen] = useState(false);
   const [dictamenSuccess, setDictamenSuccess] = useState("");
   const [dictamenError, setDictamenError] = useState("");
@@ -174,6 +175,7 @@ export default function PanelDictaminacion() {
           decision,
           committee_notes: committeeNotes,
           score: parseFloat(score) || undefined,
+          student_percentage: decision === "aprobada" ? parseFloat(studentPercentage) : undefined,
         },
       });
       setDictamenSuccess("Dictamen emitido y guardado exitosamente.");
@@ -529,6 +531,44 @@ export default function PanelDictaminacion() {
                     <option value="revision">Mantener En Revisión / Solicitar corrección</option>
                   </select>
                 </div>
+
+                {decision === "aprobada" && (
+                  <div
+                    style={{
+                      background: "var(--canvas)",
+                      border: "1px solid var(--gold)",
+                      padding: "12px",
+                      borderRadius: "var(--radius)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                    }}
+                  >
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <Field
+                        label="Porcentaje que pagará el estudiante (%) *"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        required
+                        value={studentPercentage}
+                        onChange={(e) => setStudentPercentage(e.target.value)}
+                        hint="Ej. 53% o 65% según necesidad económica."
+                      />
+                      <div>
+                        <small style={{ color: "var(--muted)" }}>Beca institucional asignada</small>
+                        <p style={{ margin: "6px 0 0 0", fontSize: "1.25rem", fontWeight: "700", color: "var(--green)" }}>
+                          {100 - (parseFloat(studentPercentage) || 0)}% de Beca
+                        </p>
+                        <small style={{ color: "var(--muted)" }}>Descuento sobre cuota ordinaria</small>
+                      </div>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.8125rem", color: "var(--ink)" }}>
+                      💡 De una cuota de <strong>$1,850.00 MXN</strong>, el estudiante pagará <strong>${((1850 * (parseFloat(studentPercentage) || 0)) / 100).toFixed(2)} MXN</strong> con referencia generada por Tesorería para <em>Pagos en Línea del Gobierno de Puebla</em>.
+                    </p>
+                  </div>
+                )}
 
                 <Field
                   label="Puntaje socioeconómico ratificado por el comité"

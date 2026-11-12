@@ -25,6 +25,10 @@ export default function OrdenesCobro() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Pagos en Línea Gobierno de Puebla & Porcentajes
+  const [cuotaBase, setCuotaBase] = useState("1850");
+  const [orderStudentPct, setOrderStudentPct] = useState("53");
+
   // Dispersión SPEI state
   const [disperseOrderId, setDisperseOrderId] = useState(null);
   const [batchFolio, setBatchFolio] = useState("LOTE-SPEI-UTO-01");
@@ -43,6 +47,16 @@ export default function OrdenesCobro() {
 
   const totalAmount = (orders || []).reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
+  async function handleConfirmPayment(orderId) {
+    try {
+      await api(`/becas/ordenes-cobro/${orderId}/confirmar-pago`, { method: "POST" });
+      setSuccessMsg("Pago validado por Tesorería correctamente. Beca y reinscripción confirmadas.");
+      refreshOrders();
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
+  }
+
   async function handleGenerate(e) {
     e.preventDefault();
     setSaving(true);
@@ -56,9 +70,11 @@ export default function OrdenesCobro() {
           application_id: parseInt(appId, 10),
           period,
           scheduled_date: `${scheduledDate}T12:00:00Z`,
+          cuota_base: parseFloat(cuotaBase) || 1850,
+          student_percentage: parseFloat(orderStudentPct) || undefined,
         },
       });
-      setSuccessMsg(res.message);
+      setSuccessMsg(`Orden ${res.folio_orden} generada. Monto a pagar: $${res.amount.toFixed(2)} MXN (${res.student_percentage}% a pagar). Ref. Gob. Puebla: ${res.puebla_reference}`);
       setShowGenerateModal(false);
       refreshOrders();
     } catch (err) {
@@ -92,10 +108,10 @@ export default function OrdenesCobro() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h2 style={{ margin: "0 0 4px 0", fontSize: "1.25rem", color: "var(--brand)" }}>
-            Calendario de Pagos y Órdenes de Cobro
+            Tesorería: Órdenes de Pago y Pagos en Línea (Gobierno de Puebla)
           </h2>
           <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--muted)" }}>
-            Programación de dispersiones, emisión de referencias bancarias y control presupuestal de becas.
+            Emisión de órdenes de reinscripción con porcentaje de beca diferenciado (53%, 65%, etc.) y referencias para Pagos en Línea del Estado de Puebla.
           </p>
         </div>
         {user.role !== "estudiante" && (
@@ -185,73 +201,99 @@ export default function OrdenesCobro() {
           <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--canvas)", textAlign: "left", fontSize: "0.8125rem" }}>
-                <th style={{ padding: "10px 12px" }}>Folio de Orden</th>
-                <th style={{ padding: "10px 12px" }}>Folio Beca</th>
-                <th style={{ padding: "10px 12px" }}>Estudiante</th>
+                <th style={{ padding: "10px 12px" }}>Folio Orden</th>
+                <th style={{ padding: "10px 12px" }}>Estudiante / Beca</th>
                 <th style={{ padding: "10px 12px" }}>Convocatoria</th>
-                <th style={{ padding: "10px 12px" }}>Periodo</th>
-                <th style={{ padding: "10px 12px" }}>Monto</th>
-                <th style={{ padding: "10px 12px" }}>Cuenta bancaria</th>
-                <th style={{ padding: "10px 12px" }}>Referencia SPEI</th>
+                <th style={{ padding: "10px 12px" }}>Cuota base</th>
+                <th style={{ padding: "10px 12px" }}>% a Pagar / Beca</th>
+                <th style={{ padding: "10px 12px" }}>Monto final</th>
+                <th style={{ padding: "10px 12px" }}>Ref. Gob. de Puebla</th>
                 <th style={{ padding: "10px 12px" }}>Estado</th>
-                {user.role !== "estudiante" && <th style={{ padding: "10px 12px", textAlign: "right" }}>Acción</th>}
+                <th style={{ padding: "10px 12px", textAlign: "right" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={user.role !== "estudiante" ? 10 : 9} style={{ padding: "20px", textAlign: "center", color: "var(--muted)" }}>
-                    No hay órdenes de cobro emitidas para el periodo actual.
+                  <td colSpan={9} style={{ padding: "20px", textAlign: "center", color: "var(--muted)" }}>
+                    No hay órdenes de pago emitidas para el periodo actual.
                   </td>
                 </tr>
               ) : (
                 orders.map((ord) => (
                   <tr key={ord.id} style={{ borderTop: "1px solid var(--line)" }}>
                     <td style={{ padding: "12px", fontWeight: "700" }}>{ord.folio_orden}</td>
-                    <td style={{ padding: "12px" }}>{ord.application_folio}</td>
-                    <td style={{ padding: "12px", fontWeight: "600" }}>{ord.student_name}</td>
-                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>{ord.call_title}</td>
-                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>{ord.period}</td>
-                    <td style={{ padding: "12px", fontWeight: "700", color: "var(--brand)" }}>
-                      ${ord.amount.toLocaleString("es-MX")}
+                    <td style={{ padding: "12px" }}>
+                      <div style={{ fontWeight: "600" }}>{ord.student_name}</div>
+                      <small style={{ color: "var(--muted)" }}>Folio: {ord.application_folio}</small>
                     </td>
-                    <td style={{ padding: "12px", fontSize: "0.8125rem" }}>
-                      {ord.bank_name ? (
-                        <span><strong>{ord.bank_name}</strong> (***{ord.bank_clabe ? ord.bank_clabe.slice(-4) : "----"})</span>
-                      ) : (
-                        <span style={{ color: "var(--muted)" }}>Sin CLABE</span>
-                      )}
+                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>
+                      {ord.call_title}
+                      <small style={{ display: "block", color: "var(--muted)" }}>{ord.period}</small>
                     </td>
-                    <td style={{ padding: "12px", fontFamily: "monospace", fontSize: "0.8125rem" }}>
-                      {ord.reference}
+                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>
+                      ${(ord.cuota_base || 1850).toLocaleString("es-MX")} MXN
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <span className={`badge ${ord.status === "dispersada" ? "badge-validado" : "badge-pendiente"}`}>
-                        {ord.status === "dispersada" ? "Dispersada" : "Programada"}
+                      <strong style={{ color: "var(--brand)" }}>{ord.student_percentage || 50}% a pagar</strong>
+                      <small style={{ display: "block", color: "var(--green)" }}>
+                        ({ord.discount_percentage || (100 - (ord.student_percentage || 50))}% de beca)
+                      </small>
+                    </td>
+                    <td style={{ padding: "12px", fontWeight: "700", color: "var(--brand)", fontSize: "0.9375rem" }}>
+                      ${ord.amount.toLocaleString("es-MX")} MXN
+                    </td>
+                    <td style={{ padding: "12px" }}>
+                      <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", fontWeight: "700" }}>
+                        {ord.puebla_reference || ord.reference}
+                      </div>
+                      <a
+                        href={ord.puebla_url || "https://pagosenlinea.puebla.gob.mx/"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="button button-secondary"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.6875rem", padding: "2px 6px", marginTop: "4px" }}
+                      >
+                        <ArrowUpRight size={12} /> Pagos en Línea Puebla
+                      </a>
+                    </td>
+                    <td style={{ padding: "12px" }}>
+                      <span className={`badge ${ord.status === "pagada" ? "badge-validado" : ord.status === "dispersada" ? "badge-validado" : "badge-pendiente"}`}>
+                        {ord.status === "pagada" ? "Pagada en línea" : ord.status === "dispersada" ? "Dispersada" : "Pendiente de pago"}
                       </span>
-                      {ord.batch_folio && (
-                        <small style={{ display: "block", color: "var(--muted)", fontSize: "0.75rem" }}>
-                          Lote: {ord.batch_folio}
+                      {ord.paid_at && (
+                        <small style={{ display: "block", color: "var(--green)", fontSize: "0.75rem" }}>
+                          Validado por Tesorería
                         </small>
                       )}
                     </td>
-                    {user.role !== "estudiante" && (
-                      <td style={{ padding: "12px", textAlign: "right" }}>
-                        {ord.status !== "dispersada" && (
+                    <td style={{ padding: "12px", textAlign: "right" }}>
+                      <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                        {user.role !== "estudiante" && ord.status === "programada" && (
                           <button
                             type="button"
                             className="button button-primary"
+                            style={{ fontSize: "0.75rem", padding: "4px 8px" }}
+                            onClick={() => handleConfirmPayment(ord.id)}
+                          >
+                            <CheckCircle size={12} /> Validar Pago
+                          </button>
+                        )}
+                        {user.role !== "estudiante" && ord.status !== "dispersada" && (
+                          <button
+                            type="button"
+                            className="button button-secondary"
                             style={{ fontSize: "0.75rem", padding: "4px 8px" }}
                             onClick={() => {
                               setDisperseOrderId(ord.id);
                               setDisperseErr("");
                             }}
                           >
-                            <CreditCard size={14} /> Dispersar SPEI
+                            <CreditCard size={12} /> Dispersar SPEI
                           </button>
                         )}
-                      </td>
-                    )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -262,9 +304,12 @@ export default function OrdenesCobro() {
 
       {/* Modal Emisión de Orden de Cobro */}
       {showGenerateModal && (
-        <Modal title="Emitir Orden de Cobro Institucional" onClose={() => setShowGenerateModal(false)}>
+        <Modal title="Emitir Orden de Pago Institucional (Tesorería)" onClose={() => setShowGenerateModal(false)}>
           <form onSubmit={handleGenerate} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <Alert>{errorMsg}</Alert>
+            <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--muted)" }}>
+              Tesorería genera la orden con el porcentaje de beca otorgado en el dictamen para su pago a través del portal de <strong>Pagos en Línea del Gobierno de Puebla</strong>.
+            </p>
 
             <div className="field">
               <label htmlFor="appSelect">Beca aprobada del aspirante *</label>
@@ -272,28 +317,81 @@ export default function OrdenesCobro() {
                 id="appSelect"
                 required
                 value={appId}
-                onChange={(e) => setAppId(e.target.value)}
+                onChange={(e) => {
+                  const selId = e.target.value;
+                  setAppId(selId);
+                  const selApp = (approvedApps || []).find((a) => a.id === parseInt(selId, 10));
+                  if (selApp?.student_percentage) {
+                    setOrderStudentPct(String(selApp.student_percentage));
+                  }
+                }}
                 style={{ padding: "8px" }}
               >
                 <option value="">Selecciona una beca aprobada…</option>
                 {(approvedApps || []).map((app) => (
                   <option key={app.id} value={app.id}>
-                    {app.folio} - {app.applicant.name} ({app.call_title})
+                    {app.folio} - {app.applicant.name} ({app.call_title} · Paga {app.student_percentage || 50}%)
                   </option>
                 ))}
               </select>
             </div>
 
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <Field
+                label="Cuota ordinaria institucional ($ MXN) *"
+                type="number"
+                step="50"
+                min="100"
+                required
+                value={cuotaBase}
+                onChange={(e) => setCuotaBase(e.target.value)}
+                hint="Monto ordinario de reinscripción UTO."
+              />
+              <Field
+                label="Porcentaje a pagar por el alumno (%) *"
+                type="number"
+                step="1"
+                min="0"
+                max="100"
+                required
+                value={orderStudentPct}
+                onChange={(e) => setOrderStudentPct(e.target.value)}
+                hint="Ej. 53% o 65% según dictamen."
+              />
+            </div>
+
+            <div
+              style={{
+                background: "var(--canvas)",
+                border: "1px solid var(--gold)",
+                padding: "12px",
+                borderRadius: "var(--radius)",
+                fontSize: "0.875rem",
+              }}
+            >
+              <strong>Cálculo final para Pagos en Línea Gob. Puebla:</strong>
+              <div style={{ marginTop: "4px", display: "flex", justifyContent: "space-between" }}>
+                <span>Monto a pagar por el alumno:</span>
+                <strong style={{ color: "var(--brand)", fontSize: "1rem" }}>
+                  ${(((parseFloat(cuotaBase) || 1850) * (parseFloat(orderStudentPct) || 50)) / 100).toFixed(2)} MXN
+                </strong>
+              </div>
+              <div style={{ marginTop: "2px", display: "flex", justifyContent: "space-between", color: "var(--green)" }}>
+                <span>Beca institucional aplicada:</span>
+                <strong>{100 - (parseFloat(orderStudentPct) || 50)}% de descuento</strong>
+              </div>
+            </div>
+
             <Field
-              label="Periodo / Parcial a dispersar"
+              label="Periodo / Cuatrimestre de aplicación"
               required
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              placeholder="Ej. Primer Parcial - Mayo 2026"
+              placeholder="Ej. Reinscripción Cuatrimestral - Mayo 2026"
             />
 
             <Field
-              label="Fecha programada de pago"
+              label="Fecha límite programada de pago"
               type="date"
               required
               value={scheduledDate}
@@ -310,7 +408,7 @@ export default function OrdenesCobro() {
                 Cancelar
               </button>
               <BusyButton busy={saving} busyText="Generando orden…" type="submit" className="button button-primary">
-                Confirmar y foliar orden de cobro
+                Emitir orden con Ref. Puebla
               </BusyButton>
             </div>
           </form>
