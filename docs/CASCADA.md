@@ -115,3 +115,11 @@ La interpretación gráfica de la mascota sigue siendo una propuesta; no se decl
 La asignación de responsabilidades, reglas académicas, documentación de becas y fórmula orientativa recibida siguen como propuestas pendientes de ratificación institucional. No se adoptan SPEI, SAT, padrón, proveedor IA o MFA como nuevos requisitos aprobados. Las interfaces identifican operaciones internas y no simulan dichas integraciones. No se sustituye el SSO de producción por contraseñas locales para evaluación.
 
 Análisis, matriz de permisos, flujos, límites y criterios: [INTEGRACION-MODULOS.md](INTEGRACION-MODULOS.md). Evidencia y pruebas: [VALIDACION.md](VALIDACION.md). Los datos existentes se respaldan y conservan; las pruebas usan una base separada. No se abrió una issue externa ni se publica un commit desde esta implementación. El registro conserva la autorización del líder, sin declarar fases formalmente aprobadas.
+
+## Registro CR-011 · Autoevaluación y continuidad visual de Becas
+
+11 de noviembre de 2026. Tras traer `origin/main` (133bc7d), el líder solicita mejorar diseño, funciones y compatibilidad de los módulos recibidos, incluido Becas, para que compartan la aplicación existente. Autoriza esta revisión transversal de interfaz, navegación, ayuda y correcciones técnicas; no fija nuevos criterios institucionales.
+
+Se conserva el alcance funcional recibido de Autoevaluación (estudiante y administrador, preguntas por parcial, envío único) y su migración `61dbabf45860`, respaldando la base antes de aplicarla. Se sustituyen estilos independientes, tarjetas repetidas y controles sin etiqueta por los componentes comunes. Se corrigen respuesta múltiple obligatoria vacía, destino OAuth, Ayuda sin contenido y lectura de respuestas mediante textos/versiones de sus preguntas. Becas prioriza recepción abierta, estudio previo, retomar solicitud y adjuntar archivos por requisito.
+
+La matriz de acceso, visibilidad individual, preguntas, retención y procedimiento de corrección de Autoevaluación necesitan ratificación institucional. No se incorpora coevaluación, otra autenticación, cálculo de calificaciones ni integraciones externas. Alcance y evidencia en [MEJORAS-MODULOS.md](MEJORAS-MODULOS.md); no se declaran fases formalmente aprobadas.

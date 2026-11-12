@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Download } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { api, date } from "../../shared/api";
-import { Field, BusyButton, useAsync } from "../../shared/ui";
+import { Field, BusyButton, Modal, useAsync } from "../../shared/ui";
 import {
   Heading,
   LoadState,
@@ -136,6 +137,7 @@ export function Socioeconomic() {
 }
 
 export function ManageCalls() {
+  const [dialog, setDialog] = useState(false);
   const state = useAsync(() => api("/becas/convocatorias"), []),
     mutation = useMutation();
   async function submit(e) {
@@ -163,133 +165,157 @@ export function ManageCalls() {
       });
       await state.refresh();
     }, "Convocatoria guardada. La recepción se habilita durante las fechas registradas.");
-    if (ok) element.reset();
+    if (ok) {
+      element.reset();
+      setDialog(false);
+    }
   }
   return (
     <>
       <Heading
         eyebrow="Becas / Administración"
-        title="Registrar una convocatoria"
+        title="Convocatorias de beca"
         action={
-          <Link to="/becas" className="button button-secondary">
-            Consultar catálogo
-          </Link>
+          <button
+            className="button button-primary"
+            onClick={() => {
+              mutation.clear();
+              setDialog(true);
+            }}
+          >
+            Registrar convocatoria
+          </button>
         }
       >
         Captura las bases autorizadas por el área responsable. Los montos y
         criterios se definen por convocatoria.
       </Heading>
-      <div className="work-split">
-        <form className="work-form" onSubmit={submit}>
-          <MutationState state={mutation} />
-          <Field
-            name="title"
-            label="Nombre de la convocatoria"
-            required
-            minLength={3}
-            maxLength={150}
-          />
-          <Field
-            name="modalidad"
-            label="Modalidad"
-            as="select"
-            required
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Selecciona la modalidad
-            </option>
-            {MODALIDADES.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </Field>
-          <Field
-            name="description"
-            label="Bases y condiciones de participación"
-            as="textarea"
-            rows={5}
-            required
-            minLength={10}
-            maxLength={5000}
-          />
-          <div className="form-grid">
+      {!dialog && <MutationState state={mutation} />}
+      {dialog && (
+        <Modal
+          title="Registrar convocatoria"
+          onClose={() => {
+            if (!mutation.busy) setDialog(false);
+          }}
+        >
+          <form className="work-form" onSubmit={submit}>
+            <MutationState state={mutation} />
             <Field
-              name="min_gpa"
-              label="Promedio mínimo autorizado"
-              type="number"
-              min="6"
-              max="10"
-              step=".01"
+              name="title"
+              label="Nombre de la convocatoria"
               required
+              minLength={3}
+              maxLength={150}
             />
             <Field
-              name="amount"
-              label="Monto del apoyo (MXN)"
-              type="number"
-              min=".01"
-              step=".01"
-              max="9999999999.99"
+              name="modalidad"
+              label="Modalidad"
+              as="select"
               required
-            />
-            <Field
-              name="slots"
-              label="Número de apoyos disponibles"
-              type="number"
-              min="1"
-              max="100000"
-              required
-            />
-            <div />
-            <Field
-              name="start_date"
-              label="Apertura de recepción"
-              type="datetime-local"
-              required
-              defaultValue={localDateInput()}
-            />
-            <Field
-              name="end_date"
-              label="Cierre de recepción"
-              type="datetime-local"
-              required
-            />
-          </div>
-          <Field
-            name="custom_questions"
-            label="Preguntas adicionales"
-            as="textarea"
-            rows={4}
-            hint="Una pregunta por línea. Máximo 20; cada una admite hasta 300 caracteres."
-          />
-          <div className="form-footer">
-            <BusyButton
-              type="submit"
-              className="button button-primary"
-              busy={mutation.busy}
+              defaultValue=""
             >
-              Guardar convocatoria
-            </BusyButton>
+              <option value="" disabled>
+                Selecciona la modalidad
+              </option>
+              {MODALIDADES.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </Field>
+            <Field
+              name="description"
+              label="Bases y condiciones de participación"
+              as="textarea"
+              rows={5}
+              required
+              minLength={10}
+              maxLength={5000}
+            />
+            <div className="form-grid">
+              <Field
+                name="min_gpa"
+                label="Promedio mínimo autorizado"
+                type="number"
+                min="6"
+                max="10"
+                step=".01"
+                required
+              />
+              <Field
+                name="amount"
+                label="Monto del apoyo (MXN)"
+                type="number"
+                min=".01"
+                step=".01"
+                max="9999999999.99"
+                required
+              />
+              <Field
+                name="slots"
+                label="Número de apoyos disponibles"
+                type="number"
+                min="1"
+                max="100000"
+                required
+              />
+              <div />
+              <Field
+                name="start_date"
+                label="Apertura de recepción"
+                type="datetime-local"
+                required
+                defaultValue={localDateInput()}
+              />
+              <Field
+                name="end_date"
+                label="Cierre de recepción"
+                type="datetime-local"
+                required
+              />
+            </div>
+            <Field
+              name="custom_questions"
+              label="Preguntas adicionales"
+              as="textarea"
+              rows={4}
+              hint="Una pregunta por línea. Máximo 20; cada una admite hasta 300 caracteres."
+            />
+            <div className="form-footer">
+              <BusyButton
+                type="submit"
+                className="button button-primary"
+                busy={mutation.busy}
+              >
+                Guardar convocatoria
+              </BusyButton>
+              <button
+                className="button button-secondary"
+                type="button"
+                disabled={mutation.busy}
+                onClick={() => setDialog(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+          <div className="work-note">
+            <p>
+              Confirma presupuesto, cupo, promedio y fechas con el área
+              responsable. No se aplican tarifas ni criterios institucionales
+              predeterminados.
+            </p>
+            <p>
+              La convocatoria aparece en el catálogo. Solo recibe solicitudes
+              dentro del periodo de apertura y cierre.
+            </p>
+            <p>
+              Las fechas se capturan con la zona horaria de tu dispositivo y se
+              conservan en UTC.
+            </p>
           </div>
-        </form>
-        <aside className="work-aside">
-          <h2>Revisa antes de guardar</h2>
-          <p>
-            Confirma presupuesto, cupo, promedio y fechas con el área
-            responsable. No se aplican tarifas ni criterios institucionales
-            predeterminados.
-          </p>
-          <p>
-            La convocatoria aparece en el catálogo. Solo recibe solicitudes
-            dentro del periodo de apertura y cierre.
-          </p>
-          <p>
-            Las fechas se capturan con la zona horaria de tu dispositivo y se
-            conservan en UTC.
-          </p>
-        </aside>
-      </div>
+        </Modal>
+      )}
       <section className="work-section">
         <h2>Convocatorias registradas</h2>
         <LoadState state={state} empty="Todavía no hay convocatorias">

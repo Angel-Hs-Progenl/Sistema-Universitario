@@ -10,7 +10,7 @@ MODALIDADES = [
 
 ESTADOS = {
     "recibida": "Solicitud recibida",
-    "revision": "En revisión por comité",
+    "revision": "En revisión",
     "aprobada": "Beca aprobada",
     "rechazada": "Solicitud rechazada",
     "renovada": "Beca renovada",

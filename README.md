@@ -4,7 +4,9 @@ La [revisión integral CR-007](docs/REVISION-INTEGRAL.md) registra investigació
 
 Las animaciones empiezan activadas. Puedes desactivarlas o volver a activarlas desde el footer; el navegador conserva esta preferencia de apariencia al navegar y recargar.
 
-Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. La bienvenida presenta el portal completo con el azor mensajero; el inicio privado ofrece Titulación, Becas y Evaluación docente según el rol. Los enlaces internos conservan su destino al iniciar sesión. Los tres módulos comparten sesión, navegación, componentes y base de datos; coevaluación y autoevaluación por parcial son necesidades futuras señaladas por el líder. Las necesidades futuras se incorporarán después de definir y aprobar su alcance.
+Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. La bienvenida presenta el portal completo con el azor mensajero; el inicio privado ofrece Titulación, Becas, Evaluación docente y Autoevaluación por parcial según el rol. Los enlaces internos conservan su destino al iniciar sesión. Los cuatro módulos comparten sesión, navegación, componentes y base de datos. Coevaluación permanece como necesidad futura pendiente de alcance.
+
+La revisión [CR-011](docs/MEJORAS-MODULOS.md) adapta Autoevaluación y mejora el recorrido de Becas: preparación en diálogos, listas de trabajo, preguntas accesibles, revisión previa y respuestas legibles. Incluye correcciones de compatibilidad con Ayuda y el retorno desde Google; no implica aprobación institucional de cuestionarios, roles o criterios.
 
 **Para los equipos:** empieza por [clonar e instalar](docs/INSTALACION.md), revisa [la arquitectura modular](docs/ARQUITECTURA.md) y utiliza los [prompts comunes](docs/PROMPTS.md). Cada equipo amplía esta aplicación; no entrega otro login, backend o diseño independiente.
 
@@ -49,6 +51,7 @@ Para detener los dos servidores: `./scripts/start-local.ps1 -Stop`. También pue
 ## Qué funciona
 
 - Becas: convocatorias con fechas, estudio, solicitud, adjuntos revisados, dictamen con cupo, órdenes internas exclusivas de Tesorería, renovación y actividad.
+- Autoevaluación: cuestionarios versionados por asignatura/grupo/parcial, asignaciones, recepción con fechas, revisión previa, envío definitivo e historial. El administrador consulta respuestas individuales; no se promete anonimato ni una calificación académica automática.
 - Evaluación docente: cuestionarios versionados, periodos, asignaciones, respuestas únicas, revisión de comentarios, publicación por docente, gráficas y planes de mejora. CSV e impresión; sin éxito simulado ni datos mock en las pantallas.
 
 - Inicio de servicios, acceso y recuperación de contraseña con token de un solo uso.

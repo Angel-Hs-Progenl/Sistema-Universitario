@@ -13,6 +13,28 @@ import { api, date } from "../../shared/api";
 import { Alert, Empty, BusyButton, Field, useAsync } from "../../shared/ui";
 import { useAuth } from "../../app/Auth";
 const helpTopics = {
+  autoevaluacion: {
+    title: "Autoevaluación por parcial",
+    text: "Consulta las evaluaciones que te asignaron por asignatura, grupo y parcial.",
+    questions: [
+      [
+        "¿Cuándo puedo responder?",
+        "Cuando la evaluación esté abierta y dentro de sus fechas de recepción. Las evaluaciones en borrador todavía no son visibles.",
+      ],
+      [
+        "¿Se guardan mis respuestas mientras escribo?",
+        "Las respuestas sin enviar solo permanecen en esta página. Revisa el contenido y confirma el envío para registrarlas; después podrás consultarlas en Historial.",
+      ],
+      [
+        "¿Quién puede consultar mis respuestas?",
+        "Tú puedes consultar tus propios envíos. El personal administrador puede consultar las respuestas individuales. Este módulo no ofrece anonimato ni publica resultados al docente.",
+      ],
+      [
+        "¿Puedo modificar un envío?",
+        "El envío es definitivo. Antes de confirmarlo se muestra un resumen con las preguntas y tus respuestas.",
+      ],
+    ],
+  },
   acceso: {
     title: "Acceso al portal",
     text: "Usa tu cuenta habilitada por la universidad. La contraseña del portal es independiente de la contraseña de tu correo.",
@@ -233,8 +255,8 @@ export function Privacy() {
       <p>
         Datos de identificación, contacto y trayectoria académica; documentos de
         titulación; solicitudes y estudio socioeconómico de becas; asignaciones,
-        respuestas y comentarios de evaluación docente; dictámenes e historial
-        de cambios.
+        respuestas y comentarios de evaluación docente; respuestas de
+        autoevaluación por parcial; dictámenes e historial de cambios.
       </p>
       <h2>Acceso por área</h2>
       <p>
@@ -245,7 +267,9 @@ export function Privacy() {
         Tesorería consulta órdenes internas y Auditoría accede a la actividad
         autorizada. En Evaluación, el docente recibe únicamente sus resultados
         agregados publicados y comentarios revisados, con el mínimo de
-        participantes configurado.
+        participantes configurado. En Autoevaluación, el estudiante consulta sus
+        propios envíos y el personal administrador consulta las respuestas
+        individuales por grupo y parcial.
       </p>
       <h2>Pendiente de aprobación institucional</h2>
       <p>

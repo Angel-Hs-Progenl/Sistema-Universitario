@@ -74,8 +74,8 @@ export default function Login() {
           Un espacio para tus trámites, evaluaciones y solicitudes de apoyo.
         </p>
         <p className="welcome-availability">
-          Titulación, evaluación docente y becas en un mismo portal, con accesos
-          según tu rol.
+          Trámites, becas y evaluaciones en un mismo portal, con accesos según
+          tu rol.
         </p>
         <WelcomeArt />
       </aside>

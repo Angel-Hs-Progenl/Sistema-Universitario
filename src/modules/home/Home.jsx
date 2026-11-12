@@ -5,6 +5,7 @@ import {
   Award,
   ClipboardCheck,
   ChevronRight,
+  NotebookPen,
 } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { MODULES, homeShortcuts } from "../../../shared/navigation";
@@ -31,6 +32,8 @@ export default function Home() {
                     <Award size={23} />
                   ) : m.id === "evaluacion-docente" ? (
                     <ClipboardCheck size={23} />
+                  ) : m.id === "autoevaluacion" ? (
+                    <NotebookPen size={23} />
                   ) : (
                     <GraduationCap size={23} />
                   )}

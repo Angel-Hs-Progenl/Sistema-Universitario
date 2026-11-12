@@ -1,192 +1,177 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Clock, Users, FileCheck } from "lucide-react";
 import { api, date } from "../../shared/api";
-import { useAsync, Empty, Alert, Modal } from "../../shared/ui";
+import { useAsync, Empty, Modal, Field } from "../../shared/ui";
 import { Heading, LoadState, Status } from "../../shared/Work";
-import "./styles.css";
-
-const BASE = "/autoevaluacion";
+import { AnswerList } from "./answers";
 
 export default function Results() {
   const { id } = useParams();
-  const state = useAsync(() => api(`${BASE}/evaluaciones/${id}/resultados`), [id]);
-  const [selectedResponse, setSelectedResponse] = useState(null);
+  return <ResultsPage key={id} id={id} />;
+}
 
-  if (state.loading) {
-    return (
-      <section className="self-evaluation-page">
-        <p className="work-loading">Cargando resultados de la autoevaluación…</p>
-      </section>
-    );
-  }
-
-  if (state.error || !state.data) {
-    return (
-      <section className="self-evaluation-page">
-        <Alert>{state.error || "No fue posible cargar los resultados."}</Alert>
-        <Link className="button button-secondary" to={`${BASE}/evaluaciones`}>
-          Volver a evaluaciones
-        </Link>
-      </section>
-    );
-  }
-
-  const { evaluation, summary, responses } = state.data;
-  const pct = summary.assigned_count > 0
-    ? Math.round((summary.submitted_count / summary.assigned_count) * 100)
-    : 0;
-
+function ResultsPage({ id }) {
+  const state = useAsync(
+    () => api("/autoevaluacion/evaluaciones/" + id + "/resultados"),
+    [id],
+  );
+  const [selected, setSelected] = useState(null),
+    [search, setSearch] = useState(""),
+    [filter, setFilter] = useState("");
+  const data = state.data;
+  const rows = (data?.responses || []).filter(
+    (item) =>
+      item.student_name
+        .toLocaleLowerCase()
+        .includes(search.toLocaleLowerCase()) &&
+      (!filter || item.submitted === (filter === "enviadas")),
+  );
   return (
-    <section className="self-evaluation-page">
-      <div className="self-evaluation-back-nav">
-        <Link to={`${BASE}/evaluaciones`} className="self-evaluation-back-link">
-          <ArrowLeft size={16} /> Volver al listado de evaluaciones
-        </Link>
-      </div>
-
-      <Heading
-        eyebrow={`${evaluation.subject} · Grupo ${evaluation.group_name} · ${evaluation.partial}`}
-        title={`Resultados: ${evaluation.title}`}
-      >
-        Seguimiento de participación y respuestas registradas por la comunidad estudiantil.
-      </Heading>
-
-      {/* TARJETAS DE RESUMEN DE PARTICIPACIÓN */}
-      <div className="self-evaluation-metrics-grid">
-        <article className="self-evaluation-metric-card">
-          <div className="metric-icon metric-icon-assigned">
-            <Users size={24} />
-          </div>
-          <div>
-            <span className="metric-label">Asignados</span>
-            <span className="metric-value">{summary.assigned_count}</span>
-          </div>
-        </article>
-
-        <article className="self-evaluation-metric-card">
-          <div className="metric-icon metric-icon-submitted">
-            <CheckCircle2 size={24} />
-          </div>
-          <div>
-            <span className="metric-label">Respondidos</span>
-            <span className="metric-value">{summary.submitted_count}</span>
-          </div>
-        </article>
-
-        <article className="self-evaluation-metric-card">
-          <div className="metric-icon metric-icon-pending">
-            <Clock size={24} />
-          </div>
-          <div>
-            <span className="metric-label">Pendientes</span>
-            <span className="metric-value">{summary.pending_count}</span>
-          </div>
-        </article>
-
-        <article className="self-evaluation-metric-card">
-          <div className="metric-icon metric-icon-rate">
-            <FileCheck size={24} />
-          </div>
-          <div>
-            <span className="metric-label">Tasa de respuesta</span>
-            <span className="metric-value">{pct}%</span>
-          </div>
-        </article>
-      </div>
-
-      {/* TABLA DE ESTUDIANTES Y RESPUESTAS */}
-      <div className="self-evaluation-section">
-        <h2>Participación de estudiantes</h2>
-
-        {responses.length === 0 ? (
-          <Empty title="No hay estudiantes asignados">
-            Esta evaluación no tiene asignaciones registradas todavía.
-          </Empty>
-        ) : (
-          <div className="self-evaluation-table-wrapper">
-            <table className="self-evaluation-table">
-              <thead>
-                <tr>
-                  <th>Estudiante</th>
-                  <th>Estado</th>
-                  <th>Fecha de envío</th>
-                  <th className="text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {responses.map((item) => (
-                  <tr key={item.assignment_id}>
-                    <td>
-                      <strong>{item.student_name}</strong>
-                    </td>
-                    <td>
-                      <Status value={item.submitted ? "enviada" : "pendiente"}>
-                        {item.submitted ? "Respondida" : "Pendiente"}
-                      </Status>
-                    </td>
-                    <td>
-                      {item.submitted_at ? date(item.submitted_at, true) : "—"}
-                    </td>
-                    <td className="text-right">
-                      {item.submitted ? (
-                        <button
-                          type="button"
-                          className="button button-secondary button-small"
-                          onClick={() => setSelectedResponse(item)}
-                        >
-                          Ver respuestas
-                        </button>
-                      ) : (
-                        <span className="text-muted">Sin respuesta</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* MODAL PARA CONSULTAR LAS RESPUESTAS INDIVIDUALES */}
-      {selectedResponse && (
-        <Modal
-          title={`Respuestas de ${selectedResponse.student_name}`}
-          onClose={() => setSelectedResponse(null)}
-        >
-          <div className="self-evaluation-modal-content">
-            <p className="text-muted">
-              Enviado el {date(selectedResponse.submitted_at, true)}
-            </p>
-
-            <dl className="self-evaluation-answers-dl">
-              {Object.entries(selectedResponse.answers || {}).map(([key, val]) => (
-                <div key={key} className="self-evaluation-answer-item">
-                  <dt>{key}:</dt>
-                  <dd>
-                    {Array.isArray(val)
-                      ? val.join(", ")
-                      : typeof val === "object"
-                        ? JSON.stringify(val)
-                        : String(val)}
-                  </dd>
-                </div>
-              ))}
+    <>
+      <LoadState state={state}>
+        {data && (
+          <>
+            <Heading
+              eyebrow={
+                data.evaluation.subject +
+                " · Grupo " +
+                data.evaluation.group_name +
+                " · " +
+                data.evaluation.partial
+              }
+              title={data.evaluation.title}
+              action={
+                <Link
+                  className="button button-secondary"
+                  to="/autoevaluacion/evaluaciones"
+                >
+                  Volver a evaluaciones
+                </Link>
+              }
+            >
+              Revisa quién ha respondido y consulta cada envío registrado.
+            </Heading>
+            <dl className="work-summary">
+              <div>
+                <dt>Estudiantes asignados</dt>
+                <dd>{data.summary.assigned_count}</dd>
+              </div>
+              <div>
+                <dt>Envíos recibidos</dt>
+                <dd>{data.summary.submitted_count}</dd>
+              </div>
+              <div>
+                <dt>Sin enviar</dt>
+                <dd>{data.summary.pending_count}</dd>
+              </div>
             </dl>
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={() => setSelectedResponse(null)}
+            <div className="work-toolbar">
+              <Field
+                label="Buscar estudiante"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <Field
+                label="Estado del envío"
+                as="select"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
               >
-                Cerrar
-              </button>
+                <option value="">Todos</option>
+                <option value="enviadas">Enviadas</option>
+                <option value="pendientes">Sin enviar</option>
+              </Field>
+              <p role="status">{rows.length} estudiantes en esta vista.</p>
             </div>
-          </div>
+            {rows.length ? (
+              <div
+                className="work-table"
+                role="region"
+                aria-label="Participación de estudiantes"
+                tabIndex={0}
+              >
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Estudiante</th>
+                      <th>Estado</th>
+                      <th>Fecha de envío</th>
+                      <th>
+                        <span className="sr-only">Acción</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((item) => (
+                      <tr key={item.assignment_id}>
+                        <th scope="row">{item.student_name}</th>
+                        <td>
+                          <Status
+                            value={item.submitted ? "enviada" : "pendiente"}
+                          >
+                            {item.submitted ? "Enviada" : "Sin enviar"}
+                          </Status>
+                        </td>
+                        <td>
+                          {item.submitted_at
+                            ? date(item.submitted_at, true)
+                            : "—"}
+                        </td>
+                        <td>
+                          {item.submitted && (
+                            <button
+                              className="button button-secondary small"
+                              onClick={() => setSelected(item)}
+                            >
+                              Consultar respuestas
+                              <span className="sr-only">
+                                {" "}
+                                de {item.student_name}
+                              </span>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <Empty
+                title={
+                  data.responses.length
+                    ? "No hay coincidencias"
+                    : "Aún no hay estudiantes asignados"
+                }
+              >
+                Ajusta los filtros o regresa a la evaluación para revisar las
+                asignaciones.
+              </Empty>
+            )}
+          </>
+        )}
+      </LoadState>
+      {selected && (
+        <Modal
+          title={"Respuestas de " + selected.student_name}
+          onClose={() => setSelected(null)}
+        >
+          <p className="work-help">
+            Enviadas el {date(selected.submitted_at, true)}
+          </p>
+          <AnswerList
+            questionnaire={data.questionnaire}
+            answers={selected.answers}
+          />
+          <button
+            className="button button-secondary"
+            onClick={() => setSelected(null)}
+          >
+            Cerrar respuestas
+          </button>
         </Modal>
       )}
-    </section>
+    </>
   );
 }

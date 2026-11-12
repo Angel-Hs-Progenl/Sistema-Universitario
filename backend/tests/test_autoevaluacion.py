@@ -19,7 +19,7 @@ def get_user_id(email: str) -> str:
         return user.id
 
 
-def create_open_evaluation(clients):
+def create_open_evaluation(clients, extra_questions=None):
     """
     Crea un cuestionario, una evaluación, sus asignaciones
     y abre la evaluación para que los estudiantes respondan.
@@ -47,7 +47,7 @@ def create_open_evaluation(clients):
                     "required": True,
                     "max_length": 300,
                 },
-            ],
+            ] + (extra_questions or []),
         },
     )
 
@@ -226,6 +226,7 @@ def test_autoevaluacion_flujo_completo_y_respuesta_definitiva(clients):
     assert results["summary"]["assigned_count"] == 2
     assert results["summary"]["submitted_count"] == 1
     assert results["summary"]["pending_count"] == 1
+    assert results["questionnaire"]["questions"][0]["text"] == "¿Cuánto esfuerzo dedicaste?"
 
 
 def test_autoevaluacion_protege_asignaciones_de_otros_estudiantes(clients):
@@ -351,3 +352,32 @@ def test_autoevaluacion_listado_estudiantes_y_asignaciones(clients):
     assignments = response.json()
     assert len(assignments) == 2
     assert {a["student_email"] for a in assignments} == {"estudiante@test.local", "otro@test.local"}
+
+
+def test_required_multiple_choice_cannot_be_empty_and_labels_remain_available(clients):
+    setup = create_open_evaluation(clients, [{
+        "id": "estrategias", "type": "opcion_multiple",
+        "text": "¿Qué estrategias utilizaste?", "required": True,
+        "options": [{"value": "practica", "label": "Práctica en laboratorio"},
+                    {"value": "lectura", "label": "Lectura de apuntes"}],
+    }])
+    student = clients["estudiante"]
+    url = f"{AUTO}/asignaciones/{setup['student_assignment_id']}/respuesta"
+    answers = {"esfuerzo": 4, "reflexion": "Ejemplo ficticio de aprendizaje.", "estrategias": []}
+    assert student.post(url, json={"answers": answers}).status_code == 422
+    assert student.get(f"{AUTO}/asignaciones/{setup['student_assignment_id']}").json()["submitted"] is False
+    answers["estrategias"] = ["practica"]
+    assert student.post(url, json={"answers": answers}).status_code == 201
+    report = clients["administrador"].get(f"{AUTO}/evaluaciones/{setup['evaluation_id']}/resultados").json()
+    assert report["questionnaire"]["questions"][-1]["options"][0]["label"] == "Práctica en laboratorio"
+    assert student.get(f"{AUTO}/mis-respuestas").json()[0]["questionnaire"]["questions"][-1]["text"] == "¿Qué estrategias utilizaste?"
+
+
+def test_autoevaluation_permissions_and_csrf(clients):
+    setup = create_open_evaluation(clients)
+    for role in ("docente", "escolares", "tesoreria", "vinculacion", "evaluador", "auditor"):
+        assert clients[role].get(f"{AUTO}/evaluaciones").status_code == 403
+        assert clients[role].get(f"{AUTO}/evaluaciones/{setup['evaluation_id']}/resultados").status_code == 403
+    assert clients["otro"].get(f"{AUTO}/evaluaciones/{setup['evaluation_id']}/resultados").status_code == 403
+    clients["estudiante"].headers.pop("X-CSRF-Token")
+    assert clients["estudiante"].post(f"{AUTO}/asignaciones/{setup['student_assignment_id']}/respuesta", json={"answers": {}}).status_code == 403

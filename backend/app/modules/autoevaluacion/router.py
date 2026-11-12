@@ -239,6 +239,9 @@ def validate_answers(
                     detail=f"No puedes repetir opciones en {question_id}.",
                 )
 
+            if required and not answer:
+                raise HTTPException(422, f"Selecciona al menos una opción para {question_id}.")
+
             allowed = {
                 option["value"]
                 for option in question.get("options", [])
@@ -882,6 +885,9 @@ def my_submissions(
                 "partial": evaluation.partial,
                 "submitted_at": submission.submitted_at,
                 "answers": json.loads(submission.answers),
+                "questionnaire": questionnaire_data(db.get(
+                    SelfEvaluationQuestionnaire, evaluation.questionnaire_id
+                )),
             }
         )
 
@@ -959,6 +965,9 @@ def evaluation_results(
             "partial": evaluation.partial,
             "status": evaluation.status,
         },
+        "questionnaire": questionnaire_data(db.get(
+            SelfEvaluationQuestionnaire, evaluation.questionnaire_id
+        )),
         "summary": {
             "assigned_count": assigned_count,
             "submitted_count": submitted_count,

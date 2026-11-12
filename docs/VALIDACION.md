@@ -155,3 +155,20 @@ Frontend: 12 pruebas aprobadas y compilación correcta. Guardia del repositorio:
 - Evidencia ficticia seleccionada en docs/capturas: inicio-integrado.jpg, becas-integrado.jpg, evaluacion-resultados.jpg, evaluacion-periodos.jpg evaluacion-movil.jpg y becas-expediente.jpg.
 
 Docker Desktop no está instalado en este equipo: se verificó PostgreSQL local. La configuración Compose se hizo coherente con .env.example, pero no se declara ejecutada aquí. Google OAuth, SMTP institucional, SPEI, SAT, padrón, MFA y proveedor IA no se probaron ni se simulan como servicios activos. Pendientes académicos y formatos de reporte en INTEGRACION-MODULOS.md. No es una validación de producción.
+
+## CR-011 · Módulos recibidos y continuidad visual
+
+11–12 de noviembre de 2026. Verificación local de la revisión solicitada por el líder:
+
+- Cliente: 13 pruebas Node correctas y compilación Vite correcta. Se mantienen catálogos sincronizados, navegación por rol y destinos internos.
+- Servidor: **69 pruebas correctas con PostgreSQL 16**, en la base separada `uto_integracion_test`. Incluyen respuesta múltiple obligatoria vacía sin guardar envío, acceso/CSRF, lectura del cuestionario versionado y retorno OAuth al módulo. El aviso previo de deprecación TestClient/httpx sigue presente; no se ocultó.
+- Migraciones: copia de base y adjuntos en el directorio privado de respaldos antes de aplicar la migración recibida `61dbabf45860`; Alembic confirma esquema actualizado y ninguna operación nueva pendiente. No se borran registros ni se cambia la migración recibida.
+- Navegador: estudiante abre sus asignaciones, obtiene resumen de faltantes con foco, selecciona escala/opciones y consulta revisión previa. Cancelar devuelve el foco al botón de revisión. No se consume su envío pendiente.
+- Administración: creación real de un cuestionario con opciones, borrado/agregado de opciones sin colisión, preparación de una evaluación en borrador y asignación ficticia desde formularios; consulta de respuestas persistidas con textos en lugar de códigos. Se corrigió un fallo de acceso a datos del diálogo detectado durante este recorrido.
+- Becas: bases enlazan a una solicitud propia existente; expediente ofrece adjuntar/reemplazar por requisito; se distinguen pendientes y recibidos. Se mantiene la autorización del servidor y el cierre de documentos validados. La preparación de convocatorias se abre en Modal.
+- Ayuda: selección de Autoevaluación y contenido propio comprobados. Privacidad distingue respuestas individuales de autoevaluación de los agregados de evaluación docente.
+- Adaptación: cuestionario, listado de coordinación y expediente de Becas a 320/390/768/1440 px sin overflow horizontal global. Editor de opciones a 320 px sin overflow interno del diálogo. Controles nativos, etiquetas y diálogo con retorno de foco revisados; no equivale a auditoría WCAG completa.
+
+Esta revisión se sirvió en 5174 porque 5173 estaba ocupado por otra aplicación; el origen de API se ajustó solo para el proceso de validación. La configuración privada del proyecto no cambia. Se conserva PostgreSQL local; no se afirma haber probado Docker ni el acceso real a Google.
+
+Las capturas seleccionadas y los registros agregados por esta revisión están marcados como Demo/Ejemplo. El cuestionario de integración y la evaluación CR-011 quedan como borrador de desarrollo; no representan decisiones institucionales. Ver alcance y pendientes en MEJORAS-MODULOS.md.

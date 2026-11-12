@@ -84,9 +84,53 @@ export function Applications({ review = false }) {
         }
       >
         <p role="status" className="work-help">
-          {rows.length} solicitudes en esta vista.
+          {rows.length} {rows.length === 1 ? "solicitud" : "solicitudes"} en
+          esta vista.
         </p>
-        {rows.length > 0 && (
+        {!review && (
+          <div className="work-records">
+            {rows.map((a) => (
+              <article className="work-record" key={a.id}>
+                <div>
+                  <span className="record-code">
+                    {a.folio} · {a.academic_term}
+                  </span>
+                  <h2>{a.call_title}</h2>
+                  <Status value={a.status}>{ESTADOS_BECA[a.status]}</Status>
+                  <p>
+                    {a.status === "recibida"
+                      ? "Abre la solicitud para adjuntar documentos y consultar su revisión."
+                      : a.status === "revision"
+                        ? "Consulta las observaciones del área de becas y el estado de cada documento."
+                        : a.status === "aprobada" || a.status === "renovada"
+                          ? "Consulta las indicaciones del área de becas y tus órdenes internas de cobro."
+                          : "Consulta el dictamen y la observación registrada por el área de becas."}
+                  </p>
+                  {a.committee_notes && (
+                    <p className="work-note">{a.committee_notes}</p>
+                  )}
+                  <dl className="work-meta">
+                    <div>
+                      <dt>Registro</dt>
+                      <dd>{date(a.created_at)}</dd>
+                    </div>
+                    <div>
+                      <dt>Apoyo por convocatoria</dt>
+                      <dd>{money(a.amount)}</dd>
+                    </div>
+                  </dl>
+                </div>
+                <Link
+                  className="button button-secondary"
+                  to={`/becas/solicitud/${a.id}`}
+                >
+                  Abrir solicitud <ArrowRight size={16} />
+                </Link>
+              </article>
+            ))}
+          </div>
+        )}
+        {review && rows.length > 0 && (
           <div
             className="work-table"
             role="region"
@@ -157,6 +201,11 @@ export function Applications({ review = false }) {
 }
 
 export function ScholarshipCase() {
+  const { id } = useParams();
+  return <ScholarshipCaseContent key={id} />;
+}
+
+function ScholarshipCaseContent() {
   const { id } = useParams(),
     { user } = useAuth();
   const state = useAsync(() => api(`/becas/solicitudes/${id}`), [id]);
@@ -256,6 +305,15 @@ export function ScholarshipCase() {
             )}
             <div className="work-split">
               <section>
+                <p className="work-note">
+                  {student
+                    ? editable
+                      ? "Adjunta los documentos pendientes y atiende las observaciones. Recibido significa que el archivo fue guardado; el área de becas debe validarlo."
+                      : "La solicitud tiene dictamen. Los documentos se conservan para consulta."
+                    : editable
+                      ? "Revisa cada archivo antes de registrar el dictamen. Un documento observado debe incluir una indicación de corrección."
+                      : "Expediente con dictamen registrado; consulta los documentos y la observación del área."}
+                </p>
                 <div className="work-section">
                   <div className="work-actions">
                     <h2>Documentos para revisión</h2>
@@ -269,8 +327,16 @@ export function ScholarshipCase() {
                     )}
                   </div>
                   <p className="work-help">
-                    PDF o JPG hasta 5 MB; PNG solo donde el formato esté
-                    permitido. Un archivo recibido todavía requiere revisión.
+                    {
+                      DOCUMENTOS_BECA.filter(
+                        (d) =>
+                          d.required &&
+                          !a.documents.some((x) => x.kind === d.id),
+                      ).length
+                    }{" "}
+                    obligatorios por adjuntar. PDF o JPG hasta 5 MB; PNG solo
+                    donde el formato esté permitido. Un archivo recibido todavía
+                    requiere revisión.
                   </p>
                 </div>
                 <div className="work-records">
@@ -284,9 +350,14 @@ export function ScholarshipCase() {
                             {doc
                               ? doc.name
                               : d.required
-                                ? "Pendiente de adjuntar"
+                                ? "Requerido para revisión"
                                 : "Opcional"}
                           </p>
+                          {!doc && d.required && (
+                            <Status value="pendiente">
+                              Pendiente de adjuntar
+                            </Status>
+                          )}
                           {doc && (
                             <Status value={doc.status}>
                               {doc.status === "rechazado"
@@ -298,26 +369,42 @@ export function ScholarshipCase() {
                           )}
                           {doc?.note && <p className="work-note">{doc.note}</p>}
                         </div>
-                        {doc && (
-                          <div className="work-actions">
-                            <a
-                              className="button button-secondary small"
-                              href={`/api/v1/becas/solicitudes/${id}/documentos/${doc.id}`}
-                            >
-                              <Download size={15} /> Descargar
-                            </a>
-                            {!student && editable && (
+                        <div className="work-actions">
+                          {student &&
+                            editable &&
+                            doc?.status !== "validado" && (
                               <button
                                 className="button button-secondary small"
                                 onClick={() =>
-                                  open({ type: "review", document: doc })
+                                  open({ type: "upload", kind: d.id })
                                 }
                               >
-                                <Check size={15} /> Revisar
+                                <Upload size={15} />
+                                {doc ? "Reemplazar archivo" : "Adjuntar"}
+                                <span className="sr-only"> {d.name}</span>
                               </button>
                             )}
-                          </div>
-                        )}
+                          {doc && (
+                            <>
+                              <a
+                                className="button button-secondary small"
+                                href={`/api/v1/becas/solicitudes/${id}/documentos/${doc.id}`}
+                              >
+                                <Download size={15} /> Descargar
+                              </a>
+                              {!student && editable && (
+                                <button
+                                  className="button button-secondary small"
+                                  onClick={() =>
+                                    open({ type: "review", document: doc })
+                                  }
+                                >
+                                  <Check size={15} /> Revisar
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </article>
                     );
                   })}
@@ -404,7 +491,13 @@ export function ScholarshipCase() {
             <MutationState state={mutation} />
             {dialog.type === "upload" ? (
               <>
-                <Field as="select" name="kind" label="Documento" required>
+                <Field
+                  as="select"
+                  name="kind"
+                  label="Documento"
+                  required
+                  defaultValue={dialog.kind || ""}
+                >
                   <option value="">Selecciona un documento</option>
                   {DOCUMENTOS_BECA.filter(
                     (d) =>

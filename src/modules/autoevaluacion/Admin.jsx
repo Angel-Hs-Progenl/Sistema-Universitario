@@ -1,604 +1,439 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { UserPlus, Play, CheckCircle2, BarChart2, Plus, Users } from "lucide-react";
+import { Plus, ArrowRight } from "lucide-react";
 import { api, date } from "../../shared/api";
-import { Modal, BusyButton, Alert } from "../../shared/ui";
-import { Heading, Status, useMutation, MutationState } from "../../shared/Work";
-import "./styles.css";
+import { useAsync, Field, Modal, BusyButton, Empty } from "../../shared/ui";
+import {
+  Heading,
+  LoadState,
+  Status,
+  useMutation,
+  MutationState,
+} from "../../shared/Work";
 
 const BASE = "/autoevaluacion";
-
 export default function Admin() {
-  const [questionnaires, setQuestionnaires] = useState([]);
-  const [evaluations, setEvaluations] = useState([]);
-  const [students, setStudents] = useState([]);
-
-  const [form, setForm] = useState({
-    title: "",
-    questionnaire_id: "",
-    subject: "",
-    group_name: "",
-    partial: "",
-    start_date: "",
-    end_date: "",
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-
-  // Estado para el modal de asignación de estudiantes
-  const [assignTarget, setAssignTarget] = useState(null);
-  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
-  const [alreadyAssignedIds, setAlreadyAssignedIds] = useState(new Set());
-  const [assigningBusy, setAssigningBusy] = useState(false);
-  const [assignModalError, setAssignModalError] = useState("");
-
-  // Estado para confirmación de cambio de estado (abrir / cerrar)
-  const [transitionTarget, setTransitionTarget] = useState(null);
-  const [transitionNewStatus, setTransitionNewStatus] = useState("");
-  const [transitioningBusy, setTransitioningBusy] = useState(false);
-
-  // Cargar datos iniciales
-  async function loadData() {
-    setLoading(true);
-    setError("");
-
-    try {
-      const [questionnaireData, evaluationData, studentsData] = await Promise.all([
-        api(`${BASE}/cuestionarios`),
-        api(`${BASE}/evaluaciones`),
-        api(`${BASE}/estudiantes`),
-      ]);
-
-      setQuestionnaires(questionnaireData);
-      setEvaluations(evaluationData);
-      setStudents(studentsData);
-    } catch (err) {
-      setError(err.message || "No fue posible cargar la información.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadData();
+  const state = useAsync(async () => {
+    const [evaluations, questionnaires, students] = await Promise.all([
+      api(BASE + "/evaluaciones"),
+      api(BASE + "/cuestionarios"),
+      api(BASE + "/estudiantes"),
+    ]);
+    return { evaluations, questionnaires, students };
   }, []);
-
-  function handleChange(event) {
-    const { name, value } = event.target;
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
+  const [dialog, setDialog] = useState(null),
+    [filter, setFilter] = useState(""),
+    [search, setSearch] = useState(""),
+    [studentSearch, setStudentSearch] = useState(""),
+    [selected, setSelected] = useState([]);
+  const mutation = useMutation();
+  const assignments = useAsync(
+    () =>
+      dialog?.type === "assign"
+        ? api(BASE + "/evaluaciones/" + dialog.item.id + "/asignaciones")
+        : Promise.resolve([]),
+    [dialog?.type, dialog?.item?.id],
+  );
+  const assigned = new Set((assignments.data || []).map((a) => a.student_id));
+  const students = (state.data?.students || []).filter((s) =>
+    (s.name + " " + s.email)
+      .toLocaleLowerCase()
+      .includes(studentSearch.toLocaleLowerCase()),
+  );
+  const rows = (state.data?.evaluations || []).filter(
+    (e) =>
+      (!filter || e.status === filter) &&
+      (e.title + " " + e.subject + " " + e.group_name + " " + e.partial)
+        .toLocaleLowerCase()
+        .includes(search.toLocaleLowerCase()),
+  );
+  function open(value) {
+    mutation.clear();
+    setSelected([]);
+    setStudentSearch("");
+    setDialog(value);
   }
-
-  // Crear una nueva evaluación en borrador
-  async function handleSubmit(event) {
+  function close() {
+    if (!mutation.busy) setDialog(null);
+  }
+  async function create(event) {
     event.preventDefault();
-    setError("");
-    setMessage("");
-
-    if (!form.questionnaire_id) {
-      setError("Selecciona un cuestionario.");
-      return;
-    }
-
-    if (!form.start_date || !form.end_date) {
-      setError("Completa las fechas de inicio y cierre.");
-      return;
-    }
-
-    const startDate = new Date(form.start_date);
-    const endDate = new Date(form.end_date);
-
-    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-      setError("Las fechas ingresadas no son válidas.");
-      return;
-    }
-
-    if (endDate <= startDate) {
-      setError("La fecha de cierre debe ser posterior a la de inicio.");
-      return;
-    }
-
-    if (endDate <= new Date()) {
-      setError("La fecha de cierre debe estar en el futuro.");
-      return;
-    }
-
-    const payload = {
-      title: form.title.trim(),
-      questionnaire_id: Number(form.questionnaire_id),
-      subject: form.subject.trim(),
-      group_name: form.group_name.trim(),
-      partial: form.partial.trim(),
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-    };
-
-    setSaving(true);
-
-    try {
-      await api(`${BASE}/evaluaciones`, {
-        method: "POST",
-        body: payload,
-      });
-
-      setMessage("Evaluación creada correctamente en estado borrador.");
-      setForm({
-        title: "",
-        questionnaire_id: "",
-        subject: "",
-        group_name: "",
-        partial: "",
-        start_date: "",
-        end_date: "",
-      });
-
-      await loadData();
-    } catch (err) {
-      setError(err.message || "No fue posible crear la evaluación.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  // Abrir modal para asignar estudiantes
-  async function openAssignModal(evaluation) {
-    setAssignTarget(evaluation);
-    setAssignModalError("");
-    setSelectedStudentIds([]);
-
-    try {
-      const currentAssignments = await api(`${BASE}/evaluaciones/${evaluation.id}/asignaciones`);
-      const existing = new Set(currentAssignments.map((a) => a.student_id));
-      setAlreadyAssignedIds(existing);
-    } catch (err) {
-      setAlreadyAssignedIds(new Set());
-    }
-  }
-
-  // Alternar selección de un estudiante en el modal
-  function toggleStudentSelection(studentId) {
-    setSelectedStudentIds((prev) =>
-      prev.includes(studentId)
-        ? prev.filter((id) => id !== studentId)
-        : [...prev, studentId]
-    );
-  }
-
-  // Seleccionar todos los no asignados
-  function selectAllAvailable() {
-    const available = students
-      .filter((s) => !alreadyAssignedIds.has(s.id))
-      .map((s) => s.id);
-    setSelectedStudentIds(available);
-  }
-
-  // Guardar asignaciones de estudiantes
-  async function handleSaveAssignments() {
-    if (!assignTarget || selectedStudentIds.length === 0) return;
-
-    setAssigningBusy(true);
-    setAssignModalError("");
-
-    try {
-      await api(`${BASE}/evaluaciones/${assignTarget.id}/asignaciones`, {
-        method: "POST",
-        body: { student_ids: selectedStudentIds },
-      });
-
-      setMessage(`Se asignaron ${selectedStudentIds.length} estudiantes a "${assignTarget.title}".`);
-      setAssignTarget(null);
-      setSelectedStudentIds([]);
-      await loadData();
-    } catch (err) {
-      setAssignModalError(err.message || "No fue posible registrar las asignaciones.");
-    } finally {
-      setAssigningBusy(false);
-    }
-  }
-
-  // Iniciar confirmación de cambio de estado
-  function confirmTransition(evaluation, targetStatus) {
-    setTransitionTarget(evaluation);
-    setTransitionNewStatus(targetStatus);
-  }
-
-  // Ejecutar cambio de estado en el backend
-  async function handleExecuteTransition() {
-    if (!transitionTarget || !transitionNewStatus) return;
-
-    setTransitioningBusy(true);
-    setError("");
-
-    try {
-      await api(`${BASE}/evaluaciones/${transitionTarget.id}/estado`, {
+    const form = new FormData(event.currentTarget);
+    await save(async () => {
+      await api(BASE + "/evaluaciones", {
         method: "POST",
         body: {
-          status: transitionNewStatus,
-          version: transitionTarget.version,
+          title: form.get("title"),
+          questionnaire_id: Number(form.get("questionnaire_id")),
+          subject: form.get("subject"),
+          group_name: form.get("group_name"),
+          partial: form.get("partial"),
+          start_date: new Date(form.get("start_date")).toISOString(),
+          end_date: new Date(form.get("end_date")).toISOString(),
         },
       });
-
-      setMessage(`Evaluación "${transitionTarget.title}" marcada como ${transitionNewStatus}.`);
-      setTransitionTarget(null);
-      setTransitionNewStatus("");
-      await loadData();
-    } catch (err) {
-      setError(err.message || "No fue posible cambiar el estado de la evaluación.");
-      setTransitionTarget(null);
-    } finally {
-      setTransitioningBusy(false);
-    }
+    }, "Evaluación creada en borrador. Asigna estudiantes antes de abrirla.");
   }
-
+  async function save(action, notice) {
+    await mutation.run(async () => {
+      await action();
+      setDialog(null);
+      await state.refresh();
+    }, notice);
+  }
   return (
-    <section className="self-evaluation-page">
+    <>
       <Heading
-        eyebrow="Autoevaluación / Administración"
-        title="Administración de autoevaluaciones"
+        eyebrow="Autoevaluación / Coordinación"
+        title="Evaluaciones por parcial"
+        action={
+          <button
+            className="button button-primary"
+            disabled={!state.data?.questionnaires.length}
+            onClick={() => open({ type: "create" })}
+          >
+            <Plus size={16} /> Preparar evaluación
+          </button>
+        }
       >
-        Configura evaluaciones por asignatura, grupo y parcial, asigna estudiantes y supervisa la participación.
+        Prepara el periodo, asigna estudiantes y abre la recepción cuando esté
+        listo.
       </Heading>
-
-      {error && <Alert type="error">{error}</Alert>}
-      {message && <Alert type="success">{message}</Alert>}
-
-      {/* FORMULARIO PARA CREAR EVALUACIONES */}
-      <div className="self-evaluation-section">
-        <h2>Crear nueva evaluación</h2>
-
-        <form onSubmit={handleSubmit}>
-          <div className="self-evaluation-field">
-            <label htmlFor="evaluation-title">Nombre de la evaluación *</label>
-            <input
-              id="evaluation-title"
-              name="title"
-              type="text"
-              value={form.title}
-              onChange={handleChange}
-              minLength={3}
-              maxLength={150}
-              placeholder="Ej. Autoevaluación del primer parcial"
-              required
-            />
-          </div>
-
-          <div className="self-evaluation-field">
-            <label htmlFor="evaluation-questionnaire">Cuestionario *</label>
-            <select
-              id="evaluation-questionnaire"
-              name="questionnaire_id"
-              value={form.questionnaire_id}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Selecciona un cuestionario</option>
-              {questionnaires.map((q) => (
-                <option key={q.id} value={q.id}>
-                  {q.title} — Versión {q.version}
-                </option>
-              ))}
-            </select>
-
-            {questionnaires.length === 0 && !loading && (
-              <p className="self-evaluation-help">
-                Primero debes registrar un cuestionario en la pestaña{" "}
-                <Link to={`${BASE}/cuestionarios`}>Cuestionarios</Link>.
+      {!dialog && <MutationState state={mutation} />}
+      <LoadState state={state}>
+        {state.data && (
+          <>
+            {!state.data.questionnaires.length && (
+              <p className="work-note">
+                Para preparar una evaluación, primero{" "}
+                <Link className="text-link" to={BASE + "/cuestionarios"}>
+                  crea un cuestionario
+                </Link>
+                .
               </p>
             )}
-          </div>
-
-          <div className="self-evaluation-inline-fields">
-            <div className="self-evaluation-field">
-              <label htmlFor="evaluation-subject">Materia / Asignatura *</label>
-              <input
-                id="evaluation-subject"
-                name="subject"
-                type="text"
-                value={form.subject}
-                onChange={handleChange}
-                minLength={3}
-                maxLength={150}
-                placeholder="Ej. Programación web"
-                required
+            <div className="work-toolbar">
+              <Field
+                label="Buscar evaluación, asignatura o grupo"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
+              <Field
+                label="Estado de recepción"
+                as="select"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              >
+                <option value="">Todos</option>
+                <option value="borrador">Borrador</option>
+                <option value="abierta">Abierta</option>
+                <option value="cerrada">Cerrada</option>
+              </Field>
+              <p role="status">{rows.length} evaluaciones en esta vista.</p>
             </div>
-
-            <div className="self-evaluation-field">
-              <label htmlFor="evaluation-group">Grupo *</label>
-              <input
-                id="evaluation-group"
-                name="group_name"
-                type="text"
-                value={form.group_name}
-                onChange={handleChange}
-                maxLength={80}
-                placeholder="Ej. 5A"
-                required
-              />
-            </div>
-
-            <div className="self-evaluation-field">
-              <label htmlFor="evaluation-partial">Parcial *</label>
-              <input
-                id="evaluation-partial"
-                name="partial"
-                type="text"
-                value={form.partial}
-                onChange={handleChange}
-                maxLength={50}
-                placeholder="Ej. Primer parcial"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="self-evaluation-inline-fields">
-            <div className="self-evaluation-field">
-              <label htmlFor="evaluation-start">Fecha y hora de inicio *</label>
-              <input
-                id="evaluation-start"
-                name="start_date"
-                type="datetime-local"
-                value={form.start_date}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="self-evaluation-field">
-              <label htmlFor="evaluation-end">Fecha y hora de cierre *</label>
-              <input
-                id="evaluation-end"
-                name="end_date"
-                type="datetime-local"
-                value={form.end_date}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="button button-primary"
-            disabled={saving || loading || questionnaires.length === 0}
-          >
-            {saving ? "Creando evaluación…" : "Crear evaluación"}
-          </button>
-        </form>
-      </div>
-
-      {/* LISTADO DE EVALUACIONES */}
-      <div className="self-evaluation-section">
-        <h2>Evaluaciones registradas</h2>
-
-        {loading ? (
-          <p className="work-loading">Cargando evaluaciones…</p>
-        ) : evaluations.length === 0 ? (
-          <p>Aún no hay evaluaciones registradas en el sistema.</p>
-        ) : (
-          <div className="self-evaluation-admin-list">
-            {evaluations.map((ev) => (
-              <article className="self-evaluation-admin-card" key={ev.id}>
-                <div className="self-evaluation-admin-info">
-                  <div className="self-evaluation-admin-header">
+            <div className="work-records">
+              {rows.map((item) => (
+                <article
+                  className="work-record self-evaluation-record"
+                  key={item.id}
+                >
+                  <div>
                     <span className="record-code">
-                      {ev.subject} · {ev.group_name} · {ev.partial}
+                      {item.subject} · Grupo {item.group_name} · {item.partial}
                     </span>
+                    <h2>{item.title}</h2>
                     <Status
                       value={
-                        ev.status === "abierta"
-                          ? "aprobada"
-                          : ev.status === "cerrada"
-                            ? "concluido"
-                            : "borrador"
+                        item.status === "abierta" ? "publicado" : "pendiente"
                       }
                     >
-                      {ev.status === "abierta"
-                        ? "Abierta"
-                        : ev.status === "cerrada"
-                          ? "Cerrada"
+                      {item.status === "abierta"
+                        ? "Recepción abierta"
+                        : item.status === "cerrada"
+                          ? "Recepción cerrada"
                           : "Borrador"}
                     </Status>
+                    <dl className="work-meta">
+                      <div>
+                        <dt>Apertura</dt>
+                        <dd>{date(item.start_date, true)}</dd>
+                      </div>
+                      <div>
+                        <dt>Cierre</dt>
+                        <dd>{date(item.end_date, true)}</dd>
+                      </div>
+                      <div>
+                        <dt>Participación</dt>
+                        <dd>
+                          {item.submitted_count} de {item.assigned_count} envíos
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
-
-                  <h3>{ev.title}</h3>
-
-                  <dl className="work-meta">
-                    <div>
-                      <dt>Asignados</dt>
-                      <dd><strong>{ev.assigned_count}</strong></dd>
-                    </div>
-                    <div>
-                      <dt>Respondidos</dt>
-                      <dd><strong>{ev.submitted_count}</strong></dd>
-                    </div>
-                    <div>
-                      <dt>Pendientes</dt>
-                      <dd><strong>{ev.pending_count}</strong></dd>
-                    </div>
-                    <div>
-                      <dt>Periodo</dt>
-                      <dd>{date(ev.start_date, true)} al {date(ev.end_date, true)}</dd>
-                    </div>
-                  </dl>
-                </div>
-
-                <div className="self-evaluation-admin-actions">
-                  {/* ACCIONES SEGÚN EL ESTADO */}
-                  {ev.status === "borrador" && (
-                    <>
+                  <div className="work-actions">
+                    {item.status === "borrador" && (
+                      <>
+                        <button
+                          className="button button-secondary"
+                          onClick={() => open({ type: "assign", item })}
+                        >
+                          Asignar estudiantes
+                        </button>
+                        <button
+                          className="button button-primary"
+                          disabled={!item.assigned_count}
+                          onClick={() =>
+                            open({
+                              type: "transition",
+                              item,
+                              status: "abierta",
+                            })
+                          }
+                        >
+                          Abrir recepción
+                        </button>
+                        {!item.assigned_count && (
+                          <p className="work-help">
+                            Asigna al menos un estudiante para abrir.
+                          </p>
+                        )}
+                      </>
+                    )}
+                    {item.status === "abierta" && (
                       <button
-                        type="button"
                         className="button button-secondary"
-                        onClick={() => openAssignModal(ev)}
-                      >
-                        <UserPlus size={16} /> Asignar estudiantes ({ev.assigned_count})
-                      </button>
-
-                      <button
-                        type="button"
-                        className="button button-primary"
-                        onClick={() => confirmTransition(ev, "abierta")}
-                        disabled={ev.assigned_count === 0}
-                        title={
-                          ev.assigned_count === 0
-                            ? "Debes asignar estudiantes antes de abrir la evaluación"
-                            : "Abrir recepción de respuestas"
+                        onClick={() =>
+                          open({ type: "transition", item, status: "cerrada" })
                         }
                       >
-                        <Play size={16} /> Abrir evaluación
+                        Cerrar recepción
                       </button>
-                    </>
-                  )}
-
-                  {ev.status === "abierta" && (
-                    <button
-                      type="button"
-                      className="button button-secondary"
-                      onClick={() => confirmTransition(ev, "cerrada")}
-                    >
-                      <CheckCircle2 size={16} /> Cerrar evaluación
-                    </button>
-                  )}
-
-                  <Link
-                    to={`${BASE}/resultados/${ev.id}`}
-                    className="button button-secondary"
-                  >
-                    <BarChart2 size={16} /> Ver resultados
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* MODAL PARA ASIGNAR ESTUDIANTES */}
-      {assignTarget && (
-        <Modal
-          title={`Asignar estudiantes a "${assignTarget.title}"`}
-          onClose={() => setAssignTarget(null)}
-        >
-          <div className="self-evaluation-modal-content">
-            <p>
-              Selecciona a los estudiantes que deben responder esta autoevaluación ({assignTarget.subject} - {assignTarget.group_name}).
-            </p>
-
-            {assignModalError && <Alert type="error">{assignModalError}</Alert>}
-
-            <div className="self-evaluation-student-select-toolbar">
-              <button
-                type="button"
-                className="button button-secondary button-small"
-                onClick={selectAllAvailable}
-              >
-                Seleccionar todos los disponibles
-              </button>
-              <span className="text-muted">
-                {selectedStudentIds.length} seleccionados
-              </span>
-            </div>
-
-            <div className="self-evaluation-student-checklist">
-              {students.map((student) => {
-                const isAlreadyAssigned = alreadyAssignedIds.has(student.id);
-                const isChecked = selectedStudentIds.includes(student.id);
-
-                return (
-                  <label
-                    key={student.id}
-                    className={`self-evaluation-student-item ${isAlreadyAssigned ? "already-assigned" : ""}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isAlreadyAssigned || isChecked}
-                      disabled={isAlreadyAssigned}
-                      onChange={() => toggleStudentSelection(student.id)}
-                    />
-                    <div>
-                      <strong>{student.name}</strong>
-                      <small className="text-muted">{student.email}</small>
-                    </div>
-                    {isAlreadyAssigned && (
-                      <span className="badge badge-validado">Ya asignado</span>
                     )}
-                  </label>
-                );
-              })}
+                    <Link
+                      className="text-link"
+                      to={BASE + "/resultados/" + item.id}
+                    >
+                      Participación y respuestas <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </article>
+              ))}
             </div>
-
-            <div className="modal-actions">
-              <BusyButton
-                busy={assigningBusy}
-                busyText="Guardando…"
-                className="button button-primary"
-                disabled={selectedStudentIds.length === 0}
-                onClick={handleSaveAssignments}
+            {!rows.length && (
+              <Empty
+                title={
+                  state.data.evaluations.length
+                    ? "No hay coincidencias"
+                    : "Aún no hay evaluaciones por parcial"
+                }
               >
-                Guardar asignaciones ({selectedStudentIds.length})
-              </BusyButton>
-
-              <button
-                type="button"
-                className="button button-secondary"
-                disabled={assigningBusy}
-                onClick={() => setAssignTarget(null)}
-              >
-                Cancelar
-              </button>
+                {state.data.evaluations.length
+                  ? "Prueba otra asignatura o estado."
+                  : "Prepara una evaluación con su cuestionario, grupo y fechas de recepción."}
+              </Empty>
+            )}
+          </>
+        )}
+      </LoadState>
+      {dialog?.type === "create" && (
+        <Modal title="Preparar evaluación" onClose={close}>
+          <form onSubmit={create}>
+            <MutationState state={mutation} />
+            <Field
+              name="title"
+              label="Nombre de la evaluación"
+              required
+              minLength={3}
+              maxLength={150}
+            />
+            <Field
+              name="questionnaire_id"
+              label="Cuestionario"
+              as="select"
+              required
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Selecciona una versión
+              </option>
+              {state.data.questionnaires.map((q) => (
+                <option key={q.id} value={q.id}>
+                  {q.title} · v{q.version}
+                </option>
+              ))}
+            </Field>
+            <Field
+              name="subject"
+              label="Asignatura"
+              required
+              minLength={3}
+              maxLength={150}
+            />
+            <div className="form-grid">
+              <Field name="group_name" label="Grupo" required maxLength={80} />
+              <Field name="partial" label="Parcial" required maxLength={50} />
             </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* MODAL DE CONFIRMACIÓN DE CAMBIO DE ESTADO */}
-      {transitionTarget && (
-        <Modal
-          title={`Confirmar cambio a "${transitionNewStatus}"`}
-          onClose={() => setTransitionTarget(null)}
-        >
-          <div className="self-evaluation-modal-content">
-            <p>
-              ¿Deseas cambiar el estado de <strong>{transitionTarget.title}</strong> a <strong>{transitionNewStatus}</strong>?
+            <div className="form-grid">
+              <Field
+                name="start_date"
+                label="Apertura"
+                type="datetime-local"
+                required
+              />
+              <Field
+                name="end_date"
+                label="Cierre"
+                type="datetime-local"
+                required
+              />
+            </div>
+            <p className="work-help">
+              Fechas en la zona horaria de tu navegador. Se creará un borrador
+              que los estudiantes aún no verán.
             </p>
-            {transitionNewStatus === "abierta" && (
-              <p className="self-evaluation-modal-warning">
-                Una vez abierta, los estudiantes asignados ({transitionTarget.assigned_count}) podrán ingresar y enviar sus respuestas.
-              </p>
-            )}
-            {transitionNewStatus === "cerrada" && (
-              <p className="self-evaluation-modal-warning">
-                Al cerrarla, ya no se admitirán nuevas respuestas y la recepción quedará finalizada.
-              </p>
-            )}
-            <div className="modal-actions">
+            <div className="work-actions">
               <BusyButton
-                busy={transitioningBusy}
-                busyText="Actualizando…"
                 className="button button-primary"
-                onClick={handleExecuteTransition}
+                type="submit"
+                busy={mutation.busy}
               >
-                Confirmar
+                Crear borrador
               </BusyButton>
               <button
-                type="button"
                 className="button button-secondary"
-                disabled={transitioningBusy}
-                onClick={() => setTransitionTarget(null)}
+                type="button"
+                onClick={close}
+                disabled={mutation.busy}
               >
                 Cancelar
               </button>
             </div>
+          </form>
+        </Modal>
+      )}
+      {dialog?.type === "assign" && (
+        <Modal title="Asignar estudiantes" onClose={close}>
+          <p>
+            {dialog.item.title} · Grupo {dialog.item.group_name}
+          </p>
+          <MutationState state={mutation} />
+          <LoadState state={assignments}>
+            <Field
+              label="Buscar estudiante por nombre o correo"
+              type="search"
+              value={studentSearch}
+              onChange={(e) => setStudentSearch(e.target.value)}
+            />
+            <p className="work-help" role="status">
+              {selected.length} seleccionados · {assigned.size} ya asignados
+            </p>
+            <div className="self-student-list">
+              {students.map((s) => (
+                <label className="self-student-choice" key={s.id}>
+                  <input
+                    type="checkbox"
+                    disabled={assigned.has(s.id) || mutation.busy}
+                    checked={assigned.has(s.id) || selected.includes(s.id)}
+                    onChange={(e) =>
+                      setSelected((current) =>
+                        e.target.checked
+                          ? [...current, s.id]
+                          : current.filter((id) => id !== s.id),
+                      )
+                    }
+                  />
+                  <span>
+                    {s.name}
+                    <small>
+                      {s.email}
+                      {assigned.has(s.id) ? " · Ya asignado" : ""}
+                    </small>
+                  </span>
+                </label>
+              ))}
+            </div>
+            {!students.length && (
+              <p>No hay estudiantes que coincidan con la búsqueda.</p>
+            )}
+            <div className="work-actions">
+              <BusyButton
+                className="button button-primary"
+                busy={mutation.busy}
+                disabled={!selected.length || selected.length > 500}
+                onClick={() =>
+                  save(
+                    () =>
+                      api(
+                        BASE +
+                          "/evaluaciones/" +
+                          dialog.item.id +
+                          "/asignaciones",
+                        { method: "POST", body: { student_ids: selected } },
+                      ),
+                    "Estudiantes asignados.",
+                  )
+                }
+              >
+                Guardar asignaciones
+              </BusyButton>
+              <button
+                className="button button-secondary"
+                disabled={mutation.busy}
+                onClick={close}
+              >
+                Cancelar
+              </button>
+            </div>
+          </LoadState>
+        </Modal>
+      )}
+      {dialog?.type === "transition" && (
+        <Modal
+          title={
+            dialog.status === "abierta" ? "Abrir recepción" : "Cerrar recepción"
+          }
+          onClose={close}
+        >
+          <p>
+            <strong>{dialog.item.title}</strong>
+          </p>
+          <p>
+            {dialog.status === "abierta"
+              ? "Los estudiantes asignados podrán responder durante el periodo configurado."
+              : "Se dejarán de aceptar respuestas. Este cambio no permite reabrir la evaluación."}
+          </p>
+          <MutationState state={mutation} />
+          <div className="work-actions">
+            <BusyButton
+              className="button button-primary"
+              busy={mutation.busy}
+              onClick={() =>
+                save(
+                  () =>
+                    api(BASE + "/evaluaciones/" + dialog.item.id + "/estado", {
+                      method: "POST",
+                      body: {
+                        status: dialog.status,
+                        version: dialog.item.version,
+                      },
+                    }),
+                  "Estado de recepción actualizado.",
+                )
+              }
+            >
+              Confirmar {dialog.status === "abierta" ? "apertura" : "cierre"}
+            </BusyButton>
+            <button
+              className="button button-secondary"
+              disabled={mutation.busy}
+              onClick={close}
+            >
+              Cancelar
+            </button>
           </div>
         </Modal>
       )}
-    </section>
+    </>
   );
 }

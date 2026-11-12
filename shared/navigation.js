@@ -102,7 +102,7 @@ export const MODULES = [
     shortName: "Autoevaluación",
     area: "Área académica",
     description:
-      "Reflexiona sobre tu desempeño académico y registra tus avances.",
+      "Cuestionarios por asignatura y parcial, respuestas y seguimiento.",
     roles: ["estudiante", "administrador"],
     pages: {
       cuestionarios: "Cuestionarios",
@@ -269,20 +269,14 @@ export function breadcrumbsFor(pathname, authenticated, entityLabel) {
       { label: module.name, path: module.path },
       { label: "Responder evaluación" },
     ];
-  if (
-    module.id === "autoevaluacion" &&
-    /^evaluar\/\d+$/.test(sub)
-  ) {
+  if (module.id === "autoevaluacion" && /^evaluar\/\d+$/.test(sub)) {
     return [
       root,
       { label: module.name, path: module.path },
       { label: "Responder autoevaluación" },
     ];
   }
-  if (
-    module.id === "autoevaluacion" &&
-    /^resultados\/\d+$/.test(sub)
-  ) {
+  if (module.id === "autoevaluacion" && /^resultados\/\d+$/.test(sub)) {
     return [
       root,
       { label: module.name, path: module.path },

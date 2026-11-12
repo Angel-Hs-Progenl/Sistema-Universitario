@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { api, date } from "../../shared/api";
@@ -16,15 +16,26 @@ import { MODALIDADES, DOCUMENTOS_BECA } from "../../../shared/becas";
 
 export default function Calls() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const state = useAsync(() => api("/becas/convocatorias"), []);
+  const personal = useAsync(async () => {
+    if (user.role !== "estudiante") return null;
+    const [study, applications] = await Promise.all([
+      api("/becas/socioeconomico"),
+      api("/becas/solicitudes"),
+    ]);
+    return { study, applications };
+  }, [user.role]);
   const [search, setSearch] = useState(""),
     [modality, setModality] = useState(""),
     [selected, setSelected] = useState(null),
-    [applying, setApplying] = useState(null);
+    [applying, setApplying] = useState(null),
+    [reception, setReception] = useState("abiertas");
   const mutation = useMutation();
   const rows = (state.data || []).filter(
     (c) =>
       (!modality || c.modalidad === modality) &&
+      (reception === "todas" || c.accepting) &&
       `${c.title} ${c.code} ${c.description}`
         .toLocaleLowerCase()
         .includes(search.toLocaleLowerCase()),
@@ -39,7 +50,7 @@ export default function Calls() {
       ]),
     );
     const ok = await mutation.run(async () => {
-      await api("/becas/solicitudes", {
+      const created = await api("/becas/solicitudes", {
         method: "POST",
         body: {
           call_id: applying.id,
@@ -49,6 +60,7 @@ export default function Calls() {
           custom_answers: answers,
         },
       });
+      navigate(`/becas/solicitud/${created.id}`);
     }, "Solicitud registrada. Consulta el folio y adjunta tus documentos en Mis solicitudes.");
     if (ok) setApplying(null);
   }
@@ -80,6 +92,15 @@ export default function Calls() {
               placeholder="Nombre o código"
             />
             <Field
+              label="Recepción"
+              as="select"
+              value={reception}
+              onChange={(e) => setReception(e.target.value)}
+            >
+              <option value="abiertas">Reciben solicitudes</option>
+              <option value="todas">Todas las convocatorias</option>
+            </Field>
+            <Field
               label="Modalidad"
               as="select"
               value={modality}
@@ -109,6 +130,7 @@ export default function Calls() {
                   onClick={() => {
                     setSearch("");
                     setModality("");
+                    setReception("todas");
                   }}
                 >
                   Limpiar filtros
@@ -157,7 +179,45 @@ export default function Calls() {
           </LoadState>
         </div>
         <aside className="work-aside">
-          <h2>Antes de solicitar</h2>
+          <h2>
+            {user.role === "estudiante"
+              ? "Tu solicitud de apoyo"
+              : "Proceso de solicitud"}
+          </h2>
+          {user.role === "estudiante" && (
+            <LoadState state={personal}>
+              <p>
+                {personal.data?.study.has_profile
+                  ? "Tu estudio socioeconómico está guardado. Revisa que siga vigente antes de solicitar."
+                  : "Primero guarda la información socioeconómica de tu hogar."}
+              </p>
+              <Link className="text-link" to="/becas/socioeconomico">
+                {personal.data?.study.has_profile
+                  ? "Revisar estudio"
+                  : "Completar estudio"}{" "}
+                <ArrowRight size={15} />
+              </Link>
+              {personal.data?.applications.length > 0 && (
+                <section className="work-section">
+                  <h3>Solicitudes registradas</h3>
+                  <ul>
+                    {personal.data.applications.map((a) => (
+                      <li key={a.id}>
+                        <Link
+                          className="text-link"
+                          to={`/becas/solicitud/${a.id}`}
+                        >
+                          {a.folio}
+                        </Link>
+                        <br />
+                        {a.call_title}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </LoadState>
+          )}
           <ol>
             <li>Lee las bases y verifica el periodo de recepción.</li>
             <li>Guarda tu información socioeconómica.</li>
@@ -166,11 +226,6 @@ export default function Calls() {
           <p>
             El registro queda sujeto a revisión y al cupo de la convocatoria.
           </p>
-          {user.role === "estudiante" && (
-            <Link className="text-link" to="/becas/socioeconomico">
-              Revisar mi estudio socioeconómico <ArrowRight size={15} />
-            </Link>
-          )}
         </aside>
       </div>
       {selected && (
@@ -214,19 +269,38 @@ export default function Calls() {
             >
               Cerrar bases
             </button>
-            {user.role === "estudiante" && (
-              <button
-                disabled={!selected.accepting}
-                className="button button-primary"
-                onClick={() => {
-                  mutation.clear();
-                  setApplying(selected);
-                  setSelected(null);
-                }}
-              >
-                Solicitar este apoyo
-              </button>
-            )}
+            {user.role === "estudiante" &&
+              (personal.data?.applications.find(
+                (a) => a.call_id === selected.id,
+              ) ? (
+                <Link
+                  className="button button-primary"
+                  to={`/becas/solicitud/${personal.data.applications.find((a) => a.call_id === selected.id).id}`}
+                >
+                  Abrir mi solicitud
+                </Link>
+              ) : !personal.data?.study.has_profile ? (
+                <Link
+                  className="button button-primary"
+                  to="/becas/socioeconomico"
+                >
+                  Completar estudio para solicitar
+                </Link>
+              ) : (
+                <button
+                  disabled={
+                    !selected.accepting || personal.loading || !!personal.error
+                  }
+                  className="button button-primary"
+                  onClick={() => {
+                    mutation.clear();
+                    setApplying(selected);
+                    setSelected(null);
+                  }}
+                >
+                  Solicitar este apoyo
+                </button>
+              ))}
           </div>
         </Modal>
       )}

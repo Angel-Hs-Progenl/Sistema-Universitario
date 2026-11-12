@@ -33,6 +33,7 @@ src/
     titulacion/         Expedientes y revisión por área
     becas/              Convocatorias, solicitudes y revisión
     evaluacion-docente/ Asignaciones, cuestionarios, informes y coordinación
+    autoevaluacion/     Cuestionarios por parcial, recepción y envíos
 backend/
   app/
     core/               Configuración, DB, identidad y sesiones compartidas
@@ -40,6 +41,7 @@ backend/
       titulacion/       Expedientes y documentos
       becas/            Solicitudes, estudio y apoyos
       evaluacion_docente/ Cuestionarios, periodos, respuestas y planes
+      autoevaluacion/     Instrumentos versionados, asignaciones y envíos únicos
     main.py             Registro de routers y middleware
   migrations/           Versiones Alembic revisadas por el líder
   tests/                Pruebas de API y seguridad

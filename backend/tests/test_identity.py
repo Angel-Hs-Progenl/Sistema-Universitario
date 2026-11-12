@@ -27,6 +27,13 @@ from app.core.security import digest
 from conftest import PASSWORD, PROFILE
 
 
+def test_oauth_preserves_autoevaluation_destination_without_external_redirects():
+    from app.core.identity import safe_next
+    assert safe_next("/autoevaluacion/evaluar/17") == "/autoevaluacion/evaluar/17"
+    for target in ("//evil.invalid", "/autoevaluacion/../cuenta", "/autoevaluacion?next=https://evil.invalid"):
+        assert safe_next(target) == "/"
+
+
 def test_database_error_does_not_log_sensitive_details(clients, monkeypatch, caplog):
     from sqlalchemy.exc import SQLAlchemyError
 

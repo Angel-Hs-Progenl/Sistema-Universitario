@@ -109,6 +109,8 @@ Autorización: líder en este chat; confirmó Google Workspace y teléfono con c
 
 ## Aclaración de plataforma y necesidades futuras · CR-008
 
+**Actualización CR-011:** Autoevaluación por parcial se recibió implementada en el pull de noviembre y se revisa por solicitud del líder. Este apartado conserva la necesidad inicial; su estado actual se describe en [MEJORAS-MODULOS.md](MEJORAS-MODULOS.md). Coevaluación sigue pendiente. El alcance técnico recibido no equivale a ratificación institucional de preguntas, roles ni acceso individual a respuestas.
+
 13 de octubre de 2026. El líder indica expresamente que la plataforma contempla también coevaluación y autoevaluación de clase cada parcial, además de evaluación docente, Becas y Titulación. Esta necesidad procede del chat; no se atribuye al documento fuente de evaluación docente.
 
 Nombre provisional del alcance: Coevaluación y autoevaluación de clase. Antes de desarrollar se deben definir responsables, asignaciones por grupo/asignatura/parcial, cuestionarios o rúbricas, escalas, cálculo, anonimato, visibilidad y publicación de resultados, correcciones y retención. No existen rutas, tablas, pantallas o módulos habilitados para esta función en la entrega actual.

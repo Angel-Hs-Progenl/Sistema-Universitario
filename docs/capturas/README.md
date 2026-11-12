@@ -51,3 +51,15 @@ Resumen del estudiante, con tareas de preparación y menos instrucciones repetid
 Los PNG anteriores se conservan como evidencia histórica de CR-005/007/009. Los JPG de esta sección corresponden a la integración actual. No representan una aprobación institucional ni operación con datos reales.
 
 ![Expediente ficticio de Becas y observación registrada](becas-expediente.jpg)
+
+## Continuidad visual · CR-011
+
+11–12 de noviembre de 2026. Datos locales ficticios. No se muestran contraseñas, tokens ni documentos originales. Estas capturas documentan la revisión local y no acreditan aceptación institucional.
+
+![Evaluaciones por parcial y acciones de coordinación](autoevaluacion-coordinacion.jpg)
+
+![Respuestas con las preguntas y etiquetas del instrumento versionado](autoevaluacion-respuestas.jpg)
+
+Gestión de convocatorias en móvil: las columnas restantes se consultan mediante desplazamiento interno de la tabla, sin desbordar la página.
+
+![Listado de convocatorias y acción de registro en móvil](becas-gestion-convocatorias.jpg)
