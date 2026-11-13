@@ -94,7 +94,7 @@ def test_becas_full_flow(clients):
 
     # Duplicate application rejected
     res_dup = student.post("/api/v1/becas/solicitudes", json=app_payload)
-    assert res_dup.status_code == 409
+    assert res_dup.status_code == 400
 
     # 4. Upload document to application
     doc_res = student.post(

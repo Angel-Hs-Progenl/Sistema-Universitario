@@ -3,6 +3,7 @@ import io
 import json
 from pathlib import Path
 from datetime import datetime, timezone
+from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field as PydField
@@ -36,6 +37,10 @@ from .domain import (
 router = APIRouter(prefix="/api/v1/becas", tags=["Becas"])
 
 
+def utc(dt: datetime) -> datetime:
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 def audit_becas(db: Session, user: User, action: str, target_type: str, target_id: str, details: str = "", ip: str = "127.0.0.1"):
     db.add(
         ScholarshipAuditLog(
@@ -67,6 +72,7 @@ def list_calls(db: Session = Depends(get_db)):
             "start_date": c.start_date.isoformat(),
             "end_date": c.end_date.isoformat(),
             "is_active": c.is_active,
+            "accepting": c.is_active and utc(c.start_date) <= now() <= utc(c.end_date),
             "custom_questions": json.loads(c.custom_questions or "[]"),
             "created_at": c.created_at.isoformat(),
         }
@@ -150,6 +156,7 @@ def get_call(call_id: int, db: Session = Depends(get_db)):
         "start_date": c.start_date.isoformat(),
         "end_date": c.end_date.isoformat(),
         "is_active": c.is_active,
+        "accepting": c.is_active and utc(c.start_date) <= now() <= utc(c.end_date),
         "custom_questions": json.loads(c.custom_questions or "[]"),
     }
 
@@ -170,6 +177,7 @@ def list_applications(
     if user.role == "estudiante":
         stmt = stmt.where(ScholarshipApplication.user_id == user.id)
     else:
+        require_role(user, "administrador", "evaluador", "escolares")
         if modalidad:
             stmt = stmt.where(ScholarshipCall.modalidad == modalidad)
         if status:
@@ -183,6 +191,7 @@ def list_applications(
         results.append({
             "id": app.id,
             "folio": app.folio,
+            "version": getattr(app, "version", 1),
             "call_id": call.id,
             "call_code": call.code,
             "call_title": call.title,
@@ -222,7 +231,7 @@ def create_application(
     db: Session = Depends(get_db),
 ):
     call = db.get(ScholarshipCall, payload.call_id)
-    if not call or not call.is_active:
+    if not call or not call.is_active or not utc(call.start_date) <= now() <= utc(call.end_date):
         raise HTTPException(400, "La convocatoria seleccionada no está disponible o ha cerrado.")
 
     # Check if student already applied to this call
@@ -259,6 +268,7 @@ def create_application(
         Notification(
             user_id=user.id,
             message=f"Tu solicitud de beca {call.title} fue recibida exitosamente con folio {app.folio}.",
+            target_path=f"/becas/solicitud/{app.id}",
         )
     )
 
@@ -273,7 +283,13 @@ def create_application(
     )
     db.commit()
 
-    return {"id": app.id, "folio": app.folio, "status": app.status, "message": "Solicitud registrada con éxito."}
+    return {
+        "id": app.id,
+        "folio": app.folio,
+        "version": getattr(app, "version", 1),
+        "status": app.status,
+        "message": "Solicitud registrada con éxito.",
+    }
 
 
 @router.get("/solicitudes/{app_id}")
@@ -286,8 +302,11 @@ def get_application_detail(
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
 
-    if user.role == "estudiante" and app.user_id != user.id:
-        raise HTTPException(403, "No tienes permiso para consultar esta solicitud.")
+    if user.role == "estudiante":
+        if app.user_id != user.id:
+            raise HTTPException(403, "No tienes permiso para consultar esta solicitud.")
+    else:
+        require_role(user, "administrador", "evaluador", "escolares")
 
     call = db.get(ScholarshipCall, app.call_id)
     applicant = db.get(User, app.user_id)
@@ -297,6 +316,7 @@ def get_application_detail(
     return {
         "id": app.id,
         "folio": app.folio,
+        "version": getattr(app, "version", 1),
         "status": app.status,
         "gpa": app.gpa,
         "academic_term": app.academic_term,
@@ -358,6 +378,7 @@ class DictamenPayload(BaseModel):
     score: float | None = None
     discount_percentage: float | None = None
     student_percentage: float | None = None
+    version: int | None = None
 
 
 @router.post("/solicitudes/{app_id}/dictamen")
@@ -376,6 +397,13 @@ def submit_dictamen(
     if payload.decision not in ("aprobada", "rechazada", "revision"):
         raise HTTPException(400, "Decisión no válida. Usa 'aprobada', 'rechazada' o 'revision'.")
 
+    current_version = getattr(app, "version", 1)
+    if payload.version is not None and current_version != payload.version:
+        raise HTTPException(409, "La solicitud cambió o ya tiene dictamen. Recarga el expediente.")
+
+    if hasattr(app, "version"):
+        app.version = current_version + 1
+
     app.status = payload.decision
     app.committee_notes = payload.committee_notes
     if payload.score is not None:
@@ -383,6 +411,11 @@ def submit_dictamen(
 
     # Asignación de porcentaje de beca / porcentaje a pagar por el estudiante
     if payload.decision == "aprobada":
+        required_kinds = {d["id"] for d in DOCUMENTOS if d.get("required")}
+        docs = db.scalars(select(ScholarshipDocument).where(ScholarshipDocument.application_id == app.id)).all()
+        validated_kinds = {d.kind for d in docs if d.status == "validado"}
+        if not required_kinds.issubset(validated_kinds):
+            raise HTTPException(409, "No se puede aprobar la solicitud sin toda la documentación obligatoria validada.")
         if payload.student_percentage is not None:
             app.student_percentage = float(payload.student_percentage)
             app.discount_percentage = round(100.0 - app.student_percentage, 1)
@@ -401,6 +434,7 @@ def submit_dictamen(
         Notification(
             user_id=app.user_id,
             message=f"Tu solicitud {app.folio} ha sido actualizada a: {ESTADOS.get(app.status, app.status)}. Nota del comité: {payload.committee_notes}",
+            target_path=f"/becas/solicitud/{app.id}",
         )
     )
 
@@ -415,7 +449,11 @@ def submit_dictamen(
     )
     db.commit()
 
-    return {"message": "Dictamen registrado con éxito.", "status": app.status}
+    return {
+        "message": "Dictamen registrado con éxito.",
+        "status": app.status,
+        "version": getattr(app, "version", 1),
+    }
 
 
 @router.post("/solicitudes/{app_id}/evaluar-reglas")
@@ -433,6 +471,7 @@ def run_rules_evaluation(
     evaluation = evaluate_applicant_rules(app.gpa, call.min_gpa)
     return {
         "folio": app.folio,
+        "version": getattr(app, "version", 1),
         "gpa": app.gpa,
         "call_min_gpa": call.min_gpa,
         "meets_requirements": evaluation["meets_requirements"],
@@ -454,8 +493,12 @@ async def upload_document(
     app = db.get(ScholarshipApplication, app_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
-    if user.role == "estudiante" and app.user_id != user.id:
+    if user.role != "estudiante" or app.user_id != user.id:
         raise HTTPException(403, "No puedes subir documentos a esta solicitud.")
+
+    valid_kinds = {d["id"] for d in DOCUMENTOS}
+    if kind not in valid_kinds:
+        raise HTTPException(422, "Tipo de documento no válido.")
 
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:
@@ -464,6 +507,9 @@ async def upload_document(
     allowed_mimes = ["application/pdf", "image/jpeg", "image/png"]
     if file.content_type not in allowed_mimes:
         raise HTTPException(400, "Formato no permitido. Solo se aceptan PDF y JPG/PNG.")
+
+    if file.content_type == "application/pdf" and not content.startswith(b"%PDF-"):
+        raise HTTPException(422, "El archivo PDF está dañado o no es válido.")
 
     stored_name = f"{uid()}{Path(file.filename).suffix.lower()}"
     upload_path = DATA_DIR / "uploads" / stored_name
@@ -494,8 +540,52 @@ async def upload_document(
         )
         db.add(doc)
 
+    if hasattr(app, "version"):
+        app.version = getattr(app, "version", 1) + 1
+
     db.commit()
     return {"message": "Documento recibido con éxito.", "kind": kind, "filename": file.filename}
+
+
+class ReviewDocumentPayload(BaseModel):
+    status: Literal["validado", "rechazado"]
+    note: str = PydField(default="", max_length=2000)
+    version: int = PydField(ge=1)
+
+
+@router.post("/solicitudes/{app_id}/documentos/{doc_id}/revision")
+def review_document(
+    app_id: int,
+    doc_id: str,
+    payload: ReviewDocumentPayload,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    require_role(user, "evaluador", "administrador", "escolares")
+    app = db.get(ScholarshipApplication, app_id)
+    if not app:
+        raise HTTPException(404, "Solicitud no encontrada.")
+
+    current_version = getattr(app, "version", 1)
+    if current_version != payload.version or app.status not in ("recibida", "revision"):
+        raise HTTPException(409, "El expediente cambió o está cerrado. Recarga antes de revisar.")
+
+    doc = db.get(ScholarshipDocument, doc_id)
+    if not doc or doc.application_id != app.id:
+        raise HTTPException(404, "Documento no encontrado.")
+
+    if payload.status == "rechazado" and not payload.note.strip():
+        raise HTTPException(422, "Explica qué debe corregir el estudiante.")
+
+    doc.status = payload.status
+    doc.note = payload.note
+    if hasattr(app, "version"):
+        app.version = current_version + 1
+    app.updated_at = now()
+
+    audit_becas(db, user, f"Documento {payload.status}: {doc.kind}", "ScholarshipApplication", str(app.id))
+    db.commit()
+    return {"version": getattr(app, "version", 1), "message": "Revisión guardada."}
 
 
 @router.get("/solicitudes/{app_id}/documentos/{doc_id}")
@@ -525,11 +615,14 @@ def download_document(
 # ---------------- ESTUDIO SOCIOECONÓMICO ---------------- #
 
 @router.get("/socioeconomico")
+@router.get("/socioeconomico")
 def get_socioeconomic(
     user_id: str | None = None,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    require_role(user, "estudiante", "administrador", "evaluador", "escolares")
+    target_id = user.id
     target_id = user.id
     if user_id and user.role != "estudiante":
         target_id = user_id
@@ -673,7 +766,7 @@ class GeneratePaymentOrderPayload(BaseModel):
     application_id: int
     period: str = PydField(min_length=2, max_length=50)
     scheduled_date: str
-    cuota_base: float = 1850.0
+    cuota_base: float | None = None
     student_percentage: float | None = None
 
 
@@ -685,12 +778,21 @@ def generate_payment_order(
     db: Session = Depends(get_db),
 ):
     """Tesorería emite la orden de pago con línea de captura de Pagos en Línea del Gobierno de Puebla."""
-    require_role(user, "tesoreria", "administrador", "evaluador", "escolares")
+    require_role(user, "tesoreria")
     app = db.get(ScholarshipApplication, payload.application_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
     if app.status != "aprobada":
         raise HTTPException(400, "Solo es posible generar órdenes de cobro para becas aprobadas.")
+
+    existing_order = db.scalar(
+        select(ScholarshipPaymentOrder).where(
+            ScholarshipPaymentOrder.application_id == payload.application_id,
+            ScholarshipPaymentOrder.period == payload.period,
+        )
+    )
+    if existing_order:
+        raise HTTPException(409, "Ya existe una orden de cobro registrada para esta solicitud y periodo.")
 
     call = db.get(ScholarshipCall, app.call_id)
     count = db.scalar(select(func.count(ScholarshipPaymentOrder.id))) or 0
@@ -704,8 +806,12 @@ def generate_payment_order(
     # Cálculo porcentual institucional según dictamen
     pct_pago = payload.student_percentage if payload.student_percentage is not None else (app.student_percentage or 50.0)
     pct_beca = round(100.0 - pct_pago, 1)
-    cuota_base = float(payload.cuota_base or 1850.0)
-    monto_a_pagar = round(cuota_base * (pct_pago / 100.0), 2)
+    if payload.cuota_base is None and payload.student_percentage is None and app.student_percentage is None:
+        cuota_base = float(call.amount)
+        monto_a_pagar = round(float(call.amount), 2)
+    else:
+        cuota_base = float(payload.cuota_base or 1850.0)
+        monto_a_pagar = round(cuota_base * (pct_pago / 100.0), 2)
 
     # Línea de captura institucional para Pagos en Línea del Gobierno de Puebla
     puebla_ref = f"PUE-UTO-2026-{app.id:04d}-{count + 1:04d}"
@@ -721,7 +827,7 @@ def generate_payment_order(
         period=payload.period,
         scheduled_date=sched_dt,
         status="programada",
-        reference=puebla_ref,
+        reference="",
         puebla_reference=puebla_ref,
         puebla_url=puebla_url,
         bank_name=app.bank_name,
@@ -738,6 +844,7 @@ def generate_payment_order(
                 f"(cubres el {pct_pago:.1f}% con beca del {pct_beca:.1f}%). "
                 f"Realiza tu pago en Pagos en Línea del Gobierno de Puebla con la referencia: {puebla_ref}."
             ),
+            target_path="/becas/ordenes-cobro",
         )
     )
 
@@ -785,6 +892,7 @@ def confirm_puebla_payment(
             Notification(
                 user_id=app.user_id,
                 message=f"Tesorería validó tu pago ({order.folio_orden}). Tu reinscripción y beca están formalmente confirmadas.",
+                target_path="/becas/ordenes-cobro",
             )
         )
 
@@ -832,6 +940,7 @@ def disperse_payment_order(
             Notification(
                 user_id=app.user_id,
                 message=f"Tu orden de pago {order.folio_orden} ha sido dispersada exitosamente vía SPEI (Lote {payload.batch_folio}).",
+                target_path="/becas/ordenes-cobro",
             )
         )
 
@@ -1197,6 +1306,7 @@ def validate_socioeconomic(
                     f"Tu estudio socioeconómico ha sido {status_label.lower()}. "
                     + (payload.validation_notes or "")
                 ).strip(),
+                target_path="/becas/socioeconomico",
             )
         )
 
@@ -1254,6 +1364,7 @@ def resolve_renewal(
         Notification(
             user_id=renewal.user_id,
             message=f"Tu solicitud de renovación fue {decision_label.lower()}. {payload.resolution_notes}",
+            target_path="/becas/renovacion",
         )
     )
 
