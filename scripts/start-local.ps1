@@ -1,4 +1,4 @@
-param([switch]$Stop)
+﻿param([switch]$Stop)
 $ErrorActionPreference = 'Stop'
 $workspacePath = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location -LiteralPath $workspacePath
@@ -62,7 +62,10 @@ for ($attempt = 0; $attempt -lt 3; $attempt++) {
   Start-Sleep -Milliseconds 100
   $tracked = @(Get-ProjectProcessTree $tracked)
 }
-$entries = @($tracked | ForEach-Object { @{id=$_.Id;start=$_.StartTime.ToUniversalTime().ToString('o')} })
+$entries = @($tracked | Where-Object { $_ } | ForEach-Object {
+  $st = try { if ($_.StartTime) { $_.StartTime.ToUniversalTime().ToString('o') } else { (Get-Date).ToUniversalTime().ToString('o') } } catch { (Get-Date).ToUniversalTime().ToString('o') }
+  @{id=$_.Id;start=$st}
+})
 @{ processes = $entries } | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $statePath
 $ready=$false
 for ($attempt=0; $attempt -lt 20; $attempt++) {

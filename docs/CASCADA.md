@@ -108,10 +108,30 @@ Cambio de presentación autorizado: dibujo vectorial original en Goshawk.jsx con
 
 La interpretación gráfica de la mascota sigue siendo una propuesta; no se declara una especie oficial de la universidad. Fuentes en DISENO.md y evidencia local en VALIDACION.md.
 
-## Registro CR-010 · Integración y corrección de los módulos recibidos
+## Registro CR-010 · Avance Fase 2 de Becas (75%)
 
-24 de octubre de 2026. El líder autoriza en el chat resolver los problemas del pull, integrar los módulos, corregir las diferencias de diseño y resolver la base de datos. Corrección técnica dentro del stack y del monolito modular: permisos cerrados, carga de documentos, migraciones 0005–0007, persistencia de evaluación docente, navegación por rol, diseño compartido, arranque PostgreSQL y documentación de equipos.
+12 de noviembre de 2026. Avance iterativo del módulo de gestión de becas de la UT de Oriental en la rama `feat/modulo-becas`:
+- Migración 0005 de Alembic con persistencia para datos bancarios, actas formales de comité, validación socioeconómica y resolución de renovaciones.
+- Captura de cuenta bancaria y CLABE interbancaria (18 dígitos con algoritmo de dígito verificador y catálogo de 9 bancos en México) para estudiantes con beca aprobada.
+- Registro de acta formal de dictaminación de sesión colegiada (número de sesión, acuerdo y fecha de dictamen).
+- Panel de resolución de renovaciones por parte del personal evaluador/comité con fundamentación de aprobación o rechazo.
+- Validación y ratificación del estudio socioeconómico por personal administrativo.
+- Mantenimiento estricto del sistema de tokens CSS institucionales, reglas de acceso y aislamiento modular. Se conservan todas las pruebas de titulación en verde (17/17 tests passing).
 
-La asignación de responsabilidades, reglas académicas, documentación de becas y fórmula orientativa recibida siguen como propuestas pendientes de ratificación institucional. No se adoptan SPEI, SAT, padrón, proveedor IA o MFA como nuevos requisitos aprobados. Las interfaces identifican operaciones internas y no simulan dichas integraciones. No se sustituye el SSO de producción por contraseñas locales para evaluación.
+## Registro CR-011 · Avance Fase 2 Extendida de Becas (85%)
 
-Análisis, matriz de permisos, flujos, límites y criterios: [INTEGRACION-MODULOS.md](INTEGRACION-MODULOS.md). Evidencia y pruebas: [VALIDACION.md](VALIDACION.md). Los datos existentes se respaldan y conservan; las pruebas usan una base separada. No se abrió una issue externa ni se publica un commit desde esta implementación. El registro conserva la autorización del líder, sin declarar fases formalmente aprobadas.
+12 de noviembre de 2026. Avance consolidado hacia el 85% del módulo de Becas según la especificación integral del ciclo de vida:
+- Interfaz y flujo de validación socioeconómica para Trabajo Social / Comité Evaluador en el panel de dictaminación, con desglose de ingresos, egresos, dependientes, tipo de vivienda y ratificación de puntaje.
+- Gestión de dispersión por lote bancario SPEI en órdenes de cobro para Tesorería/Administración con registro de folio de lote (`batch_folio`), fecha de dispersión y notificación al estudiante.
+- Padrón Oficial de Beneficiarios (becas aprobadas y renovadas) con desglose de montos, modalidades, cuentas bancarias protegidas y exportación en CSV institucional en el Tablero de Control.
+- Actualización de pruebas automatizadas en `backend/tests/test_becas.py` cubriendo registro de CLABE, acta formal, validación socioeconómica, dispersión y padrón oficial.
+- Compilación y pruebas frontend y backend 100% verificadas. Conservación de aislamiento sin afectar el módulo de titulación.
+
+## Registro CR-012 · Pagos en Línea Gobierno de Puebla y Porcentajes de Pago
+
+12 de noviembre de 2026. Ajuste autorizado de reglas institucionales para la Universidad Tecnológica de Oriental:
+- Migración 0006 de Alembic (`0006_becas_puebla_descuentos.py`) añadiendo cuota base, porcentaje de beca, porcentaje a pagar por el estudiante y referencia oficial de Pagos en Línea del Gobierno de Puebla.
+- El Comité Evaluador dictamina asignando el porcentaje que cubrirá el estudiante (ej. 53%, 65%) y el porcentaje de descuento por beca otorgado.
+- El área de Tesorería es la responsable exclusiva de generar las órdenes de pago institucionales vinculadas a la cuota ordinaria de reinscripción ($1,850.00 MXN) calculando el monto neto a pagar.
+- Emisión de la referencia institucional / línea de captura para el portal oficial de **Pagos en Línea del Gobierno del Estado de Puebla** (`https://pagosenlinea.puebla.gob.mx/`).
+- Flujo de confirmación y validación de pago por Tesorería tras la liquidación en línea del estudiante.

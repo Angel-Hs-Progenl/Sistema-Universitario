@@ -14,6 +14,18 @@ export const ESTADOS_BECA = {
   renovada: "Beca renovada",
 };
 
+export const RENEWAL_ESTADOS = {
+  solicitada: "Solicitada",
+  aprobada_renovacion: "Aprobada",
+  rechazada_renovacion: "Rechazada",
+};
+
+export const VALIDATION_ESTADOS = {
+  pendiente: "Pendiente de validación",
+  validado: "Validado",
+  observado: "Con observaciones",
+};
+
 export const DOCUMENTOS_BECA = [
   {
     id: "kardex",

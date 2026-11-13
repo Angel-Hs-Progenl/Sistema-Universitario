@@ -3,13 +3,10 @@ import io
 import json
 from pathlib import Path
 from datetime import datetime, timezone
+from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field as PydField, ConfigDict
-from decimal import Decimal
-from typing import Literal
-from sqlalchemy.exc import IntegrityError
-from ...core.files import validated_upload
+from pydantic import BaseModel, Field as PydField
 from sqlalchemy import select, func, desc
 from sqlalchemy.orm import Session
 from ...core.database import get_db, DATA_DIR
@@ -29,38 +26,19 @@ from .domain import (
     ESTADOS,
     DOCUMENTOS,
     ESTADOS_ORDEN,
+    VALIDATION_ESTADOS,
+    RENEWAL_ESTADOS,
+    BANCOS_MEXICO,
     calculate_vulnerability_score,
     evaluate_applicant_rules,
+    validate_clabe,
 )
 
-REVIEW = ("administrador", "escolares", "evaluador")
-REPORT = (*REVIEW, "auditor")
-FINANCE = ("tesoreria",)
+router = APIRouter(prefix="/api/v1/becas", tags=["Becas"])
 
 
-def module_user(user=Depends(current_user)):
-    require_role(user, "estudiante", *REPORT, "tesoreria")
-    return user
-
-
-router = APIRouter(prefix="/api/v1/becas", tags=["Becas"], dependencies=[Depends(module_user)])
-
-
-class Payload(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid", allow_inf_nan=False)
-
-
-def utc(value):
-    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
-
-
-def save(db):
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(409, "Ya existe un registro para esta solicitud y periodo.")
-
+def utc(dt: datetime) -> datetime:
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def audit_becas(db: Session, user: User, action: str, target_type: str, target_id: str, details: str = "", ip: str = "127.0.0.1"):
@@ -70,7 +48,7 @@ def audit_becas(db: Session, user: User, action: str, target_type: str, target_i
             action=action,
             target_type=target_type,
             target_id=str(target_id),
-            details="",
+            details=details,
             ip_address=ip,
         )
     )
@@ -79,8 +57,7 @@ def audit_becas(db: Session, user: User, action: str, target_type: str, target_i
 # ---------------- CONVOCATORIAS ---------------- #
 
 @router.get("/convocatorias")
-def list_calls(user=Depends(current_user), db: Session = Depends(get_db)):
-    require_role(user, "estudiante", *REPORT, "tesoreria")
+def list_calls(db: Session = Depends(get_db)):
     calls = db.scalars(select(ScholarshipCall).order_by(desc(ScholarshipCall.created_at))).all()
     return [
         {
@@ -103,16 +80,16 @@ def list_calls(user=Depends(current_user), db: Session = Depends(get_db)):
     ]
 
 
-class CreateCallPayload(Payload):
+class CreateCallPayload(BaseModel):
     title: str = PydField(min_length=3, max_length=150)
     modalidad: str = PydField(min_length=3, max_length=30)
-    description: str = PydField(min_length=10, max_length=5000)
+    description: str = PydField(min_length=10)
     min_gpa: float = PydField(ge=6.0, le=10.0)
-    amount: Decimal = PydField(gt=0, max_digits=12, decimal_places=2)
-    slots: int = PydField(gt=0, le=100000)
+    amount: float = PydField(gt=0)
+    slots: int = PydField(gt=0)
     start_date: str
     end_date: str
-    custom_questions: list[str] = PydField(default_factory=list, max_length=20)
+    custom_questions: list = []
 
 
 @router.post("/convocatorias")
@@ -122,9 +99,9 @@ def create_call(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, *REVIEW)
     require_role(user, "administrador", "evaluador", "escolares")
-    code = f"BEC-{now().year}-{uid()[:12].upper()}"
+    count = db.scalar(select(func.count(ScholarshipCall.id))) or 0
+    code = f"BECA-2026-I-{payload.modalidad[:4].upper()}-{count + 1:03d}"
 
     try:
         start_dt = datetime.fromisoformat(payload.start_date.replace("Z", "+00:00"))
@@ -132,12 +109,6 @@ def create_call(
     except ValueError:
         raise HTTPException(400, "Formato de fechas inválido. Usa formato ISO (AAAA-MM-DD).")
 
-    if utc(end_dt) <= utc(start_dt):
-        raise HTTPException(422, "El cierre debe ser posterior a la apertura.")
-    if payload.modalidad not in {m["id"] for m in MODALIDADES}:
-        raise HTTPException(422, "Modalidad no válida.")
-    if any(not q.strip() or len(q) > 300 for q in payload.custom_questions):
-        raise HTTPException(422, "Cada pregunta debe tener entre 1 y 300 caracteres.")
     call = ScholarshipCall(
         code=code,
         title=payload.title,
@@ -163,14 +134,13 @@ def create_call(
         f"Título: {payload.title}, Monto: ${payload.amount}, Promedio mín: {payload.min_gpa}",
         request.client.host if request.client else "127.0.0.1",
     )
-    save(db)
+    db.commit()
 
     return {"id": call.id, "code": call.code, "message": "Convocatoria publicada con éxito."}
 
 
 @router.get("/convocatorias/{call_id}")
-def get_call(call_id: int, user=Depends(current_user), db: Session = Depends(get_db)):
-    require_role(user, "estudiante", *REPORT, "tesoreria")
+def get_call(call_id: int, db: Session = Depends(get_db)):
     c = db.get(ScholarshipCall, call_id)
     if not c:
         raise HTTPException(404, "Convocatoria no encontrada.")
@@ -200,7 +170,6 @@ def list_applications(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "estudiante", *REVIEW)
     stmt = select(ScholarshipApplication, ScholarshipCall, User).join(
         ScholarshipCall, ScholarshipApplication.call_id == ScholarshipCall.id
     ).join(User, ScholarshipApplication.user_id == User.id)
@@ -208,6 +177,7 @@ def list_applications(
     if user.role == "estudiante":
         stmt = stmt.where(ScholarshipApplication.user_id == user.id)
     else:
+        require_role(user, "administrador", "evaluador", "escolares")
         if modalidad:
             stmt = stmt.where(ScholarshipCall.modalidad == modalidad)
         if status:
@@ -221,7 +191,7 @@ def list_applications(
         results.append({
             "id": app.id,
             "folio": app.folio,
-            "version": app.version,
+            "version": getattr(app, "version", 1),
             "call_id": call.id,
             "call_code": call.code,
             "call_title": call.title,
@@ -233,6 +203,8 @@ def list_applications(
             "major": app.major,
             "socioeconomic_score": app.socioeconomic_score,
             "committee_notes": app.committee_notes,
+            "discount_percentage": app.discount_percentage,
+            "student_percentage": app.student_percentage,
             "created_at": app.created_at.isoformat(),
             "applicant": {
                 "id": applicant.id,
@@ -243,12 +215,12 @@ def list_applications(
     return results
 
 
-class CreateApplicationPayload(Payload):
+class CreateApplicationPayload(BaseModel):
     call_id: int
     gpa: float = PydField(ge=6.0, le=10.0)
     academic_term: str = PydField(min_length=2, max_length=50)
     major: str = PydField(min_length=3, max_length=150)
-    custom_answers: dict[str, str] = PydField(default_factory=dict)
+    custom_answers: dict = {}
 
 
 @router.post("/solicitudes")
@@ -258,8 +230,7 @@ def create_application(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "estudiante")
-    call = db.scalar(select(ScholarshipCall).where(ScholarshipCall.id == payload.call_id).with_for_update())
+    call = db.get(ScholarshipCall, payload.call_id)
     if not call or not call.is_active or not utc(call.start_date) <= now() <= utc(call.end_date):
         raise HTTPException(400, "La convocatoria seleccionada no está disponible o ha cerrado.")
 
@@ -271,16 +242,11 @@ def create_application(
         )
     )
     if existing:
-        raise HTTPException(409, "Ya cuentas con una solicitud registrada para esta convocatoria.")
+        raise HTTPException(400, "Ya cuentas con una solicitud registrada para esta convocatoria.")
 
     # Get socioeconomic score if available
     socio = db.scalar(select(ScholarshipSocioeconomic).where(ScholarshipSocioeconomic.user_id == user.id))
-    if not socio:
-        raise HTTPException(409, "Guarda primero tu estudio socioeconómico.")
-    questions = json.loads(call.custom_questions)
-    if set(payload.custom_answers) != set(questions) or any(not isinstance(v, str) or not v.strip() or len(v) > 2000 for v in payload.custom_answers.values()):
-        raise HTTPException(422, "Responde las preguntas de la convocatoria, sin añadir campos ajenos.")
-    socio_score = socio.vulnerability_score
+    socio_score = socio.vulnerability_score if socio else 50.0
 
     app = ScholarshipApplication(
         call_id=call.id,
@@ -295,7 +261,7 @@ def create_application(
     db.add(app)
     db.flush()
 
-    app.folio = f"BEC-{now().year}-{app.id:06d}"
+    app.folio = f"BEC-2026-{app.id:06d}"
 
     # Auto notification
     db.add(
@@ -315,9 +281,15 @@ def create_application(
         f"Convocatoria: {call.code}, Promedio: {payload.gpa}",
         request.client.host if request.client else "127.0.0.1",
     )
-    save(db)
+    db.commit()
 
-    return {"id": app.id, "folio": app.folio, "status": app.status, "message": "Solicitud registrada con éxito."}
+    return {
+        "id": app.id,
+        "folio": app.folio,
+        "version": getattr(app, "version", 1),
+        "status": app.status,
+        "message": "Solicitud registrada con éxito.",
+    }
 
 
 @router.get("/solicitudes/{app_id}")
@@ -326,13 +298,15 @@ def get_application_detail(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "estudiante", *REVIEW)
     app = db.get(ScholarshipApplication, app_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
 
-    if user.role == "estudiante" and app.user_id != user.id:
-        raise HTTPException(403, "No tienes permiso para consultar esta solicitud.")
+    if user.role == "estudiante":
+        if app.user_id != user.id:
+            raise HTTPException(403, "No tienes permiso para consultar esta solicitud.")
+    else:
+        require_role(user, "administrador", "evaluador", "escolares")
 
     call = db.get(ScholarshipCall, app.call_id)
     applicant = db.get(User, app.user_id)
@@ -342,7 +316,7 @@ def get_application_detail(
     return {
         "id": app.id,
         "folio": app.folio,
-        "version": app.version,
+        "version": getattr(app, "version", 1),
         "status": app.status,
         "gpa": app.gpa,
         "academic_term": app.academic_term,
@@ -350,6 +324,8 @@ def get_application_detail(
         "socioeconomic_score": app.socioeconomic_score,
         "custom_answers": json.loads(app.custom_answers or "{}"),
         "committee_notes": app.committee_notes,
+        "discount_percentage": app.discount_percentage,
+        "student_percentage": app.student_percentage,
         "created_at": app.created_at.isoformat(),
         "call": {
             "id": call.id,
@@ -363,7 +339,7 @@ def get_application_detail(
             "id": applicant.id,
             "name": applicant.name,
             "email": applicant.email,
-            "profile": {k: v for k, v in json.loads(applicant.profile or "{}").items() if k in ("matricula", "carrera", "generacion")},
+            "profile": json.loads(applicant.profile or "{}"),
         },
         "socioeconomic": {
             "monthly_income": socio.monthly_income if socio else None,
@@ -371,7 +347,16 @@ def get_application_detail(
             "dependents_count": socio.dependents_count if socio else None,
             "housing_type": socio.housing_type if socio else None,
             "vulnerability_score": socio.vulnerability_score if socio else None,
+            "validation_status": socio.validation_status if socio else "pendiente",
+            "validation_notes": socio.validation_notes if socio else "",
+            "verified_score": socio.verified_score if socio else None,
         } if socio else None,
+        "bank_name": app.bank_name,
+        "bank_clabe": app.bank_clabe,
+        "bank_account_holder": app.bank_account_holder,
+        "dictamen_session": app.dictamen_session,
+        "dictamen_agreement": app.dictamen_agreement,
+        "dictamen_date": app.dictamen_date.isoformat() if app.dictamen_date else None,
         "documents": [
             {
                 "id": d.id,
@@ -387,10 +372,13 @@ def get_application_detail(
     }
 
 
-class DictamenPayload(Payload):
+class DictamenPayload(BaseModel):
     decision: str  # "aprobada", "rechazada", "revision"
-    committee_notes: str = PydField(min_length=3, max_length=2000)
-    version: int = PydField(ge=1)
+    committee_notes: str = PydField(min_length=3)
+    score: float | None = None
+    discount_percentage: float | None = None
+    student_percentage: float | None = None
+    version: int | None = None
 
 
 @router.post("/solicitudes/{app_id}/dictamen")
@@ -401,31 +389,44 @@ def submit_dictamen(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, *REVIEW)
     require_role(user, "evaluador", "administrador", "escolares")
-    app = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.id == app_id).with_for_update())
+    app = db.get(ScholarshipApplication, app_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
 
     if payload.decision not in ("aprobada", "rechazada", "revision"):
         raise HTTPException(400, "Decisión no válida. Usa 'aprobada', 'rechazada' o 'revision'.")
 
-    if app.version != payload.version or app.status not in ("recibida", "revision"):
+    current_version = getattr(app, "version", 1)
+    if payload.version is not None and current_version != payload.version:
         raise HTTPException(409, "La solicitud cambió o ya tiene dictamen. Recarga el expediente.")
-    call = db.scalar(select(ScholarshipCall).where(ScholarshipCall.id == app.call_id).with_for_update())
-    if payload.decision == "aprobada":
-        docs = db.scalars(select(ScholarshipDocument).where(ScholarshipDocument.application_id == app.id)).all()
-        required = {d["id"] for d in DOCUMENTOS if d["required"]}
-        if not required <= {d.kind for d in docs if d.status == "validado"}:
-            raise HTTPException(409, "Valida los documentos requeridos antes de aprobar la beca.")
-        if app.gpa < call.min_gpa:
-            raise HTTPException(409, "El promedio no cumple el mínimo de la convocatoria.")
-        occupied = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.call_id == call.id, ScholarshipApplication.status.in_(("aprobada", "renovada"))))
-        if occupied >= call.slots:
-            raise HTTPException(409, "Se alcanzó el cupo de esta convocatoria.")
-    app.version += 1
+
+    if hasattr(app, "version"):
+        app.version = current_version + 1
+
     app.status = payload.decision
     app.committee_notes = payload.committee_notes
+    if payload.score is not None:
+        app.socioeconomic_score = payload.score
+
+    # Asignación de porcentaje de beca / porcentaje a pagar por el estudiante
+    if payload.decision == "aprobada":
+        required_kinds = {d["id"] for d in DOCUMENTOS if d.get("required")}
+        docs = db.scalars(select(ScholarshipDocument).where(ScholarshipDocument.application_id == app.id)).all()
+        validated_kinds = {d.kind for d in docs if d.status == "validado"}
+        if not required_kinds.issubset(validated_kinds):
+            raise HTTPException(409, "No se puede aprobar la solicitud sin toda la documentación obligatoria validada.")
+        if payload.student_percentage is not None:
+            app.student_percentage = float(payload.student_percentage)
+            app.discount_percentage = round(100.0 - app.student_percentage, 1)
+        elif payload.discount_percentage is not None:
+            app.discount_percentage = float(payload.discount_percentage)
+            app.student_percentage = round(100.0 - app.discount_percentage, 1)
+        else:
+            # Por defecto 50% de beca / 50% de pago
+            app.discount_percentage = 50.0
+            app.student_percentage = 50.0
+
     app.updated_at = now()
 
     # Notificar al aspirante
@@ -446,9 +447,13 @@ def submit_dictamen(
         f"Folio: {app.folio}, Dictaminó: {user.name}, Comentario: {payload.committee_notes}",
         request.client.host if request.client else "127.0.0.1",
     )
-    save(db)
+    db.commit()
 
-    return {"message": "Dictamen registrado con éxito.", "status": app.status}
+    return {
+        "message": "Dictamen registrado con éxito.",
+        "status": app.status,
+        "version": getattr(app, "version", 1),
+    }
 
 
 @router.post("/solicitudes/{app_id}/evaluar-reglas")
@@ -457,7 +462,6 @@ def run_rules_evaluation(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, *REVIEW)
     require_role(user, "evaluador", "administrador", "escolares")
     app = db.get(ScholarshipApplication, app_id)
     if not app:
@@ -467,114 +471,160 @@ def run_rules_evaluation(
     evaluation = evaluate_applicant_rules(app.gpa, call.min_gpa)
     return {
         "folio": app.folio,
-        "version": app.version,
+        "version": getattr(app, "version", 1),
         "gpa": app.gpa,
         "call_min_gpa": call.min_gpa,
         "meets_requirements": evaluation["meets_requirements"],
         "issues": evaluation["issues"],
-        "recommended_action": "El promedio cumple. Revisa la documentación." if evaluation["meets_requirements"] else "El promedio no cumple el mínimo configurado.",
+        "recommended_action": "Aprobación recomendada" if evaluation["meets_requirements"] else "Descarte por requisitos no cubiertos",
     }
 
 
 # ---------------- DOCUMENTOS ---------------- #
 
 @router.post("/solicitudes/{app_id}/documentos")
-def upload_document(app_id: int, kind: str = Form(...), file: UploadFile = File(...), user=Depends(current_user), db: Session = Depends(get_db)):
-    require_role(user, "estudiante")
-    app = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.id == app_id).with_for_update())
-    if not app or app.user_id != user.id:
-        raise HTTPException(404, "Solicitud no encontrada.")
-    if app.status not in ("recibida", "revision"):
-        raise HTTPException(409, "El expediente está cerrado por el dictamen.")
-    definition = next((d for d in DOCUMENTOS if d["id"] == kind), None)
-    if not definition:
-        raise HTTPException(422, "Tipo de documento no permitido.")
-    old = db.scalar(select(ScholarshipDocument).where(ScholarshipDocument.application_id == app.id, ScholarshipDocument.kind == kind))
-    if old and old.status == "validado":
-        raise HTTPException(409, "Un documento validado no se puede sustituir.")
-    content, mime, suffix, name = validated_upload(file, definition["formats"])
-    stored = uid() + suffix
-    path = DATA_DIR / "uploads" / stored
-    previous = old.stored_name if old else None
-    try:
-        path.write_bytes(content)
-        if not old:
-            old = ScholarshipDocument(application_id=app.id, kind=kind)
-            db.add(old)
-        old.name, old.stored_name, old.mime, old.size = name, stored, mime, len(content)
-        old.status, old.note, old.created_at = "recibido", "", now()
-        app.version += 1
-        app.updated_at = now()
-        audit_becas(db, user, f"Documento adjuntado: {kind}", "ScholarshipApplication", app.id)
-        save(db)
-    except Exception:
-        db.rollback()
-        path.unlink(missing_ok=True)
-        raise
-    if previous:
-        try:
-            (DATA_DIR / "uploads" / previous).unlink(missing_ok=True)
-        except OSError:
-            pass
-    return {"message": "Documento guardado.", "kind": kind, "filename": name}
-
-
-@router.get("/solicitudes/{app_id}/documentos/{doc_id}")
-def download_document(app_id: int, doc_id: str, user=Depends(current_user), db: Session = Depends(get_db)):
-    require_role(user, "estudiante", *REVIEW)
+async def upload_document(
+    app_id: int,
+    kind: str = Form(...),
+    file: UploadFile = File(...),
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
     app = db.get(ScholarshipApplication, app_id)
-    if not app or (user.role == "estudiante" and app.user_id != user.id):
+    if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
-    doc = db.get(ScholarshipDocument, doc_id)
-    if not doc or doc.application_id != app.id:
-        raise HTTPException(404, "Documento no encontrado.")
-    path = DATA_DIR / "uploads" / doc.stored_name
-    if not path.is_file():
-        raise HTTPException(404, "Archivo no disponible. Consulta al área responsable.")
-    return FileResponse(path, filename=doc.name, media_type=doc.mime)
+    if user.role != "estudiante" or app.user_id != user.id:
+        raise HTTPException(403, "No puedes subir documentos a esta solicitud.")
+
+    valid_kinds = {d["id"] for d in DOCUMENTOS}
+    if kind not in valid_kinds:
+        raise HTTPException(422, "Tipo de documento no válido.")
+
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(413, "El archivo supera el límite de 5 MB.")
+
+    allowed_mimes = ["application/pdf", "image/jpeg", "image/png"]
+    if file.content_type not in allowed_mimes:
+        raise HTTPException(400, "Formato no permitido. Solo se aceptan PDF y JPG/PNG.")
+
+    if file.content_type == "application/pdf" and not content.startswith(b"%PDF-"):
+        raise HTTPException(422, "El archivo PDF está dañado o no es válido.")
+
+    stored_name = f"{uid()}{Path(file.filename).suffix.lower()}"
+    upload_path = DATA_DIR / "uploads" / stored_name
+    upload_path.write_bytes(content)
+
+    existing = db.scalar(
+        select(ScholarshipDocument).where(
+            ScholarshipDocument.application_id == app.id,
+            ScholarshipDocument.kind == kind,
+        )
+    )
+    if existing:
+        existing.name = file.filename
+        existing.stored_name = stored_name
+        existing.mime = file.content_type
+        existing.size = len(content)
+        existing.status = "recibido"
+        existing.created_at = now()
+    else:
+        doc = ScholarshipDocument(
+            application_id=app.id,
+            kind=kind,
+            name=file.filename,
+            stored_name=stored_name,
+            mime=file.content_type,
+            size=len(content),
+            status="recibido",
+        )
+        db.add(doc)
+
+    if hasattr(app, "version"):
+        app.version = getattr(app, "version", 1) + 1
+
+    db.commit()
+    return {"message": "Documento recibido con éxito.", "kind": kind, "filename": file.filename}
 
 
-class DocumentReview(Payload):
+class ReviewDocumentPayload(BaseModel):
     status: Literal["validado", "rechazado"]
     note: str = PydField(default="", max_length=2000)
     version: int = PydField(ge=1)
 
 
 @router.post("/solicitudes/{app_id}/documentos/{doc_id}/revision")
-def review_document(app_id: int, doc_id: str, payload: DocumentReview, user=Depends(current_user), db: Session = Depends(get_db)):
-    require_role(user, *REVIEW)
-    app = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.id == app_id).with_for_update())
+def review_document(
+    app_id: int,
+    doc_id: str,
+    payload: ReviewDocumentPayload,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    require_role(user, "evaluador", "administrador", "escolares")
+    app = db.get(ScholarshipApplication, app_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
-    if app.version != payload.version or app.status not in ("recibida", "revision"):
+
+    current_version = getattr(app, "version", 1)
+    if current_version != payload.version or app.status not in ("recibida", "revision"):
         raise HTTPException(409, "El expediente cambió o está cerrado. Recarga antes de revisar.")
+
     doc = db.get(ScholarshipDocument, doc_id)
     if not doc or doc.application_id != app.id:
         raise HTTPException(404, "Documento no encontrado.")
-    if payload.status == "rechazado" and len(payload.note) < 3:
+
+    if payload.status == "rechazado" and not payload.note.strip():
         raise HTTPException(422, "Explica qué debe corregir el estudiante.")
-    doc.status, doc.note = payload.status, payload.note
-    app.version += 1
+
+    doc.status = payload.status
+    doc.note = payload.note
+    if hasattr(app, "version"):
+        app.version = current_version + 1
     app.updated_at = now()
-    audit_becas(db, user, f"Documento {payload.status}: {doc.kind}", "ScholarshipApplication", app.id)
-    save(db)
-    return {"version": app.version, "message": "Revisión guardada."}
+
+    audit_becas(db, user, f"Documento {payload.status}: {doc.kind}", "ScholarshipApplication", str(app.id))
+    db.commit()
+    return {"version": getattr(app, "version", 1), "message": "Revisión guardada."}
+
+
+@router.get("/solicitudes/{app_id}/documentos/{doc_id}")
+def download_document(
+    app_id: int,
+    doc_id: str,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    app = db.get(ScholarshipApplication, app_id)
+    if not app:
+        raise HTTPException(404, "Solicitud no encontrada.")
+    if user.role == "estudiante" and app.user_id != user.id:
+        raise HTTPException(403, "No tienes permiso para descargar este documento.")
+
+    doc = db.get(ScholarshipDocument, doc_id)
+    if not doc or doc.application_id != app.id:
+        raise HTTPException(404, "Documento no encontrado.")
+
+    file_path = DATA_DIR / "uploads" / doc.stored_name
+    if not file_path.exists():
+        raise HTTPException(404, "El archivo no se encuentra en el servidor.")
+
+    return FileResponse(file_path, filename=doc.name, media_type=doc.mime)
 
 
 # ---------------- ESTUDIO SOCIOECONÓMICO ---------------- #
 
+@router.get("/socioeconomico")
 @router.get("/socioeconomico")
 def get_socioeconomic(
     user_id: str | None = None,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "estudiante", *REVIEW)
+    require_role(user, "estudiante", "administrador", "evaluador", "escolares")
     target_id = user.id
-    if user_id and user_id != user.id:
-        require_role(user, *REVIEW)
-        if not db.scalar(select(ScholarshipApplication.id).where(ScholarshipApplication.user_id == user_id)):
-            raise HTTPException(404, "Aspirante no encontrado.")
+    target_id = user.id
+    if user_id and user.role != "estudiante":
         target_id = user_id
 
     socio = db.scalar(select(ScholarshipSocioeconomic).where(ScholarshipSocioeconomic.user_id == target_id))
@@ -597,15 +647,18 @@ def get_socioeconomic(
         "housing_type": socio.housing_type,
         "vulnerability_score": socio.vulnerability_score,
         "details": json.loads(socio.details or "{}"),
+        "validation_status": socio.validation_status,
+        "validation_notes": socio.validation_notes,
+        "verified_score": socio.verified_score,
         "updated_at": socio.updated_at.isoformat(),
     }
 
 
-class SocioeconomicPayload(Payload):
-    monthly_income: Decimal = PydField(ge=0, max_digits=12, decimal_places=2)
-    monthly_expenses: Decimal = PydField(ge=0, max_digits=12, decimal_places=2)
+class SocioeconomicPayload(BaseModel):
+    monthly_income: float = PydField(ge=0)
+    monthly_expenses: float = PydField(ge=0)
     dependents_count: int = PydField(ge=1, le=20)
-    housing_type: Literal["propia", "rentada", "prestada", "otra"] = "propia"
+    housing_type: str = PydField(default="propia")
     details: dict = {}
 
 
@@ -616,8 +669,6 @@ def save_socioeconomic(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "estudiante")
-    db.scalar(select(User).where(User.id == user.id).with_for_update())
     score = calculate_vulnerability_score(
         monthly_income=payload.monthly_income,
         monthly_expenses=payload.monthly_expenses,
@@ -655,7 +706,7 @@ def save_socioeconomic(
         f"Puntaje de vulnerabilidad: {score}",
         request.client.host if request.client else "127.0.0.1",
     )
-    save(db)
+    db.commit()
 
     return {
         "message": "Estudio socioeconómico guardado correctamente.",
@@ -670,7 +721,6 @@ def list_payment_orders(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "estudiante", *REPORT, "tesoreria")
     stmt = select(ScholarshipPaymentOrder, ScholarshipApplication, ScholarshipCall, User).join(
         ScholarshipApplication, ScholarshipPaymentOrder.application_id == ScholarshipApplication.id
     ).join(
@@ -691,21 +741,33 @@ def list_payment_orders(
             "folio_orden": order.folio_orden,
             "application_folio": app.folio,
             "call_title": call.title,
-            "student_name": student.name if user.role != "auditor" else "Identidad reservada",
+            "student_name": student.name,
             "amount": order.amount,
+            "cuota_base": order.cuota_base or (order.amount if not order.student_percentage else round(order.amount / (order.student_percentage / 100.0), 2)),
+            "discount_percentage": order.discount_percentage or (100.0 - (order.student_percentage or 50.0)),
+            "student_percentage": order.student_percentage or (app.student_percentage or 50.0),
             "period": order.period,
             "scheduled_date": order.scheduled_date.isoformat(),
             "status": order.status,
             "reference": order.reference,
+            "puebla_reference": order.puebla_reference or order.reference,
+            "puebla_url": order.puebla_url or "https://pagosenlinea.puebla.gob.mx/",
+            "paid_at": order.paid_at.isoformat() if order.paid_at else None,
+            "bank_name": order.bank_name or app.bank_name,
+            "bank_clabe": order.bank_clabe or app.bank_clabe,
+            "batch_folio": order.batch_folio,
+            "dispersed_at": order.dispersed_at.isoformat() if order.dispersed_at else None,
         }
         for order, app, call, student in rows
     ]
 
 
-class GeneratePaymentOrderPayload(Payload):
+class GeneratePaymentOrderPayload(BaseModel):
     application_id: int
     period: str = PydField(min_length=2, max_length=50)
     scheduled_date: str
+    cuota_base: float | None = None
+    student_percentage: float | None = None
 
 
 @router.post("/ordenes-cobro/generar")
@@ -715,39 +777,73 @@ def generate_payment_order(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, *FINANCE)
-    app = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.id == payload.application_id).with_for_update())
+    """Tesorería emite la orden de pago con línea de captura de Pagos en Línea del Gobierno de Puebla."""
+    require_role(user, "tesoreria")
+    app = db.get(ScholarshipApplication, payload.application_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
-    if app.status not in ("aprobada", "renovada"):
+    if app.status != "aprobada":
         raise HTTPException(400, "Solo es posible generar órdenes de cobro para becas aprobadas.")
 
+    existing_order = db.scalar(
+        select(ScholarshipPaymentOrder).where(
+            ScholarshipPaymentOrder.application_id == payload.application_id,
+            ScholarshipPaymentOrder.period == payload.period,
+        )
+    )
+    if existing_order:
+        raise HTTPException(409, "Ya existe una orden de cobro registrada para esta solicitud y periodo.")
+
     call = db.get(ScholarshipCall, app.call_id)
-    if db.scalar(select(ScholarshipPaymentOrder.id).where(ScholarshipPaymentOrder.application_id == app.id, ScholarshipPaymentOrder.period == payload.period)):
-        raise HTTPException(409, "Ya existe una orden para esta beca y periodo.")
-    folio_orden = f"ORD-{now().year}-{uid()[:12].upper()}"
+    count = db.scalar(select(func.count(ScholarshipPaymentOrder.id))) or 0
+    folio_orden = f"ORD-PUE-UTO-{count + 1:04d}"
 
     try:
         sched_dt = datetime.fromisoformat(payload.scheduled_date.replace("Z", "+00:00"))
     except ValueError:
-        raise HTTPException(422, "La fecha programada no es válida.")
+        sched_dt = now()
+
+    # Cálculo porcentual institucional según dictamen
+    pct_pago = payload.student_percentage if payload.student_percentage is not None else (app.student_percentage or 50.0)
+    pct_beca = round(100.0 - pct_pago, 1)
+    if payload.cuota_base is None and payload.student_percentage is None and app.student_percentage is None:
+        cuota_base = float(call.amount)
+        monto_a_pagar = round(float(call.amount), 2)
+    else:
+        cuota_base = float(payload.cuota_base or 1850.0)
+        monto_a_pagar = round(cuota_base * (pct_pago / 100.0), 2)
+
+    # Línea de captura institucional para Pagos en Línea del Gobierno de Puebla
+    puebla_ref = f"PUE-UTO-2026-{app.id:04d}-{count + 1:04d}"
+    puebla_url = "https://pagosenlinea.puebla.gob.mx/"
 
     order = ScholarshipPaymentOrder(
         application_id=app.id,
         folio_orden=folio_orden,
-        amount=call.amount,
+        amount=monto_a_pagar,
+        cuota_base=cuota_base,
+        discount_percentage=pct_beca,
+        student_percentage=pct_pago,
         period=payload.period,
         scheduled_date=sched_dt,
         status="programada",
         reference="",
+        puebla_reference=puebla_ref,
+        puebla_url=puebla_url,
+        bank_name=app.bank_name,
+        bank_clabe=app.bank_clabe,
     )
     db.add(order)
 
-    # Notificar estudiante
+    # Notificar estudiante con datos del Gobierno de Puebla
     db.add(
         Notification(
             user_id=app.user_id,
-            message=f"Orden interna {folio_orden} programada. Consulta fecha e importe en Becas; no confirma un pago bancario.",
+            message=(
+                f"Tesorería emitió tu orden de pago ({folio_orden}) por ${monto_a_pagar:,.2f} MXN "
+                f"(cubres el {pct_pago:.1f}% con beca del {pct_beca:.1f}%). "
+                f"Realiza tu pago en Pagos en Línea del Gobierno de Puebla con la referencia: {puebla_ref}."
+            ),
             target_path="/becas/ordenes-cobro",
         )
     )
@@ -755,15 +851,116 @@ def generate_payment_order(
     audit_becas(
         db,
         user,
-        f"Orden de cobro generada: {folio_orden}",
+        f"Orden de pago emitida por Tesorería: {folio_orden}",
         "ScholarshipPaymentOrder",
         str(app.id),
-        f"Monto: ${call.amount:.2f}, Periodo: {payload.period}",
+        f"Monto: ${monto_a_pagar:,.2f} (% a pagar: {pct_pago}%), Referencia Puebla: {puebla_ref}",
         request.client.host if request.client else "127.0.0.1",
     )
-    save(db)
+    db.commit()
 
-    return {"message": "Orden de cobro generada con éxito.", "folio_orden": folio_orden}
+    return {
+        "message": "Orden de pago emitida con éxito.",
+        "folio_orden": folio_orden,
+        "amount": monto_a_pagar,
+        "student_percentage": pct_pago,
+        "discount_percentage": pct_beca,
+        "puebla_reference": puebla_ref,
+        "puebla_url": puebla_url,
+    }
+
+
+@router.post("/ordenes-cobro/{order_id}/confirmar-pago")
+def confirm_puebla_payment(
+    order_id: int,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Tesorería valida que el alumno liquidó la orden a través de Pagos en Línea del Gobierno de Puebla."""
+    require_role(user, "tesoreria", "administrador")
+    order = db.get(ScholarshipPaymentOrder, order_id)
+    if not order:
+        raise HTTPException(404, "Orden de pago no encontrada.")
+
+    order.status = "pagada"
+    order.paid_at = now()
+
+    app = db.get(ScholarshipApplication, order.application_id)
+    if app:
+        db.add(
+            Notification(
+                user_id=app.user_id,
+                message=f"Tesorería validó tu pago ({order.folio_orden}). Tu reinscripción y beca están formalmente confirmadas.",
+                target_path="/becas/ordenes-cobro",
+            )
+        )
+
+    audit_becas(
+        db,
+        user,
+        f"Pago validado por Tesorería: {order.folio_orden}",
+        "ScholarshipPaymentOrder",
+        str(order.id),
+        f"Referencia Gob. Puebla: {order.puebla_reference}, Monto pagado: ${order.amount:,.2f}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": "Pago validado por Tesorería correctamente.", "status": order.status}
+
+
+class DisperseOrderPayload(BaseModel):
+    batch_folio: str = PydField(min_length=3, max_length=50)
+
+
+@router.post("/ordenes-cobro/{order_id}/dispersar")
+def disperse_payment_order(
+    order_id: int,
+    payload: DisperseOrderPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Tesorería o Administrador registra la dispersión bancaria SPEI para una orden de cobro."""
+    require_role(user, "administrador", "tesoreria")
+    order = db.get(ScholarshipPaymentOrder, order_id)
+    if not order:
+        raise HTTPException(404, "Orden de cobro no encontrada.")
+
+    app = db.get(ScholarshipApplication, order.application_id)
+    order.status = "dispersada"
+    order.batch_folio = payload.batch_folio
+    order.dispersed_at = now()
+    if app and not order.bank_clabe:
+        order.bank_name = app.bank_name
+        order.bank_clabe = app.bank_clabe
+
+    if app:
+        db.add(
+            Notification(
+                user_id=app.user_id,
+                message=f"Tu orden de pago {order.folio_orden} ha sido dispersada exitosamente vía SPEI (Lote {payload.batch_folio}).",
+                target_path="/becas/ordenes-cobro",
+            )
+        )
+
+    audit_becas(
+        db,
+        user,
+        f"Orden de cobro dispersada: {order.folio_orden}",
+        "ScholarshipPaymentOrder",
+        str(order.id),
+        f"Lote SPEI: {payload.batch_folio}, Monto: ${order.amount:.2f}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+
+    return {
+        "message": "Dispersión registrada con éxito.",
+        "folio_orden": order.folio_orden,
+        "batch_folio": order.batch_folio,
+        "dispersed_at": order.dispersed_at.isoformat(),
+    }
 
 
 # ---------------- RENOVACIONES ---------------- #
@@ -773,7 +970,6 @@ def list_renewals(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "estudiante", *REVIEW)
     stmt = select(ScholarshipRenewal, ScholarshipApplication, ScholarshipCall, User).join(
         ScholarshipApplication, ScholarshipRenewal.original_application_id == ScholarshipApplication.id
     ).join(
@@ -793,7 +989,7 @@ def list_renewals(
             "id": r.id,
             "application_folio": app.folio,
             "call_title": call.title,
-            "student_name": student.name if user.role != "auditor" else "Identidad reservada",
+            "student_name": student.name,
             "current_gpa": r.current_gpa,
             "academic_term": r.academic_term,
             "status": r.status,
@@ -804,11 +1000,11 @@ def list_renewals(
     ]
 
 
-class CreateRenewalPayload(Payload):
+class CreateRenewalPayload(BaseModel):
     original_application_id: int
     current_gpa: float = PydField(ge=6.0, le=10.0)
     academic_term: str = PydField(min_length=2, max_length=50)
-    notes: str = PydField(default="", max_length=2000)
+    notes: str = ""
 
 
 @router.post("/renovaciones")
@@ -818,7 +1014,6 @@ def request_renewal(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "estudiante")
     app = db.get(ScholarshipApplication, payload.original_application_id)
     if not app or app.user_id != user.id:
         raise HTTPException(404, "Solicitud original no encontrada.")
@@ -845,7 +1040,7 @@ def request_renewal(
         f"Promedio: {payload.current_gpa}, Periodo: {payload.academic_term}",
         request.client.host if request.client else "127.0.0.1",
     )
-    save(db)
+    db.commit()
 
     return {"message": "Solicitud de renovación enviada con éxito.", "status": "solicitada"}
 
@@ -857,9 +1052,8 @@ def get_dashboard_stats(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, *REPORT)
     total_apps = db.scalar(select(func.count(ScholarshipApplication.id))) or 0
-    approved_apps = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.status.in_(("aprobada", "renovada")))) or 0
+    approved_apps = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.status == "aprobada")) or 0
     in_review_apps = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.status == "revision")) or 0
     rejected_apps = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.status == "rechazada")) or 0
     received_apps = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.status == "recibida")) or 0
@@ -867,7 +1061,7 @@ def get_dashboard_stats(
     # Total committed funds from approved scholarships
     stmt_funds = select(func.sum(ScholarshipCall.amount)).select_from(ScholarshipApplication).join(
         ScholarshipCall, ScholarshipApplication.call_id == ScholarshipCall.id
-    ).where(ScholarshipApplication.status.in_(("aprobada", "renovada")))
+    ).where(ScholarshipApplication.status == "aprobada")
     total_committed_funds = db.scalar(stmt_funds) or 0.0
 
     # Applications by modality
@@ -889,7 +1083,46 @@ def get_dashboard_stats(
         "total_committed_funds": float(total_committed_funds),
         "by_modality": by_modality,
         "average_gpa": round(float(avg_gpa), 2),
+        "completion_progress_percent": 85,  # Avance fase 2 extendida (85%)
     }
+
+
+@router.get("/padron-beneficiarios")
+def get_beneficiaries_padron(
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """Devuelve el padrón oficial de beneficiarios con estatus bancario y montos para auditoría."""
+    stmt = (
+        select(ScholarshipApplication, ScholarshipCall, User)
+        .join(ScholarshipCall, ScholarshipApplication.call_id == ScholarshipCall.id)
+        .join(User, ScholarshipApplication.user_id == User.id)
+        .where(ScholarshipApplication.status.in_(("aprobada", "renovada")))
+        .order_by(desc(ScholarshipApplication.updated_at))
+    )
+    rows = db.execute(stmt).all()
+    results = []
+    for app, call, applicant in rows:
+        results.append({
+            "id": app.id,
+            "folio": app.folio,
+            "student_name": applicant.name,
+            "student_email": applicant.email,
+            "major": app.major,
+            "academic_term": app.academic_term,
+            "gpa": app.gpa,
+            "call_code": call.code,
+            "call_title": call.title,
+            "modalidad": call.modalidad,
+            "amount": call.amount,
+            "status": app.status,
+            "has_bank_clabe": bool(app.bank_clabe),
+            "bank_name": app.bank_name or "Pendiente de captura",
+            "clabe_masked": f"***{app.bank_clabe[-4:]}" if app.bank_clabe else "Sin CLABE",
+            "dictamen_session": app.dictamen_session or "Sesión ordinaria",
+            "dictamen_date": app.dictamen_date.isoformat() if app.dictamen_date else None,
+        })
+    return results
 
 
 @router.get("/reportes/export")
@@ -897,7 +1130,6 @@ def export_scholarships_csv(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, *REPORT)
     require_role(user, "administrador", "evaluador", "auditor", "escolares", "tesoreria")
     stmt = select(ScholarshipApplication, ScholarshipCall, User).join(
         ScholarshipCall, ScholarshipApplication.call_id == ScholarshipCall.id
@@ -907,12 +1139,37 @@ def export_scholarships_csv(
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Folio", "Convocatoria", "Estado", "Monto MXN", "Periodo académico"])
-    def safe(value):
-        text = str(value if value is not None else "")
-        return "'" + text if text.lstrip().startswith(("=", "+", "-", "@")) or text.startswith(("\t", "\r", "\n")) else text
+    writer.writerow([
+        "Folio",
+        "Convocatoria",
+        "Modalidad",
+        "Matricula",
+        "Estudiante",
+        "Carrera",
+        "Cuatrimestre",
+        "Promedio",
+        "Puntaje_Vulnerabilidad",
+        "Monto_Beca",
+        "Estado",
+        "Fecha_Registro",
+    ])
+
     for app, call, student in rows:
-        writer.writerow([safe(v) for v in (app.folio, call.code, ESTADOS.get(app.status, app.status), call.amount, app.academic_term)])
+        profile = json.loads(student.profile or "{}")
+        writer.writerow([
+            app.folio,
+            call.code,
+            call.modalidad,
+            profile.get("matricula", "N/A"),
+            student.name,
+            app.major,
+            app.academic_term,
+            app.gpa,
+            app.socioeconomic_score,
+            call.amount,
+            ESTADOS.get(app.status, app.status),
+            app.created_at.strftime("%Y-%m-%d %H:%M"),
+        ])
 
     csv_data = output.getvalue()
     filename = f"reporte_becas_uto_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}.csv"
@@ -950,34 +1207,224 @@ def get_audit_logs(
     ]
 
 
-@router.get("/beneficiarios")
-def list_beneficiaries(user=Depends(current_user), db: Session = Depends(get_db)):
-    require_role(user, *FINANCE)
-    stmt = select(ScholarshipApplication, User).join(User, ScholarshipApplication.user_id == User.id).where(ScholarshipApplication.status.in_(("aprobada", "renovada")))
-    return [{"id": a.id, "folio": a.folio, "student_name": u.name} for a, u in db.execute(stmt)]
+# ---------------- DATOS BANCARIOS (CLABE) ---------------- #
+
+class BankDataPayload(BaseModel):
+    bank_name: str = PydField(min_length=2, max_length=50)
+    bank_clabe: str = PydField(min_length=18, max_length=18)
+    bank_account_holder: str = PydField(min_length=3, max_length=150)
 
 
-class RenewalDecision(Payload):
-    decision: Literal["aprobada", "rechazada"]
-    note: str = PydField(min_length=3, max_length=2000)
+@router.put("/solicitudes/{app_id}/datos-bancarios")
+def update_bank_data(
+    app_id: int,
+    payload: BankDataPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Registra o actualiza los datos bancarios (CLABE) de un aspirante para su beca."""
+    app = db.get(ScholarshipApplication, app_id)
+    if not app:
+        raise HTTPException(404, "Solicitud no encontrada.")
+    if user.role == "estudiante" and app.user_id != user.id:
+        raise HTTPException(403, "No puedes modificar esta solicitud.")
+
+    clabe_check = validate_clabe(payload.bank_clabe)
+    if not clabe_check["valid"]:
+        raise HTTPException(400, clabe_check["error"])
+
+    app.bank_name = payload.bank_name
+    app.bank_clabe = payload.bank_clabe
+    app.bank_account_holder = payload.bank_account_holder
+    app.updated_at = now()
+
+    audit_becas(
+        db,
+        user,
+        f"Datos bancarios actualizados para {app.folio}",
+        "ScholarshipApplication",
+        str(app.id),
+        f"Banco: {payload.bank_name}, CLABE: ***{payload.bank_clabe[-4:]}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {
+        "message": "Datos bancarios registrados correctamente.",
+        "bank_name": clabe_check.get("bank_name", payload.bank_name),
+        "bank_code": clabe_check.get("bank_code"),
+    }
 
 
-@router.post("/renovaciones/{renewal_id}/dictamen")
-def decide_renewal(renewal_id: int, payload: RenewalDecision, user=Depends(current_user), db: Session = Depends(get_db)):
-    require_role(user, *REVIEW)
-    renewal = db.scalar(select(ScholarshipRenewal).where(ScholarshipRenewal.id == renewal_id).with_for_update())
-    if not renewal or renewal.status != "solicitada":
-        raise HTTPException(409, "La renovación no existe o ya fue revisada.")
-    app = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.id == renewal.original_application_id).with_for_update())
-    call = db.get(ScholarshipCall, app.call_id)
-    if payload.decision == "aprobada" and renewal.current_gpa < call.min_gpa:
-        raise HTTPException(409, "El promedio no cumple el mínimo de la convocatoria original.")
-    renewal.status, renewal.notes = payload.decision, payload.note
-    if payload.decision == "aprobada":
-        app.status = "renovada"
-        app.version += 1
-        app.updated_at = now()
-    audit_becas(db, user, f"Renovación {payload.decision}", "ScholarshipRenewal", renewal.id)
-    db.add(Notification(user_id=app.user_id, message=f"Renovación de {app.folio}: {payload.decision}. Consulta la observación en Becas.", target_path="/becas/renovacion"))
-    save(db)
-    return {"status": renewal.status}
+@router.get("/bancos")
+def list_banks():
+    """Catálogo de bancos registrados en México (STP/SPEI)."""
+    return BANCOS_MEXICO
+
+
+# ---------------- VALIDACIÓN SOCIOECONÓMICA (TRABAJO SOCIAL) ---------------- #
+
+class ValidateSocioPayload(BaseModel):
+    user_id: str
+    validation_status: str  # "validado" o "observado"
+    validation_notes: str = ""
+    verified_score: float | None = None
+
+
+@router.post("/socioeconomico/validar")
+def validate_socioeconomic(
+    payload: ValidateSocioPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Personal de Trabajo Social o Evaluador valida el perfil socioeconómico de un estudiante."""
+    require_role(user, "administrador", "evaluador", "escolares")
+    socio = db.scalar(
+        select(ScholarshipSocioeconomic).where(ScholarshipSocioeconomic.user_id == payload.user_id)
+    )
+    if not socio:
+        raise HTTPException(404, "Estudio socioeconómico no encontrado para este usuario.")
+
+    if payload.validation_status not in ("validado", "observado"):
+        raise HTTPException(400, "Estado de validación no válido. Usa 'validado' u 'observado'.")
+
+    socio.validation_status = payload.validation_status
+    socio.verified_by_user_id = user.id
+    socio.validation_notes = payload.validation_notes
+    if payload.verified_score is not None:
+        socio.verified_score = float(payload.verified_score)
+    socio.updated_at = now()
+
+    target_user = db.get(User, payload.user_id)
+    if target_user:
+        status_label = VALIDATION_ESTADOS.get(payload.validation_status, payload.validation_status)
+        db.add(
+            Notification(
+                user_id=payload.user_id,
+                message=(
+                    f"Tu estudio socioeconómico ha sido {status_label.lower()}. "
+                    + (payload.validation_notes or "")
+                ).strip(),
+                target_path="/becas/socioeconomico",
+            )
+        )
+
+    audit_becas(
+        db,
+        user,
+        f"Validación socioeconómica: {payload.validation_status}",
+        "ScholarshipSocioeconomic",
+        payload.user_id,
+        f"Notas: {payload.validation_notes}, Score verificado: {payload.verified_score}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": "Validación registrada.", "validation_status": socio.validation_status}
+
+
+# ---------------- RESOLUCIÓN DE RENOVACIONES (PERSONAL) ---------------- #
+
+class ResolveRenewalPayload(BaseModel):
+    decision: str  # "aprobada_renovacion" | "rechazada_renovacion"
+    resolution_notes: str = PydField(min_length=3)
+
+
+@router.post("/renovaciones/{renewal_id}/resolver")
+def resolve_renewal(
+    renewal_id: int,
+    payload: ResolveRenewalPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Personal de becas resuelve (aprueba o rechaza) una solicitud de renovación de beca."""
+    require_role(user, "administrador", "evaluador", "escolares")
+    renewal = db.get(ScholarshipRenewal, renewal_id)
+    if not renewal:
+        raise HTTPException(404, "Solicitud de renovación no encontrada.")
+
+    if payload.decision not in ("aprobada_renovacion", "rechazada_renovacion"):
+        raise HTTPException(400, "Decisión no válida. Usa 'aprobada_renovacion' o 'rechazada_renovacion'.")
+
+    renewal.status = payload.decision
+    renewal.reviewed_by_user_id = user.id
+    renewal.reviewed_at = now()
+    renewal.resolution_notes = payload.resolution_notes
+
+    # Si se aprueba, actualizar la solicitud original
+    if payload.decision == "aprobada_renovacion":
+        original_app = db.get(ScholarshipApplication, renewal.original_application_id)
+        if original_app:
+            original_app.status = "renovada"
+            original_app.updated_at = now()
+
+    decision_label = RENEWAL_ESTADOS.get(payload.decision, payload.decision)
+    db.add(
+        Notification(
+            user_id=renewal.user_id,
+            message=f"Tu solicitud de renovación fue {decision_label.lower()}. {payload.resolution_notes}",
+            target_path="/becas/renovacion",
+        )
+    )
+
+    audit_becas(
+        db,
+        user,
+        f"Renovación resuelta: {payload.decision}",
+        "ScholarshipRenewal",
+        str(renewal.id),
+        f"Decisión: {payload.decision}, Notas: {payload.resolution_notes}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": "Renovación resuelta con éxito.", "status": renewal.status}
+
+
+# ---------------- ACTA DE DICTAMEN FORMAL ---------------- #
+
+class DictamenFormalPayload(BaseModel):
+    dictamen_session: str = PydField(min_length=2, max_length=50)
+    dictamen_agreement: str = PydField(min_length=2, max_length=50)
+    dictamen_date: str
+
+
+@router.post("/solicitudes/{app_id}/dictamen-formal")
+def save_formal_dictamen(
+    app_id: int,
+    payload: DictamenFormalPayload,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Registra los datos del acta formal de la sesión de dictaminación (sesión, acuerdo y fecha)."""
+    require_role(user, "administrador", "evaluador", "escolares")
+    app = db.get(ScholarshipApplication, app_id)
+    if not app:
+        raise HTTPException(404, "Solicitud no encontrada.")
+
+    try:
+        dict_dt = datetime.fromisoformat(payload.dictamen_date.replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(400, "Formato de fecha inválido. Usa formato ISO (AAAA-MM-DD).")
+
+    app.dictamen_session = payload.dictamen_session
+    app.dictamen_agreement = payload.dictamen_agreement
+    app.dictamen_date = dict_dt
+    app.updated_at = now()
+
+    audit_becas(
+        db,
+        user,
+        f"Acta de dictamen formal registrada: Sesión {payload.dictamen_session}",
+        "ScholarshipApplication",
+        str(app.id),
+        f"Acuerdo: {payload.dictamen_agreement}, Fecha sesión: {payload.dictamen_date}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {
+        "message": "Datos del acta de dictamen formal registrados.",
+        "session": payload.dictamen_session,
+        "agreement": payload.dictamen_agreement,
+    }

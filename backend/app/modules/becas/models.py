@@ -37,6 +37,14 @@ class ScholarshipApplication(Base):
     socioeconomic_score: Mapped[float] = mapped_column(Float, default=50.0)
     custom_answers: Mapped[str] = mapped_column(Text, default="{}")
     committee_notes: Mapped[str] = mapped_column(Text, default="")
+    bank_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    bank_clabe: Mapped[str | None] = mapped_column(String(18), nullable=True)
+    bank_account_holder: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    dictamen_session: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    dictamen_agreement: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    dictamen_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    discount_percentage: Mapped[float | None] = mapped_column(Float, nullable=True)
+    student_percentage: Mapped[float | None] = mapped_column(Float, nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
@@ -74,6 +82,12 @@ class ScholarshipSocioeconomic(Base):
     dependents_count: Mapped[int] = mapped_column(Integer, default=1)
     housing_type: Mapped[str] = mapped_column(String(30), default="propia")
     vulnerability_score: Mapped[float] = mapped_column(Float, default=50.0)
+    validation_status: Mapped[str] = mapped_column(String(30), default="pendiente")
+    verified_by_user_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
+    validation_notes: Mapped[str] = mapped_column(Text, default="")
+    verified_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     details: Mapped[str] = mapped_column(Text, default="{}")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     __table_args__ = (Index("ix_scholarship_socio_user_id", "user_id"),)
@@ -91,6 +105,16 @@ class ScholarshipPaymentOrder(Base):
     scheduled_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(String(25), default="programada")
     reference: Mapped[str] = mapped_column(String(100), default="")
+    cuota_base: Mapped[float | None] = mapped_column(Float, nullable=True)
+    discount_percentage: Mapped[float | None] = mapped_column(Float, nullable=True)
+    student_percentage: Mapped[float | None] = mapped_column(Float, nullable=True)
+    puebla_reference: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    puebla_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    bank_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    bank_clabe: Mapped[str | None] = mapped_column(String(18), nullable=True)
+    batch_folio: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    dispersed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     __table_args__ = (Index("one_scholarship_payment_period", "application_id", "period", unique=True), Index("ix_scholarship_orders_app_id", "application_id"))
 
@@ -106,6 +130,13 @@ class ScholarshipRenewal(Base):
     academic_term: Mapped[str] = mapped_column(String(50))
     status: Mapped[str] = mapped_column(String(25), default="solicitada")
     notes: Mapped[str] = mapped_column(Text, default="")
+    reviewed_by_user_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    resolution_notes: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     __table_args__ = (Index("one_scholarship_renewal_term", "original_application_id", "academic_term", unique=True),)
 
