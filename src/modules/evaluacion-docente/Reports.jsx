@@ -21,6 +21,9 @@ export function Results() {
   const periods = useAsync(() => api(`${BASE}/periodos`), []),
     [selection, setSelection] = useState("");
   const id = selection || params.get("periodo") || periods.data?.[0]?.id || "";
+  const [analisisIA, setAnalisisIA] = useState({});
+  const [cargandoIA, setCargandoIA] = useState(null);
+  const [errorIA, setErrorIA] = useState("");
   const period = periods.data?.find((p) => String(p.id) === String(id));
   const visible = period && (admin || period.status === "publicado");
   const state = useAsync(
@@ -28,6 +31,34 @@ export function Results() {
       visible ? api(`${BASE}/resultados?period_id=${id}`) : Promise.resolve([]),
     [id, visible],
   );
+
+async function analizarDocente(teacherId) {
+  setCargandoIA(teacherId);
+  setErrorIA("");
+
+  try {
+    const respuesta = await api(
+      `${BASE}/analisis-ia?period_id=${encodeURIComponent(id)}&teacher_id=${encodeURIComponent(teacherId)}`,
+      { method: "POST" }
+    );
+
+    const resultado = respuesta.resultados?.[0];
+
+    if (!resultado) {
+      throw new Error("No se recibió un análisis de la IA.");
+    }
+
+    setAnalisisIA((anteriores) => ({
+      ...anteriores,
+      [teacherId]: resultado.analisis,
+    }));
+  } catch (error) {
+    setErrorIA(error.message || "No se pudo generar el análisis.");
+  } finally {
+    setCargandoIA(null);
+  }
+}
+
   return (
     <>
       <Heading
@@ -173,7 +204,41 @@ export function Results() {
                         </table>
                       </div>
                     </details>
-                    <p className="work-help">{report.calculation}</p>
+
+                  <p className="work-help">{report.calculation}</p>
+
+<div className="work-actions">
+  <button
+    type="button"
+    className="button button-secondary"
+    disabled={cargandoIA !== null}
+    onClick={() => analizarDocente(report.teacher_id)}
+  >
+    {cargandoIA === report.teacher_id
+      ? "Analizando con IA..."
+      : "Analizar con IA"}
+  </button>
+</div>
+
+
+{analisisIA[report.teacher_id] && (
+  <section className="work-section">
+    <h3>Análisis con inteligencia artificial</h3>
+    <p className="work-help">
+Análisis de resultados y comentarios.
+ Cuando existen observaciones académicas suficientes, Qwen genera recomendaciones que requieren revisión humana.    </p>
+    <p style={{ whiteSpace: "pre-wrap" }}>
+      {analisisIA[report.teacher_id]}
+    </p>
+  </section>
+)}
+
+{errorIA && (
+  <p role="alert" className="work-help">
+    {errorIA}
+  </p>
+)}
+
                     <section className="work-section">
                       <h3>Comentarios revisados</h3>
                       {report.comments.length ? (

@@ -166,3 +166,200 @@ def test_concurrent_evaluation_send_is_unique(clients):
         assert sorted(pool.map(send, range(2))) == [201, 409]
     with SessionLocal() as db:
         assert len(list(db.scalars(select(Submission).where(Submission.assignment_id == ids[0])))) == 1
+
+
+def test_evaluation_ai_unifies_comment_batches(monkeypatch):
+    import importlib
+
+    modulo = importlib.import_module(
+        "app.modules.evaluacion_docente.router"
+    )
+
+    reporte = {
+        "available": True,
+        "teacher_id": "docente-prueba",
+        "average": 4.5,
+        "scale": [{"value": 1}, {"value": 5}],
+        "sections": [
+            {"name": "Planeación", "average": 4.8},
+            {"name": "Comunicación", "average": 4.2},
+        ],
+        "comments": [
+            "Explica claramente los temas.",
+            "Resuelve las dudas durante la clase.",
+            "Sería útil incluir más ejercicios.",
+            "Las actividades son interesantes.",
+            "Se necesitan más ejemplos prácticos.",
+        ],
+    }
+
+    monkeypatch.setattr(
+        modulo,
+        "results",
+        lambda *args, **kwargs: [reporte],
+    )
+
+    llamadas = []
+
+    def ollama_simulado(instrucciones):
+        llamadas.append(instrucciones)
+        return (
+            "Categorías: Metodología.\n"
+            "Temas recurrentes: No identificados.\n"
+            "Fortalezas mencionadas: Explicaciones claras.\n"
+            "Áreas de oportunidad: Ejercicios prácticos.\n"
+            "Problemas recurrentes: No identificados.\n"
+            "Resumen ejecutivo: Se identificaron observaciones "
+            "sobre explicaciones y ejercicios."
+        )
+
+    monkeypatch.setattr(
+        modulo,
+        "analizar_con_ollama",
+        ollama_simulado,
+    )
+
+    respuesta = modulo.generar_analisis_ia(
+        period_id=1,
+        teacher_id="docente-prueba",
+        user=None,
+        db=None,
+    )
+
+    texto = respuesta["resultados"][0]["analisis"]
+
+    assert len(llamadas) == 2
+    assert "RESULTADO: Promedio general de 4.50/5." in texto
+    assert "Categorías:" in texto
+    assert "Resumen ejecutivo:" in texto
+    assert "LOTE 1" not in texto
+    assert "LOTE 2" not in texto
+
+
+
+def test_evaluation_ai_counts_recurrent_topics(monkeypatch):
+    import importlib
+
+    modulo = importlib.import_module(
+        "app.modules.evaluacion_docente.router"
+    )
+
+    reporte = {
+        "available": True,
+        "teacher_id": "docente-prueba",
+        "average": 4.5,
+        "scale": [{"value": 1}, {"value": 5}],
+        "sections": [
+            {"name": "Planeación", "average": 4.8},
+            {"name": "Comunicación", "average": 4.2},
+        ],
+        "comments": [
+            "Necesitamos más ejercicios en clase.",
+            "Sería bueno incluir ejercicios prácticos.",
+            "El docente siempre es puntual.",
+            "Explica claramente los temas.",
+        ],
+    }
+
+    monkeypatch.setattr(
+        modulo,
+        "results",
+        lambda *args, **kwargs: [reporte],
+    )
+
+    def ollama_simulado(instrucciones):
+        return (
+            "Categorías: Metodología.\n"
+            "Temas recurrentes: Puntualidad.\n"
+            "Fortalezas mencionadas: Explicaciones claras.\n"
+            "Áreas de oportunidad: Más ejercicios.\n"
+            "Problemas recurrentes: Puntualidad.\n"
+            "Resumen ejecutivo: Observaciones sobre las clases."
+        )
+
+    monkeypatch.setattr(
+        modulo,
+        "analizar_con_ollama",
+        ollama_simulado,
+    )
+
+    respuesta = modulo.generar_analisis_ia(
+        period_id=1,
+        teacher_id="docente-prueba",
+        user=None,
+        db=None,
+    )
+
+    texto = respuesta["resultados"][0]["analisis"]
+
+    assert "Ejemplos prácticos (2 comentarios)" in texto
+    assert "Temas recurrentes: Puntualidad" not in texto
+    assert "Pendiente de verificar si las menciones" in texto
+
+
+
+def test_evaluation_ai_hides_personal_data_before_ollama(monkeypatch):
+    import importlib
+
+    modulo = importlib.import_module(
+        "app.modules.evaluacion_docente.router"
+    )
+
+    reporte = {
+        "available": True,
+        "teacher_id": "docente-prueba",
+        "average": 4.5,
+        "scale": [{"value": 1}, {"value": 5}],
+        "sections": [
+            {"name": "Planeación", "average": 4.8},
+        ],
+        "comments": [
+            "Explica claramente. Mi correo es alumno123@universidad.edu.mx.",
+            "Necesitamos más ejercicios. Mi teléfono es 4421234567.",
+            "Faltan ejemplos. Mi matrícula: A12345678.",
+        ],
+    }
+
+    monkeypatch.setattr(
+        modulo,
+        "results",
+        lambda *args, **kwargs: [reporte],
+    )
+
+    textos_enviados = []
+
+    def ollama_simulado(instrucciones):
+        textos_enviados.append(instrucciones)
+        return (
+            "Categorías: Metodología.\n"
+            "Temas recurrentes: No identificados.\n"
+            "Fortalezas mencionadas: Explicaciones claras.\n"
+            "Áreas de oportunidad: Más ejercicios.\n"
+            "Problemas recurrentes: No identificados.\n"
+            "Resumen ejecutivo: Se mencionan explicaciones y ejercicios."
+        )
+
+    monkeypatch.setattr(
+        modulo,
+        "analizar_con_ollama",
+        ollama_simulado,
+    )
+
+    modulo.generar_analisis_ia(
+        period_id=1,
+        teacher_id="docente-prueba",
+        user=None,
+        db=None,
+    )
+
+    assert textos_enviados
+
+    contenido = "\n".join(textos_enviados)
+
+    assert "alumno123@universidad.edu.mx" not in contenido
+    assert "4421234567" not in contenido
+    assert "A12345678" not in contenido
+
+    assert "[CORREO OCULTO]" in contenido
+    assert "[TELÉFONO OCULTO]" in contenido
+    assert "[MATRÍCULA OCULTA]" in contenido
