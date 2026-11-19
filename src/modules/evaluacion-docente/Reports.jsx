@@ -11,9 +11,7 @@ import {
   useMutation,
   Status,
 } from "../../shared/Work";
-
 const BASE = "/evaluacion-docente";
-
 export function Results() {
   const { user } = useAuth(),
     admin = user.role === "administrador",
@@ -31,23 +29,18 @@ export function Results() {
       visible ? api(`${BASE}/resultados?period_id=${id}`) : Promise.resolve([]),
     [id, visible],
   );
-
 async function analizarDocente(teacherId) {
   setCargandoIA(teacherId);
   setErrorIA("");
-
   try {
     const respuesta = await api(
       `${BASE}/analisis-ia?period_id=${encodeURIComponent(id)}&teacher_id=${encodeURIComponent(teacherId)}`,
       { method: "POST" }
     );
-
     const resultado = respuesta.resultados?.[0];
-
     if (!resultado) {
       throw new Error("No se recibió un análisis de la IA.");
     }
-
     setAnalisisIA((anteriores) => ({
       ...anteriores,
       [teacherId]: resultado.analisis,
@@ -58,7 +51,6 @@ async function analizarDocente(teacherId) {
     setCargandoIA(null);
   }
 }
-
   return (
     <>
       <Heading
@@ -204,9 +196,7 @@ async function analizarDocente(teacherId) {
                         </table>
                       </div>
                     </details>
-
                   <p className="work-help">{report.calculation}</p>
-
 <div className="work-actions">
   <button
     type="button"
@@ -218,18 +208,52 @@ async function analizarDocente(teacherId) {
       ? "Analizando con IA..."
       : "Analizar con IA"}
   </button>
-</div>
 
+</div>
 
 {analisisIA[report.teacher_id] && (
   <section className="work-section">
-    <h3>Análisis con inteligencia artificial</h3>
-    <p className="work-help">
-Análisis de resultados y comentarios.
- Cuando existen observaciones académicas suficientes, Qwen genera recomendaciones que requieren revisión humana.    </p>
-    <p style={{ whiteSpace: "pre-wrap" }}>
-      {analisisIA[report.teacher_id]}
-    </p>
+    <h3>Resumen de evaluación docente</h3>
+
+    {(() => {
+      const lineas = analisisIA[report.teacher_id].split("\n");
+
+      const obtener = (titulo) => {
+        const linea = lineas.find((l) => l.startsWith(titulo));
+        return linea ? linea.slice(titulo.length).trim() : "";
+      };
+
+      const fortalezas = obtener("Fortalezas mencionadas:");
+      const mejoras = obtener("Áreas de oportunidad:");
+      const recurrentes = obtener("Temas recurrentes:");
+
+      return (
+        <div>
+          {fortalezas && (
+            <p>
+              <strong>Valoración positiva:</strong> {fortalezas}
+            </p>
+          )}
+
+          {mejoras && (
+            <p>
+              <strong>Áreas de mejora:</strong> {mejoras}
+            </p>
+          )}
+
+          {recurrentes && (
+            <p>
+              <strong>Temas recurrentes:</strong> {recurrentes}
+            </p>
+          )}
+
+          <p className="work-help">
+            Análisis asistido por IA. Requiere revisión humana.
+          </p>
+  
+        </div>
+      );
+    })()}
   </section>
 )}
 
@@ -238,7 +262,6 @@ Análisis de resultados y comentarios.
     {errorIA}
   </p>
 )}
-
                     <section className="work-section">
                       <h3>Comentarios revisados</h3>
                       {report.comments.length ? (
@@ -265,7 +288,6 @@ Análisis de resultados y comentarios.
     </>
   );
 }
-
 export function TeacherSubjects() {
   const state = useAsync(() => api(`${BASE}/asignaciones`), []);
   return (
@@ -297,7 +319,6 @@ export function TeacherSubjects() {
     </>
   );
 }
-
 export function ModerateComments() {
   const periods = useAsync(() => api(`${BASE}/periodos`), []),
     [selection, setSelection] = useState("");
@@ -310,6 +331,7 @@ export function ModerateComments() {
   );
   const [selected, setSelected] = useState(null),
     mutation = useMutation();
+  const [teacherFilter, setTeacherFilter] = useState("");
   async function submit(e) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -348,7 +370,10 @@ export function ModerateComments() {
             label="Periodo"
             as="select"
             value={id}
-            onChange={(e) => setSelection(e.target.value)}
+            onChange={(e) => {
+              setTeacherFilter("");
+              setSelection(e.target.value);
+            }}
           >
             {periods.data?.map((p) => (
               <option key={p.id} value={p.id}>
@@ -356,21 +381,78 @@ export function ModerateComments() {
               </option>
             ))}
           </Field>
+          <Field
+            label="Docente"
+            as="select"
+            value={teacherFilter}
+            onChange={(e) => setTeacherFilter(e.target.value)}
+          >
+            <option value="">Todos los docentes</option>
+            {[
+              ...new Map(
+                (state.data || [])
+                  .filter((c) => c.teacher_id)
+                  .map((c) => [
+                    String(c.teacher_id),
+                    c.teacher_name || `Docente ${c.teacher_id}`,
+                  ])
+              ).entries(),
+            ].map(([teacherId, teacherName]) => (
+              <option key={teacherId} value={teacherId}>
+                {teacherName}
+              </option>
+            ))}
+          </Field>
         </div>
         <LoadState state={state} empty="No hay comentarios en este periodo">
           <div className="work-records">
-            {state.data?.map((c) => (
+            {state.data
+              ?.filter(
+                (c) => !teacherFilter || String(c.teacher_id) === teacherFilter
+              )
+              .map((c) => (
               <article className="work-record" key={c.id}>
                 <div>
-                  <Status value={c.reviewed ? "validado" : "pendiente"}>
-                    {c.reviewed ? "Revisado" : "Pendiente de revisión"}
-                  </Status>
-                  <p>{c.comment}</p>
-                  {c.reviewed && (
-                    <p className="work-help">
-                      Versión para publicar:{" "}
-                      {c.public_comment || "Excluido del informe"}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      flexWrap: "wrap",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <strong>
+                      {c.teacher_name || "Docente sin nombre registrado"}
+                    </strong>
+                    <Status value={c.reviewed ? "validado" : "pendiente"}>
+                      {c.reviewed ? "Revisado" : "Pendiente de revisión"}
+                    </Status>
+                  </div>
+                  <div style={{ marginBottom: c.reviewed ? 16 : 0 }}>
+                    <p className="work-help" style={{ marginBottom: 6 }}>
+                      Comentario original
                     </p>
+                    <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                      {c.comment}
+                    </p>
+                  </div>
+                  {c.reviewed && (
+                    <div
+                      style={{
+                        padding: 12,
+                        borderRadius: 8,
+                        background: "rgba(127, 127, 127, 0.07)",
+                      }}
+                    >
+                      <p className="work-help" style={{ marginTop: 0, marginBottom: 6 }}>
+                        Versión para publicar
+                      </p>
+                      <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                        {c.public_comment || "Excluido del informe"}
+                      </p>
+                    </div>
                   )}
                 </div>
                 {period?.status !== "publicado" && (

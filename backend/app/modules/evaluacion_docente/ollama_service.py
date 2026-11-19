@@ -3,6 +3,10 @@ import json
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
+"""
+Envía instrucciones a Ollama utilizando Qwen 2.5 1.5B
+y devuelve el análisis generado.
+"""
 
 def analizar_con_ollama(texto):
     """
@@ -11,8 +15,8 @@ def analizar_con_ollama(texto):
     """
 
     datos = {
-        "model": "qwen2.5:0.5b",
-        "prompt": texto,
+"model": "qwen2.5:1.5b",      
+  "prompt": texto,
         "stream": False,
         "options": {
     "num_predict": 260,
