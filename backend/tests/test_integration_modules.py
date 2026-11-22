@@ -572,3 +572,40 @@ def test_evaluation_ai_classifies_comments(monkeypatch):
     assert modulo.clasificar_comentario_ia("Que lleguen temprano.") == "PUNTUALIDAD"
     monkeypatch.setattr(modulo, "analizar_con_ollama", lambda *args: "Una respuesta inesperada")
     assert modulo.clasificar_comentario_ia("Comentario ambiguo.") == "NO_CLASIFICADO"
+
+def test_evaluation_rejects_personal_data_in_comments(clients):
+    period, teacher, ids = setup_evaluation(clients)
+
+    admin = clients["administrador"]
+
+    respuesta = clients["estudiante"].post(
+        f"{EVD}/asignaciones/{ids[0]}/respuesta",
+        json={
+            "answers": {"q1": 1, "q2": 2, "q3": 3},
+            "comment": "Comentario para revisión.",
+        },
+    )
+    assert respuesta.status_code == 201
+
+    comentarios = admin.get(
+        f"{EVD}/comentarios?period_id={period}"
+    ).json()
+
+    submission_id = comentarios[0]["id"]
+
+    for texto in (
+        "Mi correo es alumno@universidad.edu.mx",
+        "Mi teléfono es 4421234567",
+        "Mi matrícula: A12345678",
+    ):
+        respuesta = admin.post(
+            f"{EVD}/comentarios/{submission_id}/revision",
+            json={"public_comment": texto},
+        )
+        assert respuesta.status_code == 422
+
+    respuesta = admin.post(
+        f"{EVD}/comentarios/{submission_id}/revision",
+        json={"public_comment": "Mejorar las actividades prácticas."},
+    )
+    assert respuesta.status_code == 200

@@ -919,18 +919,54 @@ class Moderation(Payload):
 
 
 @router.post("/comentarios/{submission_id}/revision")
-def moderate(submission_id: int, payload: Moderation, user=Depends(evaluation_user), db: Session = Depends(get_db)):
+
+@router.post("/comentarios/{submission_id}/revision")
+def moderate(
+    submission_id: int,
+    payload: Moderation,
+    user=Depends(evaluation_user),
+    db: Session = Depends(get_db),
+):
     require_role(user, "administrador")
+
     s = db.get(Submission, submission_id)
     if not s:
         raise HTTPException(404, "Comentario no encontrado.")
+
     a = db.get(Assignment, s.assignment_id)
     period = period_record(db, a.period_id, True)
+
     if period.status == "publicado":
-        raise HTTPException(409, "El periodo ya está publicado; sus comentarios están cerrados.")
-    s.public_comment, s.comment_reviewed = payload.public_comment, True
+        raise HTTPException(
+            409,
+            "El periodo ya está publicado; sus comentarios están cerrados."
+        )
+
+    comentario = payload.public_comment.strip()
+
+    patrones = (
+        r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b",
+        r"(?<!\w)(?:\+52[\s-]?)?(?:\d[\s().-]?){9}\d(?!\w)",
+        r"\b(?:matr[ií]cula|no\.?\s*de\s*control)"
+        r"\s*[:#-]?\s*[A-Za-z0-9-]{5,20}\b",
+    )
+
+    if any(
+        re.search(patron, comentario, re.IGNORECASE)
+        for patron in patrones
+    ):
+        raise HTTPException(
+            422,
+            "El comentario contiene posibles datos personales. "
+            "Elimínalos antes de aprobarlo."
+        )
+
+    s.public_comment = comentario
+    s.comment_reviewed = True
+
     event(db, user, f"EVD comentario {s.id} revisado")
     commit(db)
+
     return {"message": "Revisión guardada."}
 
 
