@@ -124,3 +124,26 @@ class GroupSubject(Base):
             name="unique_group_teacher_subject",
         ),
     )
+
+class AcademicFeedback(Base):
+    __tablename__ = "evaluation_academic_feedback"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    period_id: Mapped[int] = mapped_column(
+        ForeignKey("evaluation_periods.id")
+    )
+    teacher_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id")
+    )
+    feedback: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=now
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "period_id",
+            "teacher_id",
+            name="one_academic_feedback_per_teacher_period",
+        ),
+    )

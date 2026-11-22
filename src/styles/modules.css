@@ -390,23 +390,132 @@
     flex-grow: 1;
   }
 }
+
+
 @media print {
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
+
+  /* Ocultar elementos que no pertenecen al informe */
   .app-header,
   .app-footer,
   .breadcrumb-bar,
   .module-header,
   .work-toolbar,
   .no-print,
-  .skip-link {
+  .skip-link,
+  .work-report .work-actions,
+  .work-report details > summary {
     display: none !important;
   }
+
+  /* Ocultar título y descripción de la página */
+  .service-work > .work-heading {
+    display: none !important;
+  }
+
   .container {
     width: 100%;
+    max-width: none;
   }
+
+  /* Un docente por página */
   .work-report {
-    break-inside: avoid;
+    padding: 4mm 0;
+    margin: 0;
+    break-inside: auto;
+    font-size: 11px;
   }
+
+  .work-report + .work-report {
+    break-before: page;
+  }
+
+  /* Reducir espacios */
+  .work-report h2 {
+    font-size: 18px;
+    margin: 4px 0;
+    break-after: avoid;
+  }
+
+  .work-report h3 {
+    font-size: 14px;
+    margin: 5px 0;
+    break-after: avoid;
+  }
+
+  .work-report .result-average {
+    font-size: 28px;
+  }
+
+  .work-meta {
+    margin: 6px 0;
+    gap: 8px 20px;
+  }
+
+  .work-bars {
+    gap: 6px;
+    margin: 10px 0;
+  }
+
+  .work-section {
+    padding: 10px 0;
+  }
+
   .work-table {
     overflow: visible;
+    margin: 8px 0;
   }
+
+  .work-table table {
+    min-width: 0;
+    width: 100%;
+    font-size: 10px;
+  }
+
+  .work-table th,
+  .work-table td {
+    padding: 5px 6px;
+  }
+
+  .work-table thead {
+    display: table-header-group;
+  }
+
+  .work-table tr,
+  .work-comment {
+    break-inside: avoid;
+  }
+
+  .work-comment {
+    padding: 6px 0;
+    font-size: 11px;
+  }
+
+  .work-help {
+    font-size: 10px;
+    line-height: 1.3;
+    margin: 5px 0;
+  }
+
+    /* Imprimir únicamente el docente seleccionado */
+  body[data-print-teacher] .work-report {
+    display: none !important;
+  }
+
+  body[data-print-teacher] .work-report.print-selected {
+    display: block !important;
+  }
+
+    /* Ocultar encabezado general al imprimir */
+  .work-page > header,
+  .work-page > .work-heading {
+    display: none !important;
+  }
+
+  body[data-print-teacher] .work-heading {
+  display: none !important;
+}
 }

@@ -30,6 +30,8 @@ from .models import (
     Assignment,
     Submission,
     ImprovementPlan,
+    AcademicFeedback,
+    AcademicGroup,
     AcademicGroup,
     GroupSubject,
     GroupEnrollment,
@@ -976,7 +978,23 @@ def results_for(db, period, teacher_id):
         raise HTTPException(404, "Docente no encontrado.")
     rows = db.execute(select(Assignment, Submission).join(Submission, Submission.assignment_id == Assignment.id).where(Assignment.period_id == period.id, Assignment.teacher_id == teacher_id)).all()
     distinct_students = len({a.student_id for a, s in rows})
+    asignaturas = sorted({
+        a.subject
+        for a, s in rows
+        if a.subject
+    })
+    carreras = sorted(set(db.execute(
+        select(AcademicGroup.career)
+        .join(GroupSubject, GroupSubject.group_id == AcademicGroup.id)
+        .where(
+            GroupSubject.teacher_id == teacher_id,
+            GroupSubject.subject.in_(asignaturas),
+            AcademicGroup.name.in_({a.group_name for a, s in rows}),
+        )
+    ).scalars().all()))
     base = {"teacher_id": teacher_id, "teacher_name": teacher.name, "period_id": period.id, "period_title": period.title,
+        "subjects": asignaturas,
+        "careers": carreras,
         "published": period.status == "publicado", "minimum_responses": period.minimum_responses}
     if distinct_students < period.minimum_responses:
         return {**base, "available": False, "reason": "No se alcanzó el mínimo de participantes configurado para proteger la identidad.", "questions": [], "sections": [], "comments": []}
@@ -1430,12 +1448,116 @@ def plans(user=Depends(evaluation_user), db: Session = Depends(get_db)):
         "action": p.action, "evidence": p.evidence, "due_date": p.due_date, "status": p.status, "version": p.version} for p, u, period in db.execute(stmt.order_by(ImprovementPlan.id.desc()))]
 
 
+
+    class AcademicFeedback(Base):
+        __tablename__ = "evaluation_academic_feedback"
+
+        id: Mapped[int] = mapped_column(primary_key=True)
+        period_id: Mapped[int] = mapped_column(
+            ForeignKey("evaluation_periods.id")
+        )
+        teacher_id: Mapped[str] = mapped_column(
+            ForeignKey("users.id")
+        )
+        feedback: Mapped[str] = mapped_column(Text)
+        created_at: Mapped[datetime] = mapped_column(
+            DateTime(timezone=True), default=now
+        )
+
+        __table_args__ = (
+            UniqueConstraint(
+                "period_id",
+                "teacher_id",
+                name="one_academic_feedback_per_teacher_period",
+            ),
+        )
+
 class PlanPayload(Payload):
     period_id: int
     teacher_id: str
     action: str = Field(min_length=10, max_length=4000)
     due_date: datetime
 
+class FeedbackPayload(Payload):
+    period_id: int
+    teacher_id: str
+    feedback: str = Field(min_length=10, max_length=4000)
+
+@router.get("/retroalimentacion")
+def get_feedback(
+        period_id: int,
+        user=Depends(evaluation_user),
+        db: Session = Depends(get_db),
+    ):
+        require_role(user, "docente", "administrador")
+
+        period = period_record(db, period_id)
+
+        if user.role == "docente" and period.status != "publicado":
+            raise HTTPException(
+                403, "Los resultados de este periodo aún no están publicados."
+            )
+
+        stmt = select(AcademicFeedback).where(
+            AcademicFeedback.period_id == period_id
+        )
+
+        if user.role == "docente":
+            stmt = stmt.where(AcademicFeedback.teacher_id == user.id)
+
+        return [
+            {
+                "id": item.id,
+                "period_id": item.period_id,
+                "teacher_id": item.teacher_id,
+                "feedback": item.feedback,
+            }
+            for item in db.scalars(stmt)
+        ]
+
+@router.post("/retroalimentacion", status_code=201)
+def create_feedback(
+    payload: FeedbackPayload,
+    user=Depends(evaluation_user),
+    db: Session = Depends(get_db),
+):
+    require_role(user, "administrador")
+
+    period = period_record(db, payload.period_id)
+
+    if period.status != "publicado":
+        raise HTTPException(
+            409, "El periodo debe estar publicado."
+        )
+
+    if not results_for(db, period, payload.teacher_id)["available"]:
+        raise HTTPException(
+            409, "No hay suficientes evaluaciones para registrar retroalimentación."
+        )
+
+    existing = db.scalar(
+        select(AcademicFeedback).where(
+            AcademicFeedback.period_id == payload.period_id,
+            AcademicFeedback.teacher_id == payload.teacher_id,
+        )
+    )
+
+    if existing:
+        raise HTTPException(
+            409, "Ya existe retroalimentación para este docente y periodo."
+        )
+
+    feedback = AcademicFeedback(**payload.model_dump())
+    db.add(feedback)
+
+    event(
+        db,
+        user,
+        f"EVD retroalimentación registrada en periodo {period.id}",
+    )
+    commit(db)
+
+    return {"id": feedback.id}
 
 @router.post("/planes", status_code=201)
 def create_plan(payload: PlanPayload, user=Depends(evaluation_user), db: Session = Depends(get_db)):

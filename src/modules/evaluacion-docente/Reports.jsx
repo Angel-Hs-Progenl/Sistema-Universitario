@@ -29,6 +29,20 @@ export function Results() {
       visible ? api(`${BASE}/resultados?period_id=${id}`) : Promise.resolve([]),
     [id, visible],
   );
+
+  const plans = useAsync(
+  () => visible ? api(`${BASE}/planes`) : Promise.resolve([]),
+  [visible],
+);
+
+const feedbacks = useAsync(
+  () =>
+    visible && id
+      ? api(`${BASE}/retroalimentacion?period_id=${id}`)
+      : Promise.resolve([]),
+  [id, visible],
+);
+
 async function analizarDocente(teacherId) {
   setCargandoIA(teacherId);
   setErrorIA("");
@@ -53,7 +67,8 @@ async function analizarDocente(teacherId) {
 }
   return (
     <>
-      <Heading
+    <div className="no-print">
+       <Heading
         eyebrow={
           admin
             ? "Evaluación docente / Coordinación"
@@ -83,6 +98,10 @@ async function analizarDocente(teacherId) {
           ? "Consulta resultados agregados y verifica el umbral de privacidad antes de publicar."
           : "Consulta tus resultados y los comentarios revisados después de su publicación."}
       </Heading>
+
+      
+    </div>
+     
       <LoadState state={periods} empty="No hay periodos asignados">
         <div className="work-toolbar no-print">
           <Field
@@ -116,12 +135,57 @@ async function analizarDocente(teacherId) {
             empty="No hay resultados registrados para este periodo"
           >
             {state.data?.map((report) => (
-              <article className="work-report" key={report.teacher_id}>
-                <span className="eyebrow">
+          <article className="work-report" key={report.teacher_id} data-teacher-id={report.teacher_id}
+>                <span className="eyebrow">
                   {report.period_title} ·{" "}
                   {report.published ? "Publicado" : "Vista interna"}
                 </span>
                 <h2>{report.teacher_name}</h2>
+                <div className="work-actions no-print">
+                  <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => {
+                const teacherId = String(report.teacher_id);
+
+                document.querySelectorAll(".work-report").forEach((element) => {
+                  element.classList.toggle(
+                    "print-selected",
+                    element.dataset.teacherId === teacherId
+                  );
+                });
+
+                document.body.dataset.printTeacher = teacherId;
+
+                window.addEventListener(
+                  "afterprint",
+                  () => {
+                    delete document.body.dataset.printTeacher;
+
+                    document.querySelectorAll(".work-report").forEach((element) => {
+                      element.classList.remove("print-selected");
+                    });
+                  },
+                  { once: true }
+                );
+
+                window.print();
+              }}
+              >
+                Descargar PDF
+              </button>
+            </div>
+           {report.subjects?.length > 0 && (
+                  <p className="work-help">
+           <strong>Asignaturas:</strong> {report.subjects.join(", ")}
+           </p>
+        )}
+
+        {report.careers?.length > 0 && (
+          <p className="work-help">
+          <strong>Carreras:</strong> {report.careers.join(", ")}
+          </p>
+            )}
                 {report.available ? (
                   <>
                     <dl className="work-meta">
@@ -163,7 +227,7 @@ async function analizarDocente(teacherId) {
                         </div>
                       ))}
                     </div>
-                    <details>
+                    <details open>
                       <summary className="text-link">
                         Consultar resultados por pregunta
                       </summary>
@@ -276,6 +340,109 @@ async function analizarDocente(teacherId) {
                         </p>
                       )}
                     </section>
+              <section className="work-section">
+              <h3>Retroalimentación de Dirección Académica</h3>
+
+               {admin && report.available && !feedbacks.data?.some(
+              (item) =>
+                String(item.teacher_id) === String(report.teacher_id) &&
+                String(item.period_id) === String(id)
+            ) && (
+              <form
+                className="work-section no-print"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget;
+                  const feedback = new FormData(form).get("feedback");
+
+                  try {
+                    await api(`${BASE}/retroalimentacion`, {
+                      method: "POST",
+                      body: {
+                        period_id: Number(id),
+                        teacher_id: report.teacher_id,
+                        feedback,
+                      },
+                    });
+
+                    await feedbacks.refresh();
+                    form.reset();
+                  } catch (error) {
+                    alert(error.message || "No se pudo guardar la retroalimentación.");
+                  }
+                }}
+              >
+                <h3>Registrar retroalimentación</h3>
+                <textarea
+                  name="feedback"
+                  required
+                  minLength={10}
+                  maxLength={4000}
+                  rows={4}
+                  placeholder="Escribe la retroalimentación de Dirección Académica..."
+                />
+                <div className="work-actions">
+                  <button type="submit" className="button button-primary">
+                    Guardar retroalimentación
+                  </button>
+                </div>
+              </form>
+            )}
+
+              {(() => {
+                const feedback = feedbacks.data?.find(
+                  (item) =>
+                    String(item.teacher_id) === String(report.teacher_id) &&
+                    String(item.period_id) === String(id)
+                );
+
+                if (feedbacks.loading) {
+                  return (
+                    <p className="work-help">Cargando retroalimentación...</p>
+                  );
+                }
+
+                return (
+                  <p className="work-help">
+                    {feedback?.feedback ||
+                      "Pendiente de registrar por Dirección Académica."}
+                  </p>
+                );
+              })()}
+            </section>                       
+                                
+                  <section className="work-section">
+                    <h3>Plan de acción</h3>
+                    {(() => {
+                      const plan = plans.data?.find(
+                        (p) =>
+                          String(p.teacher_id) === String(report.teacher_id) &&
+                          String(p.period_id) === String(id)
+                      );
+
+                      if (plans.loading) {
+                        return <p className="work-help">Cargando plan de mejora...</p>;
+                      }
+
+                      if (!plan) {
+                        return (
+                          <p className="work-help">
+                            No hay un plan de mejora registrado para este docente y período.
+                          </p>
+                        );
+                      }
+
+                      return (
+                        <div>
+                          <p><strong>Acción de mejora:</strong> {plan.action}</p>
+                          <p><strong>Evidencia esperada:</strong> {plan.evidence || "No registrada"}</p>
+                          <p><strong>Fecha de cumplimiento:</strong> {new Date(plan.due_date).toLocaleDateString("es-MX", { timeZone: "UTC" })}</p>
+                          <p><strong>Estado:</strong> {plan.status}</p>
+                        </div>
+                      );
+                    })()}
+                  </section>
+
                   </>
                 ) : (
                   <p className="work-note">{report.reason}</p>
