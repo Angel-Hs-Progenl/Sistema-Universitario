@@ -272,6 +272,83 @@ def test_evaluation_persists_unique_answers_moderates_and_publishes(clients):
 
     assert docente.post(f"{EVD}/planes/{plan_id}/avance", json=progress).status_code == 409
 
+    # Seguridad de la retroalimentación académica
+    feedback_data = {
+        "period_id": period,
+        "teacher_id": teacher,
+        "feedback": "Retroalimentación ficticia de Dirección Académica.",
+    }
+
+    # El estudiante y el docente no pueden registrar retroalimentación.
+    assert student.post(
+        f"{EVD}/retroalimentacion", json=feedback_data
+    ).status_code == 403
+
+    assert docente.post(
+        f"{EVD}/retroalimentacion", json=feedback_data
+    ).status_code == 403
+
+    # Solo el administrador puede registrarla.
+    response = admin.post(
+        f"{EVD}/retroalimentacion", json=feedback_data
+    )
+    assert response.status_code == 201
+
+    # No se permite duplicar la retroalimentación.
+    assert admin.post(
+        f"{EVD}/retroalimentacion", json=feedback_data
+    ).status_code == 409
+
+    # El docente puede consultar su propia retroalimentación.
+    feedbacks = docente.get(
+        f"{EVD}/retroalimentacion?period_id={period}"
+    )
+    assert feedbacks.status_code == 200
+    assert len(feedbacks.json()) == 1
+    assert feedbacks.json()[0]["teacher_id"] == teacher
+    assert feedbacks.json()[0]["feedback"] == feedback_data["feedback"]
+
+    # Los estudiantes no tienen permiso de consulta.
+    assert student.get(
+        f"{EVD}/retroalimentacion?period_id={period}"
+    ).status_code == 403
+
+    
+    # Crear un segundo docente para comprobar la privacidad.
+    from app.core.database import SessionLocal
+    from app.core.models import User
+    from app.core.security import hash_password
+    from app.main import app
+    from fastapi.testclient import TestClient
+
+    with SessionLocal() as db:
+        segundo_docente = User(
+            email="segundo-docente@test.local",
+            name="Segundo docente",
+            role="docente",
+            password=hash_password("Prueba-segura-2026!"),
+        )
+        db.add(segundo_docente)
+        db.commit()
+
+    with TestClient(app) as otro_docente:
+        login = otro_docente.post(
+            "/api/v1/auth/login",
+            json={
+                "email": "segundo-docente@test.local",
+                "password": "Prueba-segura-2026!",
+            },
+        )
+        assert login.status_code == 200
+
+        # No debe recibir la retroalimentación del primer docente.
+        response = otro_docente.get(
+            f"{EVD}/retroalimentacion?period_id={period}"
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+
 
 
 
