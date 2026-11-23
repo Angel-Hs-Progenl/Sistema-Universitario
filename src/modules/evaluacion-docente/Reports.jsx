@@ -290,6 +290,7 @@ async function analizarDocente(teacherId) {
       const fortalezas = obtener("Fortalezas mencionadas:");
       const mejoras = obtener("Áreas de oportunidad:");
       const recurrentes = obtener("Temas recurrentes:");
+      const recomendaciones = obtener("Recomendaciones sugeridas:");
 
       return (
         <div>
@@ -310,6 +311,19 @@ async function analizarDocente(teacherId) {
               <strong>Temas recurrentes:</strong> {recurrentes}
             </p>
           )}
+
+          {recomendaciones && (
+                <div>
+                  <p>
+                    <strong>Recomendaciones sugeridas por IA:</strong>
+                  </p>
+                  <ul>
+                    {recomendaciones.split("; ").map((recomendacion, i) => (
+                      <li key={i}>{recomendacion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
           <p className="work-help">
             Análisis asistido por IA. Requiere revisión humana.
@@ -413,6 +427,16 @@ async function analizarDocente(teacherId) {
                                 
                   <section className="work-section">
                     <h3>Plan de acción</h3>
+                    {admin && (
+                  <div className="work-actions no-print">
+                    <Link
+                      className="button button-secondary"
+                      to={`${BASE}/direccion/planes-accion`}
+                    >
+                      Ir a planes de mejora
+                    </Link>
+                  </div>
+                )}
                     {(() => {
                       const plan = plans.data?.find(
                         (p) =>

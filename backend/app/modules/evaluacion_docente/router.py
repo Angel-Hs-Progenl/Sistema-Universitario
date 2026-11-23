@@ -32,7 +32,6 @@ from .models import (
     ImprovementPlan,
     AcademicFeedback,
     AcademicGroup,
-    AcademicGroup,
     GroupSubject,
     GroupEnrollment,
 )
@@ -921,8 +920,6 @@ class Moderation(Payload):
 
 
 @router.post("/comentarios/{submission_id}/revision")
-
-@router.post("/comentarios/{submission_id}/revision")
 def moderate(
     submission_id: int,
     payload: Moderation,
@@ -1180,7 +1177,30 @@ def _hallazgos_explicitos_no_extraidos(comentario, validados):
                 continue
             encontrados.append({"tema": objeto, "evidencia": match.group(0)})
 
+    # Reconocer propuestas explícitas de mejora.
+    verbos_propuesta = (
+        "dividir", "resolver", "proporcionar",
+        "incorporar", "realizar", "dedicar",
+        "implementar", "organizar",
+    )
+
+    for clausula in clausulas:
+        propuesta = clausula.strip()
+
+        if not propuesta:
+            continue
+
+        if propuesta.casefold().startswith(verbos_propuesta):
+            if not any(
+                item["evidencia"] == propuesta
+                for item in validados["mejoras"] + encontrados
+            ):
+                encontrados.append({
+                    "tema": propuesta,
+                    "evidencia": propuesta,
+                })
     validados["mejoras"].extend(encontrados)
+
 
     # Valoración global inequívoca, aunque Qwen la omita.
     # No se atribuye como fortaleza de un área específica.
@@ -1193,6 +1213,24 @@ def _hallazgos_explicitos_no_extraidos(comentario, validados):
             validados["fortalezas"].append({"tema": "Valoración general", "evidencia": cita.group(0)})
             break
     return validados
+
+def _tema_respaldado_por_cita(tema, cita):
+    """Comprueba que la etiqueta tenga respaldo en la cita."""
+    if _tema_en_texto(tema, cita):
+        return True
+
+    tema_normalizado = _normalizar_tema(tema)
+    cita_normalizada = _normalizar_tema(cita)
+
+    equivalencias = {
+        "puntualidad": (r"\blleg\w*\s+temprano\b",),
+        "ejercicios": (r"\bejemplos?\s+practic\w*\b",),
+    }
+
+    return any(
+        re.search(patron, cita_normalizada)
+        for patron in equivalencias.get(tema_normalizado, ())
+    )
 
 def _hallazgos_de_comentario(comentario):
     """Qwen propone temas abiertos; solo pasan las citas literalmente comprobadas."""
@@ -1282,8 +1320,10 @@ def _hallazgos_de_comentario(comentario):
                         continue
                 if tema == "Valoración general" and not _es_valoracion_general(contexto):
                     continue
-            validados[tipo].append({"tema": tema, "evidencia": cita})
-    # Evitar duplicar un tema clasificado incorrectamente en dos polaridades.
+                if tipo == "mejoras" and not _tema_respaldado_por_cita(tema, cita):
+                  continue
+
+            validados[tipo].append({"tema": tema, "evidencia": cita})    # Evitar duplicar un tema clasificado incorrectamente en dos polaridades.
     claves_mejora = {_normalizar_tema(item["tema"]) for item in validados["mejoras"]}
     validados["fortalezas"] = [
         item for item in validados["fortalezas"]
@@ -1407,9 +1447,35 @@ def generar_analisis_ia(
         else:
             sin_datos = "No se identificaron menciones explícitas verificables."
 
+        # Recuperar propuestas explícitas de los comentarios revisados.
+        verbos_accion = (
+            "dividir ", "resolver ", "proporcionar ",
+            "incorporar ", "realizar ", "dedicar ",
+            "ofrecer ", "implementar ", "explicar ",
+            "organizar ", "agregar ", "incluir ",
+        )
+
+        recomendaciones = []
+
+        for comentario in comentarios:
+            propuesta = comentario.strip()
+
+            if (
+                propuesta.casefold().startswith(verbos_accion)
+                and propuesta not in recomendaciones
+            ):
+                recomendaciones.append(propuesta)
+
+        texto_recomendaciones = (
+            "; ".join(recomendaciones[:3])
+            if recomendaciones
+            else "No se identificaron recomendaciones explícitas en los comentarios."
+        )
+
         observaciones = "\n".join([
             f"Fortalezas mencionadas: {_mostrar_temas(fortalezas, sin_datos)}",
             f"Áreas de oportunidad: {_mostrar_temas(mejoras, sin_datos)}",
+            f"Recomendaciones sugeridas: {texto_recomendaciones}",
             f"Temas recurrentes: {_mostrar_temas(recurrentes, 'No se identificaron temas repetidos en comentarios distintos.')}",
         ])
         texto = "\n".join([
@@ -1448,29 +1514,6 @@ def plans(user=Depends(evaluation_user), db: Session = Depends(get_db)):
         "action": p.action, "evidence": p.evidence, "due_date": p.due_date, "status": p.status, "version": p.version} for p, u, period in db.execute(stmt.order_by(ImprovementPlan.id.desc()))]
 
 
-
-    class AcademicFeedback(Base):
-        __tablename__ = "evaluation_academic_feedback"
-
-        id: Mapped[int] = mapped_column(primary_key=True)
-        period_id: Mapped[int] = mapped_column(
-            ForeignKey("evaluation_periods.id")
-        )
-        teacher_id: Mapped[str] = mapped_column(
-            ForeignKey("users.id")
-        )
-        feedback: Mapped[str] = mapped_column(Text)
-        created_at: Mapped[datetime] = mapped_column(
-            DateTime(timezone=True), default=now
-        )
-
-        __table_args__ = (
-            UniqueConstraint(
-                "period_id",
-                "teacher_id",
-                name="one_academic_feedback_per_teacher_period",
-            ),
-        )
 
 class PlanPayload(Payload):
     period_id: int
