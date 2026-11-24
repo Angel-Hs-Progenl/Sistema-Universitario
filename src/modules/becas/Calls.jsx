@@ -20,7 +20,8 @@ export default function Calls() {
   const [search, setSearch] = useState(""),
     [modality, setModality] = useState(""),
     [selected, setSelected] = useState(null),
-    [applying, setApplying] = useState(null);
+    [applying, setApplying] = useState(null),
+    [viewingResults, setViewingResults] = useState(null);
   const mutation = useMutation();
   const rows = (state.data || []).filter(
     (c) =>
@@ -145,12 +146,23 @@ export default function Calls() {
                       </div>
                     </dl>
                   </div>
-                  <button
-                    className="button button-secondary"
-                    onClick={() => setSelected(c)}
-                  >
-                    Consultar bases <ArrowRight size={16} />
-                  </button>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button
+                      className="button button-secondary"
+                      onClick={() => setSelected(c)}
+                    >
+                      Consultar bases <ArrowRight size={16} />
+                    </button>
+                    {c.results_published && (
+                      <button
+                        className="button button-primary"
+                        style={{ fontSize: "0.8125rem" }}
+                        onClick={() => setViewingResults(c)}
+                      >
+                        Ver resultados oficiales
+                      </button>
+                    )}
+                  </div>
                 </article>
               ))}
             </div>
@@ -298,6 +310,81 @@ export default function Calls() {
           </form>
         </Modal>
       )}
+      {viewingResults && (
+        <CallResultsModal
+          call={viewingResults}
+          onClose={() => setViewingResults(null)}
+        />
+      )}
     </>
+  );
+}
+
+function CallResultsModal({ call, onClose }) {
+  const { data: results, loading, error } = useAsync(
+    () => api(`/becas/convocatorias/${call.id}/resultados`),
+    [call.id]
+  );
+
+  return (
+    <Modal title={`Resultados Oficiales: ${call.title}`} onClose={onClose}>
+      <p className="work-help">
+        Convocatoria {call.code} · Dictamen institucional del Comité de Becas UTO
+      </p>
+      {loading && <p>Cargando lista de folios beneficiarios…</p>}
+      {error && <p className="alert error">{error}</p>}
+      {results && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <p style={{ margin: 0, fontSize: "0.875rem" }}>
+            Se publican los folios de los aspirantes con dictamen favorable conforme al marco normativo y de protección de datos personales:
+          </p>
+          <div className="audit-table-wrapper">
+            <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "var(--canvas)", textAlign: "left", fontSize: "0.8125rem" }}>
+                  <th style={{ padding: "8px 10px" }}>Folio</th>
+                  <th style={{ padding: "8px 10px" }}>Programa educativo</th>
+                  <th style={{ padding: "8px 10px" }}>Cuatrimestre</th>
+                  <th style={{ padding: "8px 10px" }}>Beca otorgada</th>
+                  <th style={{ padding: "8px 10px" }}>% a pagar</th>
+                  <th style={{ padding: "8px 10px" }}>Sesión Comité</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ padding: "16px", textAlign: "center", color: "var(--muted)" }}>
+                      No se registraron folios aprobados en esta convocatoria.
+                    </td>
+                  </tr>
+                ) : (
+                  results.map((r) => (
+                    <tr key={r.folio} style={{ borderTop: "1px solid var(--line)" }}>
+                      <td style={{ padding: "8px 10px", fontWeight: "700" }}>{r.folio}</td>
+                      <td style={{ padding: "8px 10px", fontSize: "0.875rem" }}>{r.major}</td>
+                      <td style={{ padding: "8px 10px" }}>{r.academic_term}</td>
+                      <td style={{ padding: "8px 10px", color: "var(--green)", fontWeight: "700" }}>
+                        {r.discount_percentage}% de beca
+                      </td>
+                      <td style={{ padding: "8px 10px", fontWeight: "600" }}>
+                        {r.student_percentage}%
+                      </td>
+                      <td style={{ padding: "8px 10px", fontSize: "0.8125rem", color: "var(--muted)" }}>
+                        {r.dictamen_session}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "12px" }}>
+            <button className="button button-secondary" onClick={onClose}>
+              Cerrar resultados
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 }

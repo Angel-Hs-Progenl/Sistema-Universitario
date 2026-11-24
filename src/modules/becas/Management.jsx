@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight, Download, Check } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { api, date } from "../../shared/api";
 import { Field, BusyButton, useAsync } from "../../shared/ui";
@@ -306,6 +306,7 @@ export function ManageCalls() {
                   <th>Apertura</th>
                   <th>Cierre</th>
                   <th>Cupo</th>
+                  <th>Resultados</th>
                 </tr>
               </thead>
               <tbody>
@@ -318,6 +319,38 @@ export function ManageCalls() {
                     <td>{date(c.start_date)}</td>
                     <td>{date(c.end_date)}</td>
                     <td>{c.slots}</td>
+                    <td>
+                      {c.results_published ? (
+                        <span className="badge badge-validado">
+                          <Check size={12} /> Resultados Publicados
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          style={{ fontSize: "0.8125rem", padding: "4px 8px" }}
+                          onClick={async () => {
+                            if (
+                              !window.confirm(
+                                `¿Publicar resultados oficiales para ${c.title}? Los folios beneficiarios serán visibles para los estudiantes.`
+                              )
+                            )
+                              return;
+                            try {
+                              await api(
+                                `/becas/convocatorias/${c.id}/publicar-resultados`,
+                                { method: "POST" }
+                              );
+                              await state.refresh();
+                            } catch (err) {
+                              alert(err.message || "Error al publicar resultados");
+                            }
+                          }}
+                        >
+                          Publicar Resultados
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

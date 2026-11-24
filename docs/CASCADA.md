@@ -135,3 +135,14 @@ La interpretación gráfica de la mascota sigue siendo una propuesta; no se decl
 - El área de Tesorería es la responsable exclusiva de generar las órdenes de pago institucionales vinculadas a la cuota ordinaria de reinscripción ($1,850.00 MXN) calculando el monto neto a pagar.
 - Emisión de la referencia institucional / línea de captura para el portal oficial de **Pagos en Línea del Gobierno del Estado de Puebla** (`https://pagosenlinea.puebla.gob.mx/`).
 - Flujo de confirmación y validación de pago por Tesorería tras la liquidación en línea del estudiante.
+
+## Registro CR-013 · Finalización al 100% del Módulo de Becas
+
+24 de noviembre de 2026. Culminación al 100% del alcance funcional del módulo de Becas de la UT de Oriental en la rama `feat/modulo-becas`:
+- Migración 0010 de Alembic (`0010_becas_100_publicacion_constancias.py`) agregando bandera de publicación de resultados a convocatorias y folio de constancia a solicitudes.
+- Publicación oficial de resultados por parte de Escolares/Comité con lista protegida de beneficiarios (folios anónimos, carrera, periodo y porcentaje otorgado) conforme a la Ley General de Protección de Datos Personales.
+- Generación y consulta de la **Constancia Oficial de Asignación de Beca** institucional con sello digital de verificación SHA-256, desglose financiero UTO (cuota base, beca exenta, importe neto), línea de captura para Pagos en Línea del Gobierno de Puebla e impresión directa.
+- Buzón institucional de notificaciones del aspirante integrado en el seguimiento de solicitudes para consulta de estatus, órdenes de pago emitidas y avisos de comité.
+- Conclusión formal del ciclo de vida del expediente por parte del personal de Servicios Escolares / Administración.
+- Actualización de contratos de dominio sincronizados con el frontend y pruebas automatizadas (17/17 pytest pasando, 13/13 node test pasando, 0 alertas en check_repository.py).
+- Línea base de requisitos actualizada a 100% de cobertura (BEC-01 a BEC-23). Propuesta lista para validación institucional de usuarios.

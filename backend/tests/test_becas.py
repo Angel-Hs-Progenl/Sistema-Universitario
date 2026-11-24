@@ -214,3 +214,41 @@ def test_becas_full_flow(clients):
     res_padron = admin.get("/api/v1/becas/padron-beneficiarios")
     assert res_padron.status_code == 200
     assert len(res_padron.json()) >= 1
+
+    # 15. Publish official results for call
+    res_pub = admin.post(f"/api/v1/becas/convocatorias/{call_id}/publicar-resultados")
+    assert res_pub.status_code == 200
+    assert res_pub.json()["published"] is True
+
+    # 16. Get published results (anonymized/protected for students)
+    res_pub_list = student.get(f"/api/v1/becas/convocatorias/{call_id}/resultados")
+    assert res_pub_list.status_code == 200
+    beneficiaries = res_pub_list.json()
+    assert isinstance(beneficiaries, list)
+    assert len(beneficiaries) >= 1
+    assert beneficiaries[0]["folio"].startswith("BEC-2026-")
+
+    # 17. Student accesses official Constancia de Beca
+    res_const = student.get(f"/api/v1/becas/solicitudes/{app_id}/constancia")
+    assert res_const.status_code == 200
+    const_data = res_const.json()
+    assert const_data["folio_constancia"].startswith("CONST-BEC-UTO-")
+    assert "sha256_hash" in const_data
+    assert const_data["institution"] == "Universidad Tecnológica de Oriental"
+    assert "puebla_payment_url" in const_data
+    assert "capture_line" in const_data
+
+    # 18. Student checks notifications inbox
+    res_notifs = student.get("/api/v1/becas/notificaciones")
+    assert res_notifs.status_code == 200
+    assert isinstance(res_notifs.json(), list)
+
+    # 19. Admin concludes application lifecycle
+    res_conclude = admin.post(f"/api/v1/becas/solicitudes/{app_id}/concluir")
+    assert res_conclude.status_code == 200
+    assert res_conclude.json()["status"] in ("concluida", "concluido")
+
+    # 20. Check 100% completion milestone in stats
+    res_stats_final = admin.get("/api/v1/becas/estadisticas")
+    assert res_stats_final.status_code == 200
+    assert res_stats_final.json()["completion_progress_percent"] == 100
