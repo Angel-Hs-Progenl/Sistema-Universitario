@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { api, date } from "../../shared/api";
 import { Field, Modal, BusyButton, useAsync } from "../../shared/ui";
@@ -13,6 +13,7 @@ import {
   money,
 } from "../../shared/Work";
 import { MODALIDADES, DOCUMENTOS_BECA } from "../../../shared/becas";
+import FormularioSolicitudUTO from "./FormularioSolicitudUTO";
 
 export default function Calls() {
   const { user } = useAuth();
@@ -21,6 +22,7 @@ export default function Calls() {
     [modality, setModality] = useState(""),
     [selected, setSelected] = useState(null),
     [applying, setApplying] = useState(null),
+    [createdApp, setCreatedApp] = useState(null),
     [viewingResults, setViewingResults] = useState(null);
   const mutation = useMutation();
   const rows = (state.data || []).filter(
@@ -244,70 +246,38 @@ export default function Calls() {
       )}
       {applying && (
         <Modal
-          title="Registrar solicitud de beca"
-          onClose={() => {
-            if (!mutation.busy) setApplying(null);
-          }}
+          title={`Solicitud Oficial: ${applying.title}`}
+          onClose={() => setApplying(null)}
         >
-          <p>{applying.title}</p>
-          <form onSubmit={apply}>
-            <MutationState state={mutation} />
-            <Field
-              name="gpa"
-              label="Promedio del periodo anterior"
-              type="number"
-              min="6"
-              max="10"
-              step=".01"
-              required
-            />
-            <Field
-              name="academic_term"
-              label="Periodo académico actual"
-              maxLength={50}
-              required
-              placeholder="Ej. cuarto cuatrimestre"
-            />
-            <Field
-              name="major"
-              label="Programa educativo"
-              maxLength={150}
-              minLength={3}
-              required
-              defaultValue={user.profile?.carrera || ""}
-            />
-            {applying.custom_questions?.map((q, i) => (
-              <Field
-                name={`question-${i}`}
-                key={i}
-                label={q}
-                as="textarea"
-                maxLength={2000}
-                required
-              />
-            ))}
-            <p className="work-note">
-              Al registrar la solicitud recibirás un folio. Después podrás
-              adjuntar los documentos para revisión.
+          <FormularioSolicitudUTO
+            call={applying}
+            user={user}
+            onSuccess={(app) => {
+              setApplying(null);
+              setCreatedApp(app);
+              state.refresh();
+            }}
+            onCancel={() => setApplying(null)}
+          />
+        </Modal>
+      )}
+      {createdApp && (
+        <Modal title="¡Solicitud Registrada Exitosamente!" onClose={() => setCreatedApp(null)}>
+          <div style={{ textAlign: "center", padding: "16px" }}>
+            <CheckCircle size={48} color="var(--green)" style={{ margin: "0 auto 12px auto" }} />
+            <h3 style={{ margin: "0 0 6px 0", color: "var(--brand)" }}>Folio Oficial: {createdApp.folio}</h3>
+            <p style={{ margin: "0 0 16px 0", color: "var(--muted)", fontSize: "0.875rem" }}>
+              Tu solicitud y documentación han sido recibidas en el sistema institucional de la Universidad Tecnológica de Oriental.
             </p>
-            <div className="work-actions">
-              <BusyButton
-                className="button button-primary"
-                type="submit"
-                busy={mutation.busy}
-              >
-                Registrar solicitud
-              </BusyButton>
-              <button
-                type="button"
-                className="button button-secondary"
-                disabled={mutation.busy}
-                onClick={() => setApplying(null)}
-              >
-                Volver a convocatorias
+            <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+              <Link to="/becas/solicitudes" className="button button-primary">
+                Ir al seguimiento de mis solicitudes
+              </Link>
+              <button type="button" className="button button-secondary" onClick={() => setCreatedApp(null)}>
+                Aceptar
               </button>
             </div>
-          </form>
+          </div>
         </Modal>
       )}
       {viewingResults && (

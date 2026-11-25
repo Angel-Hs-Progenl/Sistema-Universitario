@@ -22,6 +22,7 @@ import { api, date } from "../../shared/api";
 import { useAuth } from "../../app/Auth";
 import { Modal, Field, BusyButton, Alert, useAsync, Badge } from "../../shared/ui";
 import { DOCUMENTOS_BECA, ESTADOS_BECA } from "../../../shared/becas";
+import Anexo1Modal from "./Anexo1Modal";
 
 export default function Solicitudes() {
   const { user } = useAuth();
@@ -48,6 +49,22 @@ export default function Solicitudes() {
   const [constanciaLoading, setConstanciaLoading] = useState(false);
   const [constanciaError, setConstanciaError] = useState("");
   const [concluding, setConcluding] = useState(false);
+
+  // Anexo 1 state
+  const [anexoData, setAnexoData] = useState(null);
+  const [anexoLoading, setAnexoLoading] = useState(false);
+
+  async function viewAnexo1(appId) {
+    setAnexoLoading(true);
+    try {
+      const data = await api(`/becas/solicitudes/${appId}/anexo1`);
+      setAnexoData(data);
+    } catch (err) {
+      alert(err.message || "No se pudo obtener el formato Anexo 1");
+    } finally {
+      setAnexoLoading(false);
+    }
+  }
 
   const { data: banks } = useAsync(() => api("/becas/bancos"), []);
 
@@ -434,6 +451,13 @@ export default function Solicitudes() {
                   <small style={{ color: "var(--muted)" }}>Promedio registrado</small>
                   <p style={{ margin: "2px 0 0 0", fontWeight: "600" }}>{appDetail.gpa.toFixed(1)}</p>
                 </div>
+                <div>
+                  <small style={{ color: "var(--muted)" }}>Sistema y Nivel</small>
+                  <p style={{ margin: "2px 0 0 0", fontWeight: "600" }}>
+                    {appDetail.study_system === "mixto" ? "Mixto (Híbrido)" : "Presencial"}
+                    {appDetail.study_level ? ` · ${appDetail.study_level}` : ""}
+                  </p>
+                </div>
                 {appDetail.student_percentage && (
                   <div>
                     <small style={{ color: "var(--muted)" }}>Esquema de beca (dictamen)</small>
@@ -473,6 +497,41 @@ export default function Solicitudes() {
                     onClick={() => viewConstancia(appDetail.id)}
                   >
                     Ver Constancia
+                  </button>
+                </div>
+              )}
+
+              {/* Botón de Anexo 1 si es Escasos Recursos */}
+              {appDetail.call.modalidad === "escasos_recursos" && (
+                <div
+                  style={{
+                    background: "#fefcf6",
+                    padding: "12px 16px",
+                    borderRadius: "var(--radius)",
+                    border: "1px solid var(--gold)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Printer size={20} color="var(--gold)" />
+                    <div>
+                      <strong style={{ fontSize: "0.875rem" }}>Anexo 1: Carta bajo protesta de decir verdad</strong>
+                      <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)" }}>
+                        Genera el formato oficial prellenado para firmar con tinta azul y adjuntarlo escaneado.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    style={{ fontSize: "0.8125rem" }}
+                    onClick={() => viewAnexo1(appDetail.id)}
+                  >
+                    Ver / Imprimir Anexo 1
                   </button>
                 </div>
               )}
@@ -904,6 +963,10 @@ export default function Solicitudes() {
             </div>
           </form>
         </Modal>
+      )}
+
+      {anexoData && (
+        <Anexo1Modal data={anexoData} onClose={() => setAnexoData(null)} />
       )}
     </div>
   );
