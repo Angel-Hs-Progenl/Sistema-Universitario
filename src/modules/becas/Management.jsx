@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { ArrowRight, Download, Check, Edit2 } from "lucide-react";
+import { ArrowRight, Download, Check, Edit2, Trash2, Power } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { api, date } from "../../shared/api";
 import { Field, BusyButton, Modal, useAsync } from "../../shared/ui";
@@ -432,6 +432,61 @@ export function ManageCalls() {
                             Publicar
                           </button>
                         )}
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          style={{
+                            fontSize: "0.8125rem",
+                            padding: "4px 8px",
+                            color: c.is_active ? "#B8862B" : "#386641",
+                          }}
+                          onClick={async () => {
+                            const newStatus = !c.is_active;
+                            if (
+                              !window.confirm(
+                                `¿Deseas ${newStatus ? "activar" : "suspender"} la recepción para ${c.title}?`
+                              )
+                            )
+                              return;
+                            try {
+                              await api(`/becas/convocatorias/${c.id}`, {
+                                method: "PUT",
+                                body: { is_active: newStatus },
+                              });
+                              await state.refresh();
+                            } catch (err) {
+                              alert(err.message || "Error al cambiar estado");
+                            }
+                          }}
+                          title={c.is_active ? "Suspender recepción" : "Activar recepción"}
+                        >
+                          <Power size={12} /> {c.is_active ? "Pausar" : "Activar"}
+                        </button>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          style={{ fontSize: "0.8125rem", padding: "4px 8px", color: "#b91c1c" }}
+                          onClick={async () => {
+                            if (
+                              !window.confirm(
+                                `¿Confirmas eliminar la convocatoria "${c.title}"? Si ya cuenta con expedientes se suspenderá automáticamente para preservar auditoría.`
+                              )
+                            )
+                              return;
+                            try {
+                              const res = await api(`/becas/convocatorias/${c.id}`, {
+                                method: "DELETE",
+                              });
+                              alert(res.message || "Convocatoria eliminada con éxito");
+                              await state.refresh();
+                            } catch (err) {
+                              alert(err.message || "Error al eliminar convocatoria");
+                            }
+                          }}
+                          title="Eliminar convocatoria"
+                        >
+                          <Trash2 size={12} /> Eliminar
+                        </button>
                       </div>
                     </td>
                   </tr>

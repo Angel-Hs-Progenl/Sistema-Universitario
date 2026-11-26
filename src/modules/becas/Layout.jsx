@@ -3,24 +3,48 @@ import { useAuth } from "../../app/Auth";
 
 export default function BecasLayout() {
   const { user } = useAuth();
-  const isStudent = user.role === "estudiante";
+  const role = user?.role || "estudiante";
 
-  const studentLinks = [
-    ["/becas", "Convocatorias"],
-    ["/becas/solicitudes", "Mis solicitudes"],
-    ["/becas/socioeconomico", "Estudio socioeconómico"],
-    ["/becas/renovacion", "Renovación"],
-  ];
+  let links = [];
 
-  const staffLinks = [
-    ["/becas", "Catálogo"],
-    ["/becas/admin-convocatorias", "Convocatorias y reglas"],
-    ["/becas/dictamen", "Dictaminación y reglas"],
-    ["/becas/ordenes-cobro", "Órdenes de cobro"],
-    ["/becas/dashboard", "Tablero y auditoría"],
-  ];
-
-  const links = isStudent ? studentLinks : staffLinks;
+  if (role === "estudiante") {
+    links = [
+      ["/becas", "Convocatorias"],
+      ["/becas/solicitudes", "Mis solicitudes"],
+      ["/becas/socioeconomico", "Estudio socioeconómico"],
+      ["/becas/renovacion", "Renovación"],
+    ];
+  } else if (role === "escolares") {
+    links = [
+      ["/becas", "Catálogo"],
+      ["/becas/admin-convocatorias", "Convocatorias y reglas"],
+      ["/becas/dashboard", "Padrón y estadísticas"],
+    ];
+  } else if (role === "evaluador") {
+    links = [
+      ["/becas", "Catálogo"],
+      ["/becas/dictamen", "Panel de Dictaminación"],
+      ["/becas/renovacion", "Resolución de Renovaciones"],
+    ];
+  } else if (role === "tesoreria") {
+    links = [
+      ["/becas/ordenes-cobro", "Órdenes de cobro y pagos"],
+    ];
+  } else if (role === "auditor") {
+    links = [
+      ["/becas/dashboard", "Tablero y auditoría"],
+    ];
+  } else {
+    // administrador u otros roles directivos
+    links = [
+      ["/becas", "Catálogo"],
+      ["/becas/admin-convocatorias", "Convocatorias y reglas"],
+      ["/becas/dictamen", "Dictaminación"],
+      ["/becas/ordenes-cobro", "Órdenes de cobro"],
+      ["/becas/renovacion", "Renovaciones"],
+      ["/becas/dashboard", "Tablero y auditoría"],
+    ];
+  }
 
   return (
     <div className="container module-layout">

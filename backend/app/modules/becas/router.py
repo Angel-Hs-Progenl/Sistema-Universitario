@@ -244,6 +244,49 @@ def update_call(
     return {"message": "Convocatoria actualizada exitosamente."}
 
 
+@router.delete("/convocatorias/{call_id}")
+def delete_call(
+    call_id: int,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    require_role(user, "administrador", "escolares")
+    call = db.get(ScholarshipCall, call_id)
+    if not call:
+        raise HTTPException(404, "Convocatoria no encontrada.")
+
+    apps_count = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.call_id == call_id)) or 0
+    if apps_count > 0:
+        # Si tiene solicitudes no se destruye para preservar auditoría, se desactiva
+        call.is_active = False
+        db.commit()
+        audit_becas(
+            db,
+            user,
+            f"Convocatoria desactivada (tiene expedientes): {call.code}",
+            "ScholarshipCall",
+            str(call.id),
+            f"Se desactivó para preservar {apps_count} expediente(s)",
+            request.client.host if request.client else "127.0.0.1",
+        )
+        return {"message": f"Convocatoria desactivada para preservar los {apps_count} expediente(s) asociados."}
+
+    code = call.code
+    db.delete(call)
+    audit_becas(
+        db,
+        user,
+        f"Convocatoria eliminada: {code}",
+        "ScholarshipCall",
+        str(call_id),
+        f"Eliminada por {user.name}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": "Convocatoria eliminada exitosamente."}
+
+
 @router.get("/convocatorias/{call_id}")
 def get_call(call_id: int, db: Session = Depends(get_db)):
     c = db.get(ScholarshipCall, call_id)
@@ -1112,6 +1155,73 @@ def confirm_puebla_payment(
     )
     db.commit()
     return {"message": "Pago validado por Tesorería correctamente.", "status": order.status}
+
+
+@router.post("/ordenes-cobro/{order_id}/rechazar-pago")
+def reject_puebla_payment(
+    order_id: int,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Tesorería rechaza o devuelve a pendiente el comprobante de pago por inconsistencias."""
+    require_role(user, "tesoreria", "administrador")
+    order = db.get(ScholarshipPaymentOrder, order_id)
+    if not order:
+        raise HTTPException(404, "Orden de pago no encontrada.")
+
+    order.status = "programada"
+    order.paid_at = None
+
+    app = db.get(ScholarshipApplication, order.application_id)
+    if app:
+        db.add(
+            Notification(
+                user_id=app.user_id,
+                message=f"Tesorería reportó una inconsistencia en tu comprobante de pago ({order.folio_orden}). Por favor acude o revisa tu referencia estatal.",
+                target_path="/becas/ordenes-cobro",
+            )
+        )
+
+    audit_becas(
+        db,
+        user,
+        f"Comprobante devuelto/rechazado por Tesorería: {order.folio_orden}",
+        "ScholarshipPaymentOrder",
+        str(order.id),
+        f"Devuelto a estatus programado por {user.name}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": "Comprobante rechazado / devuelto a pendiente de pago.", "status": order.status}
+
+
+@router.delete("/ordenes-cobro/{order_id}")
+def cancel_payment_order(
+    order_id: int,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Tesorería o Administrador cancela o anula una orden de cobro emitida."""
+    require_role(user, "tesoreria", "administrador")
+    order = db.get(ScholarshipPaymentOrder, order_id)
+    if not order:
+        raise HTTPException(404, "Orden de pago no encontrada.")
+
+    folio = order.folio_orden
+    db.delete(order)
+    audit_becas(
+        db,
+        user,
+        f"Orden de pago cancelada/eliminada: {folio}",
+        "ScholarshipPaymentOrder",
+        str(order_id),
+        f"Cancelada por {user.name}",
+        request.client.host if request.client else "127.0.0.1",
+    )
+    db.commit()
+    return {"message": f"Orden de pago {folio} cancelada exitosamente."}
 
 
 class DisperseOrderPayload(BaseModel):
