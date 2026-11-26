@@ -112,43 +112,55 @@ def seed():
                             )
                         )
 
-        # Seed Convocatorias de Becas UTO
+        # Seed Convocatorias Oficiales de Becas UTO
         calls_data = [
             {
-                "code": "BECA-2026-I-ACAD-001",
-                "title": "Beca de Excelencia Académica Primavera 2026",
+                "code": "BECA-UTO-2026-ACAD",
+                "title": "Beca Académica — Periodo Septiembre - Diciembre 2026",
                 "modalidad": "academica",
-                "description": "Estímulo económico a estudiantes con trayectoria académica sobresaliente en el cuatrimestre anterior.",
-                "min_gpa": 9.0,
-                "amount": 4500.0,
-                "slots": 30,
-            },
-            {
-                "code": "BECA-2026-I-MANU-001",
-                "title": "Beca Institucional de Manutención UTO 2026",
-                "modalidad": "manutencion",
-                "description": "Apoyo prioritario para la permanencia de estudiantes en condiciones de vulnerabilidad socioeconómica.",
-                "min_gpa": 8.0,
-                "amount": 3600.0,
-                "slots": 75,
-            },
-            {
-                "code": "BECA-2026-I-TRAN-001",
-                "title": "Subsidio de Movilidad y Transporte Regional",
-                "modalidad": "transporte",
-                "description": "Subsidio para estudiantes que se trasladan diariamente desde municipios de la región de Oriental.",
-                "min_gpa": 8.0,
-                "amount": 2400.0,
+                "description": "Estímulo y exención de cuota de reinscripción para estudiantes con promedio sobresaliente (mínimo 9.70) en el cuatrimestre anterior evaluado.",
+                "min_gpa": 9.7,
+                "amount": 1850.0,
                 "slots": 50,
+                "periodo_actual": "septiembre - diciembre 2026",
+                "periodo_anterior": "mayo - agosto 2026",
+                "cuatrimestres_habilitados": ["3°", "5°", "6°", "9°"],
             },
             {
-                "code": "BECA-2026-I-ALIM-001",
-                "title": "Beca de Comedor y Seguridad Alimentaria",
-                "modalidad": "alimentacion",
-                "description": "Subsidio alimentario para desayuno y comida en la cafetería universitaria durante el periodo escolar.",
-                "min_gpa": 7.5,
-                "amount": 1800.0,
+                "code": "BECA-UTO-2026-RECU",
+                "title": "Beca por Escasos Recursos Económicos — Periodo Septiembre - Diciembre 2026",
+                "modalidad": "escasos_recursos",
+                "description": "Apoyo institucional para la permanencia de estudiantes en vulnerabilidad socioeconómica con promedio mínimo de 8.50, estudio socioeconómico y Anexo 1.",
+                "min_gpa": 8.5,
+                "amount": 1850.0,
+                "slots": 80,
+                "periodo_actual": "septiembre - diciembre 2026",
+                "periodo_anterior": "mayo - agosto 2026",
+                "cuatrimestres_habilitados": ["3°", "5°", "6°", "9°"],
+            },
+            {
+                "code": "BECA-UTO-2026-ALIM",
+                "title": "Beca Alimenticia — Periodo Septiembre - Diciembre 2026",
+                "modalidad": "alimenticia",
+                "description": "Apoyo de servicio alimentario para estudiantes en el sistema presencial con valoración médica emitida por el área de Enfermería UTO y estudio socioeconómico.",
+                "min_gpa": 8.0,
+                "amount": 1200.0,
                 "slots": 40,
+                "periodo_actual": "septiembre - diciembre 2026",
+                "periodo_anterior": "mayo - agosto 2026",
+                "cuatrimestres_habilitados": ["3°", "5°", "6°", "9°"],
+            },
+            {
+                "code": "BECA-UTO-2026-HIJOS",
+                "title": "Beca para Hijas e Hijos del Personal de la Universidad — Periodo Septiembre - Diciembre 2026",
+                "modalidad": "hijos_personal",
+                "description": "Exención del 100% de la cuota de reinscripción para hijas e hijos del personal activo de la Universidad Tecnológica de Oriental (con acta y constancia RH).",
+                "min_gpa": 8.0,
+                "amount": 1850.0,
+                "slots": 30,
+                "periodo_actual": "septiembre - diciembre 2026",
+                "periodo_anterior": "mayo - agosto 2026",
+                "cuatrimestres_habilitados": ["3°", "5°", "6°", "9°"],
             },
         ]
         created_calls = {}
@@ -157,20 +169,29 @@ def seed():
             if not existing_call:
                 new_call = ScholarshipCall(
                     code=cdata["code"],
-                    title=cdata["title"] + " · Ejemplo",
+                    title=cdata["title"],
                     modalidad=cdata["modalidad"],
-                    description="Convocatoria ficticia para validar el flujo de becas. No representa un apoyo institucional vigente.",
+                    description=cdata["description"],
                     min_gpa=cdata["min_gpa"],
                     amount=cdata["amount"],
                     slots=cdata["slots"],
                     is_active=True,
-                    start_date=now() - timedelta(days=1),
+                    start_date=now() - timedelta(days=2),
                     end_date=now() + timedelta(days=45),
+                    periodo_actual=cdata["periodo_actual"],
+                    periodo_anterior=cdata["periodo_anterior"],
+                    cuatrimestres_habilitados=cdata["cuatrimestres_habilitados"],
                 )
                 db.add(new_call)
                 db.flush()
                 created_calls[cdata["code"]] = new_call
             else:
+                existing_call.title = cdata["title"]
+                existing_call.description = cdata["description"]
+                existing_call.min_gpa = cdata["min_gpa"]
+                existing_call.periodo_actual = cdata["periodo_actual"]
+                existing_call.periodo_anterior = cdata["periodo_anterior"]
+                existing_call.cuatrimestres_habilitados = cdata["cuatrimestres_habilitados"]
                 created_calls[cdata["code"]] = existing_call
 
         mariana = db.scalar(select(User).where(User.email == "estudiante@demo.uto.local"))
@@ -199,23 +220,28 @@ def seed():
                     )
                 )
 
-            call_manu = created_calls.get("BECA-2026-I-MANU-001")
-            if call_manu:
-                app_manu = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.user_id == mariana.id, ScholarshipApplication.call_id == call_manu.id))
-                if not app_manu:
-                    app_manu = ScholarshipApplication(
-                        call_id=call_manu.id,
+            call_recu = created_calls.get("BECA-UTO-2026-RECU")
+            if call_recu:
+                app_recu = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.user_id == mariana.id, ScholarshipApplication.call_id == call_recu.id))
+                if not app_recu:
+                    app_recu = ScholarshipApplication(
+                        call_id=call_recu.id,
                         user_id=mariana.id,
                         status="revision",
                         gpa=8.9,
                         academic_term="4to Cuatrimestre",
-                        major="Ingeniería en Tecnologías de la Información",
+                        major="Desarrollo de Software Multiplataforma",
+                        study_system="Presencial",
+                        study_level="Técnico Superior Universitario",
+                        phone="2221234567",
+                        curp="LOPM040615MPLPRRA2",
+                        gender="Mujer",
                         socioeconomic_score=75.0,
-                        committee_notes="Ejemplo: completa los documentos y espera la revisión del área de becas.",
+                        committee_notes="Expediente en revisión con documentación probatoria y Anexo 1 cargados.",
                     )
-                    db.add(app_manu)
+                    db.add(app_recu)
                     db.flush()
-                    app_manu.folio = f"BEC-2026-{app_manu.id:06d}"
+                    app_recu.folio = f"BEC-2026-{app_recu.id:06d}"
 
                     for kind in BECAS_DOCS[:3]:
                         stored = uid() + ".pdf"
@@ -223,7 +249,7 @@ def seed():
                         (DATA_DIR / "uploads" / stored).write_bytes(content)
                         db.add(
                             ScholarshipDocument(
-                                application_id=app_manu.id,
+                                application_id=app_recu.id,
                                 kind=kind["id"],
                                 name=f"COMPROBANTE-{kind['id'].upper()}.pdf",
                                 stored_name=stored,
@@ -235,7 +261,7 @@ def seed():
 
         # Seed Diego's scholarship application (aprobada) and payment order
         if diego and admin:
-            call_acad = created_calls.get("BECA-2026-I-ACAD-001")
+            call_acad = created_calls.get("BECA-UTO-2026-ACAD")
             if call_acad:
                 app_acad = db.scalar(select(ScholarshipApplication).where(ScholarshipApplication.user_id == diego.id, ScholarshipApplication.call_id == call_acad.id))
                 if not app_acad:
@@ -243,26 +269,33 @@ def seed():
                         call_id=call_acad.id,
                         user_id=diego.id,
                         status="aprobada",
-                        gpa=9.6,
-                        academic_term="7mo Cuatrimestre",
-                        major="Ingeniería en Tecnologías de la Información",
+                        gpa=9.8,
+                        academic_term="6to Cuatrimestre",
+                        major="Desarrollo y Gestión de Software",
+                        study_system="Presencial",
+                        study_level="Licenciatura / Ingeniería",
+                        phone="2229876543",
+                        curp="HERD020819HPLRR08",
+                        gender="Hombre",
                         socioeconomic_score=60.0,
-                        committee_notes="Ejemplo de dictamen para desarrollo, sin validez institucional.",
+                        committee_notes="Beca Académica autorizada por Comité Evaluador.",
                     )
                     db.add(app_acad)
                     db.flush()
                     app_acad.folio = f"BEC-2026-{app_acad.id:06d}"
 
-                    order = ScholarshipPaymentOrder(
-                        application_id=app_acad.id,
-                        folio_orden="ORD-BEC-2026-0001",
-                        amount=call_acad.amount,
-                        period="Periodo de demostración",
-                        scheduled_date=now(),
-                        status="programada",
-                        reference="",
-                    )
-                    db.add(order)
+                    existing_order = db.scalar(select(ScholarshipPaymentOrder).where(ScholarshipPaymentOrder.folio_orden == "ORD-BEC-2026-0001"))
+                    if not existing_order:
+                        order = ScholarshipPaymentOrder(
+                            application_id=app_acad.id,
+                            folio_orden="ORD-BEC-2026-0001",
+                            amount=call_acad.amount,
+                            period="septiembre - diciembre 2026",
+                            scheduled_date=now(),
+                            status="programada",
+                            reference="",
+                        )
+                        db.add(order)
 
                     db.add(
                         ScholarshipAuditLog(
