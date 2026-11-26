@@ -66,11 +66,27 @@ def list_carreras():
     return CARRERAS_UTO
 
 
+def parse_json_field(val, fallback):
+    if isinstance(val, list):
+        return val
+    if not val:
+        return fallback
+    try:
+        parsed = json.loads(val)
+        return parsed if isinstance(parsed, list) else fallback
+    except Exception:
+        if isinstance(val, str) and val.startswith("{") and val.endswith("}"):
+            items = [x.strip() for x in val[1:-1].split(",") if x.strip()]
+            return items
+        return fallback
+
+
 @router.get("/convocatorias")
 def list_calls(db: Session = Depends(get_db)):
     calls = db.scalars(select(ScholarshipCall).order_by(desc(ScholarshipCall.created_at))).all()
-    return [
-        {
+    res = []
+    for c in calls:
+        res.append({
             "id": c.id,
             "code": c.code,
             "title": c.title,
@@ -85,14 +101,13 @@ def list_calls(db: Session = Depends(get_db)):
             "results_published": getattr(c, "results_published", False),
             "periodo_actual": getattr(c, "periodo_actual", "septiembre - diciembre 2026") or "septiembre - diciembre 2026",
             "periodo_anterior": getattr(c, "periodo_anterior", "mayo - agosto 2026") or "mayo - agosto 2026",
-            "cuatrimestres_habilitados": json.loads(getattr(c, "cuatrimestres_habilitados", None) or '["3°", "5°", "6°", "9°"]'),
-            "carreras_habilitadas": json.loads(getattr(c, "carreras_habilitadas", None) or '[]'),
+            "cuatrimestres_habilitados": parse_json_field(getattr(c, "cuatrimestres_habilitados", None), ["3°", "5°", "6°", "9°"]),
+            "carreras_habilitadas": parse_json_field(getattr(c, "carreras_habilitadas", None), []),
             "accepting": c.is_active and utc(c.start_date) <= now() <= utc(c.end_date),
-            "custom_questions": json.loads(c.custom_questions or "[]"),
+            "custom_questions": parse_json_field(c.custom_questions, []),
             "created_at": c.created_at.isoformat(),
-        }
-        for c in calls
-    ]
+        })
+    return res
 
 
 class CreateCallPayload(BaseModel):
