@@ -10,13 +10,15 @@ Los documentos originales no se incorporan a Git. Las descripciones siguientes c
 
 ## Mapa del sistema
 
-| Área                   | Alcance                                                                      | Entrega actual                               |
-| ---------------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
-| Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación      | Implementada para validación local           |
-| Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                     | Implementada; emisión oficial externa        |
-| Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora  | Requisitos identificados; sin implementación |
-| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación, publicación y constancias | Implementada al 100% (Fase 3 concluida para validación) |
-| Módulos futuros        | Por acordar con sus responsables                                             | Fuera de alcance hasta aprobarlos            |
+| Área                   | Alcance                                                                                                  | Entrega actual                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación                                  | Implementada para validación local                                  |
+| Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                                                 | Implementada; emisión oficial externa                               |
+| Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora                              | Requisitos identificados; sin implementación                        |
+| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación, publicación y constancias | Implementada al 100% (Fase 3 concluida para validación)             |
+| Autoevaluación         | Reflexión por asignación y parcial                                                                       | Implementada para validación local; reglas académicas por ratificar |
+| Coevaluación           | Valoración entre estudiantes asignados por materia, grupo y parcial                                      | Integrada para validación local; reglas académicas por ratificar    |
+| Módulos futuros        | Por acordar con sus responsables                                                                         | Fuera de alcance hasta aprobarlos                                   |
 
 ## Titulación electrónica
 
@@ -37,7 +39,7 @@ El objetivo de esta versión es permitir que el egresado integre y envíe su exp
 | TIT-11 | Servicios Escolares consulta solicitudes, documentos y avance                             | Bandeja, búsqueda por folio/nombre/matrícula/carrera, filtro por estado y expediente. Límite actual: 500 recientes                                                   |
 | TIT-12 | Conservar estados, fechas y siguiente paso                                                | Once estados del PDF, máquina de estados y versión de concurrencia. Instrucciones visibles por estado                                                                |
 | TIT-13 | Notificar cambios y conservar actividad                                                   | Notificaciones internas e historial de eventos en la misma transacción que el cambio. Correo de estado aún no implementado                                           |
-| TIT-14 | Copias de seguridad                                                                       | Script pg_dump + archivos, procedimiento de restauración y verificación. Automatización/retención por definir                                                        |
+| TIT-14 | Copias de seguridad                                                                       | Script pg_dump + archivos, procedimiento de restauración y verificación. Automatización/retención por definir                                                       |
 | TIT-15 | Proteger sesiones, contraseñas, archivos y permisos                                       | Hash lento con sal, tokens almacenados como hash, CSRF, origen permitido, consultas ORM y rutas de archivo no públicas. Antivirus y hardening operativo pendientes   |
 | TIT-16 | Reportes y usuarios administrativos                                                       | Exportación CSV; altas por CLI de operador. Pantalla de gestión de usuarios, importación masiva y reportes PDF administrativos pendientes                            |
 
@@ -122,6 +124,6 @@ Autorización: líder en este chat; confirmó Google Workspace y teléfono con c
 
 13 de octubre de 2026. El líder indica expresamente que la plataforma contempla también coevaluación y autoevaluación de clase cada parcial, además de evaluación docente, Becas y Titulación. Esta necesidad procede del chat; no se atribuye al documento fuente de evaluación docente.
 
-Nombre provisional del alcance: Coevaluación y autoevaluación de clase. Antes de desarrollar se deben definir responsables, asignaciones por grupo/asignatura/parcial, cuestionarios o rúbricas, escalas, cálculo, anonimato, visibilidad y publicación de resultados, correcciones y retención. No existen rutas, tablas, pantallas o módulos habilitados para esta función en la entrega actual.
+Nombre provisional del alcance: Coevaluación y autoevaluación de clase. La línea base de CR-008 dejaba ambos módulos para análisis posterior. El código actual de Autoevaluación ya está integrado; Coevaluación se integró a solicitud del líder con el prototipo recibido, según [su especificación de integración](COEVALUACION.md). Aún necesitan ratificación de responsables, asignaciones, escalas, anonimato, visibilidad de resultados, correcciones y retención.
 
-La bienvenida pública utiliza el contexto general Servicios de tu universidad. Los módulos operativos continúan limitados a Titulación electrónica; la evaluación docente, esta nueva necesidad y Becas se integrarán por etapas con sus requisitos aprobados. La amplitud del mensaje no autoriza implementar decisiones académicas sin especificación.
+La bienvenida pública utiliza el contexto general Servicios de tu universidad. La existencia técnica de los módulos no equivale a aprobación de reglas académicas ni a autorización para usar expedientes reales.

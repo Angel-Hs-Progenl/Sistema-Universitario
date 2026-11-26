@@ -10,6 +10,7 @@ from .modules.titulacion.router import router as titles_router
 from .modules.becas.router import router as becas_router
 from .modules.evaluacion_docente.router import router as evaluations_router
 from .modules.autoevaluacion.router import router as autoevaluacion_router
+from .modules.coevaluacion.router import router as coevaluacion_router
 
 ALLOWED_ORIGINS = {ORIGIN}
 
@@ -105,3 +106,4 @@ app.include_router(titles_router)
 app.include_router(becas_router)
 app.include_router(evaluations_router)
 app.include_router(autoevaluacion_router)
+app.include_router(coevaluacion_router)

@@ -168,3 +168,9 @@ La interpretación gráfica de la mascota sigue siendo una propuesta; no se decl
 - **Generador e Impresión del Anexo 1 Oficial:** Componente modal `Anexo1Modal` fiel al formato oficial de la convocatoria institucional para prellenado y descarga.
 - **Administración de Convocatorias:** Edición y actualización inmediata desde la vista de gestión administrativa para coordinadores y escolares.
 - **Pruebas y Verificación:** 17/17 pruebas de backend pasando en pytest, 13/13 pruebas en node contract tests, 0 alertas en `scripts/check_repository.py`, bundle Vite compilado exitosamente.
+
+## Registro CR-013 · Integración del prototipo de Coevaluación
+
+26 de noviembre de 2026. El líder solicita integrar la carpeta `Coevaluación/` recibida por pull, conectar sus tareas con la aplicación y roles existentes, y adaptar su diseño al portal. Se conserva la propuesta de seis criterios y escala 1–5 como base editable; su promedio es descriptivo, no una nota institucional. El Administrador prepara cuestionarios versionados, actividades y parejas; Estudiante responde solo sus asignaciones. Se sustituyen el selector de rol y `localStorage` del prototipo por sesión, permisos, CSRF, PostgreSQL y auditoría compartidos.
+
+Impacto transversal autorizado por esta solicitud: rutas y navegación compartida, ayuda, router FastAPI y migración Alembic 0010. Los archivos de la página independiente se retiraron; su procedencia se conserva en Git y en `Coevaluación/README.md`. Detalle y decisiones pendientes en [COEVALUACION.md](COEVALUACION.md). La autorización para integrar esta propuesta no sustituye la ratificación de reglas académicas, privacidad o fases institucionales.

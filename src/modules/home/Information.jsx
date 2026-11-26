@@ -75,6 +75,38 @@ const helpTopics = {
       ],
     ],
   },
+  coevaluacion: {
+    title: "Coevaluación entre estudiantes",
+    text: "Responde únicamente las parejas asignadas durante el periodo abierto por el área académica.",
+    questions: [
+      [
+        "¿Cómo sé a quién evaluar?",
+        "La persona asignada aparece junto a la materia, grupo y parcial. No necesitas escribir nombres ni seleccionar compañeros por tu cuenta.",
+      ],
+      [
+        "¿Puedo corregir mi respuesta?",
+        "Revisa los criterios y comentarios antes de enviar. El envío es definitivo y queda guardado en el servidor.",
+      ],
+      [
+        "¿El promedio es una calificación?",
+        "No. Resume de forma descriptiva las selecciones del 1 al 5 en esta actividad; el portal no lo convierte en una nota académica oficial.",
+      ],
+    ],
+  },
+  autoevaluacion: {
+    title: "Autoevaluación de clase",
+    text: "Consulta tus actividades asignadas por materia, grupo y parcial durante el periodo habilitado.",
+    questions: [
+      [
+        "¿Por qué no aparece una actividad?",
+        "El área responsable debe asignarte la actividad y abrir la recepción antes de que puedas responder.",
+      ],
+      [
+        "¿Puedo cambiar una respuesta enviada?",
+        "No. Revisa tus respuestas antes de enviarlas; después puedes consultarlas en el historial.",
+      ],
+    ],
+  },
 };
 export function Help() {
   const { user } = useAuth();
@@ -233,8 +265,8 @@ export function Privacy() {
       <p>
         Datos de identificación, contacto y trayectoria académica; documentos de
         titulación; solicitudes y estudio socioeconómico de becas; asignaciones,
-        respuestas y comentarios de evaluación docente; dictámenes e historial
-        de cambios.
+        respuestas y comentarios de evaluación docente, autoevaluación y
+        coevaluación; dictámenes e historial de cambios.
       </p>
       <h2>Acceso por área</h2>
       <p>
@@ -245,7 +277,9 @@ export function Privacy() {
         Tesorería consulta órdenes internas y Auditoría accede a la actividad
         autorizada. En Evaluación, el docente recibe únicamente sus resultados
         agregados publicados y comentarios revisados, con el mínimo de
-        participantes configurado.
+        participantes configurado. En Coevaluación, cada estudiante consulta
+        únicamente sus asignaciones y respuestas; el administrador consulta el
+        avance de los envíos.
       </p>
       <h2>Pendiente de aprobación institucional</h2>
       <p>

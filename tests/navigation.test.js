@@ -138,7 +138,33 @@ test("Recuperación y ayuda pública regresan al acceso; roles de personal no en
     );
   assert.deepEqual(
     MODULES.map((m) => m.id),
-    ["titulacion", "becas", "evaluacion-docente", "autoevaluacion"],
+    [
+      "titulacion",
+      "becas",
+      "evaluacion-docente",
+      "autoevaluacion",
+      "coevaluacion",
+    ],
+  );
+});
+
+test("Coevaluación respeta accesos por rol y rutas de trabajo", () => {
+  assert.deepEqual(moduleLinks("coevaluacion", "docente"), []);
+  assert.deepEqual(moduleLinks("coevaluacion", "estudiante"), [
+    ["/coevaluacion/mis-asignaciones", "Mis coevaluaciones"],
+  ]);
+  assert.ok(
+    homeShortcuts("administrador").some(
+      (item) => item.path === "/coevaluacion/actividades",
+    ),
+  );
+  assert.equal(
+    breadcrumbsFor("/coevaluacion/responder/7", true).at(-1).label,
+    "Responder coevaluación",
+  );
+  assert.equal(
+    breadcrumbsFor("/coevaluacion/desconocida", true).at(-1).label,
+    "Página no encontrada",
   );
 });
 

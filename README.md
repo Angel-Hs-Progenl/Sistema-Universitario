@@ -4,7 +4,7 @@ La [revisión integral CR-007](docs/REVISION-INTEGRAL.md) registra investigació
 
 Las animaciones empiezan activadas. Puedes desactivarlas o volver a activarlas desde el footer; el navegador conserva esta preferencia de apariencia al navegar y recargar.
 
-Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. La bienvenida presenta el portal completo con el azor mensajero; el inicio privado ofrece Titulación, Becas y Evaluación docente según el rol. Los enlaces internos conservan su destino al iniciar sesión. Los tres módulos comparten sesión, navegación, componentes y base de datos; coevaluación y autoevaluación por parcial son necesidades futuras señaladas por el líder. Las necesidades futuras se incorporarán después de definir y aprobar su alcance.
+Base compartida del proyecto integrador de la Universidad Tecnológica de Oriental. React y JavaScript en el cliente; FastAPI, Python, SQLAlchemy y PostgreSQL en el servidor. La bienvenida presenta el portal completo con el azor mensajero; el inicio privado ofrece Titulación, Becas, Evaluación docente, Autoevaluación y Coevaluación según el rol. Los enlaces internos conservan su destino al iniciar sesión. Los módulos comparten sesión, navegación, componentes y base de datos. Las reglas académicas de Autoevaluación y Coevaluación siguen pendientes de ratificación institucional.
 
 **Para los equipos:** empieza por [clonar e instalar](docs/INSTALACION.md), revisa [la arquitectura modular](docs/ARQUITECTURA.md) y utiliza los [prompts comunes](docs/PROMPTS.md). Cada equipo amplía esta aplicación; no entrega otro login, backend o diseño independiente.
 
@@ -50,6 +50,8 @@ Para detener los dos servidores: `./scripts/start-local.ps1 -Stop`. También pue
 
 - Becas: convocatorias con fechas, estudio, solicitud, adjuntos revisados, dictamen con cupo, órdenes internas exclusivas de Tesorería, renovación y actividad.
 - Evaluación docente: cuestionarios versionados, periodos, asignaciones, respuestas únicas, revisión de comentarios, publicación por docente, gráficas y planes de mejora. CSV e impresión; sin éxito simulado ni datos mock en las pantallas.
+- Coevaluación: criterios versionados, actividades por materia/grupo/parcial, parejas asignadas, respuesta definitiva por estudiante y seguimiento de envíos. [Alcance y pendientes](docs/COEVALUACION.md).
+- Autoevaluación: actividades asignadas por parcial, cuestionarios versionados, respuesta definitiva e historial propio; reglas académicas por ratificar.
 
 - Inicio de servicios, acceso y recuperación de contraseña con token de un solo uso.
 - Acceso con teléfono vinculado y contraseña del portal; menú de cuenta y edición de nombre visible.
@@ -80,6 +82,7 @@ La recuperación sin SMTP escribe los enlaces en `data/outbox/` solamente en des
 | [Validación](docs/VALIDACION.md)                         | Pruebas ejecutadas y límites de verificación             |
 | [Instalación para equipos](docs/INSTALACION.md)          | Clonar, levantar PostgreSQL, ejecutar y entregar módulos |
 | [Acceso institucional](docs/ACCESO-INSTITUCIONAL.md)     | Google, teléfono vinculado, perfil y operación segura    |
+| [Coevaluación](docs/COEVALUACION.md)                    | Roles, flujo, datos y decisiones académicas pendientes    |
 
 ## Comprobar cambios
 
