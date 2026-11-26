@@ -1,0 +1,165 @@
+
+:root {
+  --guinda: #6F1738;
+  --dorado: #B8862B;
+  --verde: #386641;
+  --verde-claro: #DCE8D5;
+  --fondo: #F7F6F2;
+  --texto: #202124;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+header {
+  background: var(--guinda);
+  color: white;
+  padding: 30px 15px;
+  text-align: center;
+  border-bottom: 5px solid var(--dorado);
+}
+
+.container {
+  width: min(900px, 94%);
+  margin: 25px auto;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  border: 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  background: var(--verde-claro);
+  color: var(--texto);
+  margin-top: 8px;
+}
+
+button:hover {
+  filter: brightness(0.94);
+}
+
+.primary {
+  background: var(--guinda);
+  color: white;
+}
+
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid #e4dfd7;
+  box-shadow: 0 4px 15px #2021240d;
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: var(--guinda);
+}
+
+h3 {
+  color: var(--verde);
+  margin-top: 24px;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 6px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d4cec4;
+  border-radius: 8px;
+  font: inherit;
+  background: white;
+  color: var(--texto);
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.question {
+  background: var(--fondo);
+  padding: 14px;
+  border-radius: 9px;
+  margin: 12px 0;
+}
+
+.question select {
+  margin-top: 10px;
+}
+
+.valuation-feedback {
+  color: var(--verde);
+  font-size: 13px;
+  font-weight: bold;
+  margin-top: 9px;
+}
+
+.score-card {
+  background: var(--verde-claro);
+  padding: 16px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.score-card h3 {
+  margin-top: 0;
+}
+
+.score-card p {
+  margin: 8px 0;
+}
+
+.hidden {
+  display: none;
+}
+
+#status,
+#result,
+#adminSummary {
+  padding: 12px;
+  background: var(--verde-claro);
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  font-size: 13px;
+  color: #666;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
+
+  .tabs {
+    flex-direction: column;
+  }
+}

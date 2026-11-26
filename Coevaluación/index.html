@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coevaluación UT Oriental</title>
+  <link rel="stylesheet" href="css.css">
+</head>
+<body>
+  <header>
+    <h1>Universidad Tecnológica de Oriental</h1>
+    <p>Sistema de coevaluación entre estudiantes</p>
+  </header>
+
+  <main class="container">
+    <nav class="tabs">
+      <button type="button" id="studentTab">Estudiante</button>
+      <button type="button" id="adminTab">Administrador</button>
+    </nav>
+
+    <section id="studentPanel" class="card">
+      <h2>Materias por realizar</h2>
+      <label for="subject">Selecciona la materia</label>
+      <select id="subject"></select>
+      <button id="startEvaluation" class="primary">
+        Ir a la coevaluación
+      </button>
+      <p id="status">Selecciona una materia para comenzar.</p>
+    </section>
+
+    <section id="adminPanel" class="card hidden">
+      <h2>Panel del administrador</h2>
+
+      <h3>Agregar materia</h3>
+      <label for="newSubject">Nombre de la materia</label>
+      <input id="newSubject" placeholder="Ej. Programación">
+      <button id="addSubject" class="primary">Agregar materia</button>
+
+      <h3>Editar preguntas de coevaluación</h3>
+      <div id="questionEditor"></div>
+
+      <label for="newQuestion">Nueva pregunta</label>
+      <input id="newQuestion" placeholder="Escribe una pregunta">
+      <button id="addQuestion">Agregar pregunta</button>
+      <button id="saveQuestions" class="primary">Guardar cambios</button>
+      <button id="restoreQuestions">Restaurar preguntas iniciales</button>
+
+      <h3>Seguimiento</h3>
+      <p id="adminSummary">Todavía no hay evaluaciones terminadas.</p>
+    </section>
+
+    <section id="evaluationPanel" class="card hidden">
+      <h2>Coevaluación</h2>
+
+      <label for="evaluator">Tu nombre</label>
+      <input id="evaluator" placeholder="Nombre del estudiante">
+
+      <label for="peer">Compañero que vas a evaluar</label>
+      <input id="peer" placeholder="Nombre del compañero">
+
+      <h3 id="evaluationSubject">Materia seleccionada</h3>
+
+      <div id="questions"></div>
+
+      <div class="score-card">
+        <h3>Resultado de la evaluación</h3>
+        <p>Promedio: <strong id="average">0.00 de 5</strong></p>
+        <p>Porcentaje: <strong id="percentage">0%</strong></p>
+        <p>Valoración: <strong id="valuation">Pendiente</strong></p>
+      </div>
+
+      <label for="strength">Fortalezas</label>
+      <textarea id="strength" placeholder="¿Qué hizo bien?"></textarea>
+
+      <label for="improvement">Aspectos por mejorar</label>
+      <textarea id="improvement" placeholder="¿Qué puede mejorar?"></textarea>
+
+      <button id="finish" class="primary">
+        Terminar coevaluación
+      </button>
+
+      <p id="result"></p>
+    </section>
+  </main>
+
+  <footer>UT Oriental · Aprender en equipo</footer>
+  <script src="java.js"></script>
+</body>
+</html>
