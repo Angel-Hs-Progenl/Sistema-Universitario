@@ -37,6 +37,8 @@ from .models import (
 )
 
 
+# ===== ACCESO Y UTILIDADES =====
+# BUSCAR: Validar rol y acceso institucional
 def evaluation_user(request: Request, user=Depends(current_user)):
     require_role(user, "estudiante", "docente", "administrador")
     if PRODUCTION and request.state.session.auth_method != "google":
@@ -97,12 +99,15 @@ class QuestionnairePayload(Payload):
     questions: list[Question] = Field(min_length=3, max_length=100)
 
 
+# ===== CUESTIONARIOS =====
+# BUSCAR: Consultar cuestionarios
 @router.get("/cuestionarios")
 def questionnaires(user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "administrador")
     return [questionnaire_data(q) for q in db.scalars(select(Questionnaire).order_by(Questionnaire.id.desc()))]
 
 
+# BUSCAR: Crear cuestionario
 @router.post("/cuestionarios", status_code=201)
 def create_questionnaire(payload: QuestionnairePayload, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "administrador")
@@ -124,6 +129,8 @@ class AcademicGroupPayload(Payload):
     academic_term: str = Field(min_length=3, max_length=50)
 
 
+# ===== GRUPOS Y ESTUDIANTES =====
+# BUSCAR: Crear grupo academico
 @router.post("/grupos", status_code=201)
 def create_academic_group(
     payload: AcademicGroupPayload,
@@ -169,6 +176,7 @@ def create_academic_group(
     }
 
 
+# BUSCAR: Consultar grupos academicos
 @router.get("/grupos")
 def list_academic_groups(
     user=Depends(evaluation_user),
@@ -193,6 +201,7 @@ def list_academic_groups(
         for group in groups
     ]
 
+# BUSCAR: Consultar estudiantes del grupo
 @router.get("/grupos/{group_id}/estudiantes")
 def list_group_students(
     group_id: int,
@@ -227,6 +236,7 @@ class GroupEnrollmentPayload(Payload):
     student_id: str
 
 
+# BUSCAR: Inscribir estudiante individual
 @router.post("/grupos/{group_id}/estudiantes", status_code=201)
 def enroll_student(
     group_id: int,
@@ -274,6 +284,7 @@ def enroll_student(
     }
 
 
+# BUSCAR: IMPORTACION MASIVA - vista previa de Excel y validaciones
 @router.post("/grupos/{group_id}/estudiantes/importar/vista-previa")
 async def preview_student_import(
     group_id: int,
@@ -433,6 +444,7 @@ async def preview_student_import(
         workbook.close()
 
         
+# BUSCAR: IMPORTACION MASIVA - confirmar inscripciones
 @router.post("/grupos/{group_id}/estudiantes/importar/confirmar")
 async def confirm_student_import(
     group_id: int,
@@ -507,6 +519,8 @@ class GroupSubjectPayload(Payload):
     subject: str = Field(min_length=3, max_length=150)
 
 
+# ===== MATERIAS Y DOCENTES =====
+# BUSCAR: Asignar docente y materia al grupo
 @router.post("/grupos/{group_id}/materias", status_code=201)
 def assign_group_subject(
     group_id: int,
@@ -559,6 +573,7 @@ def assign_group_subject(
         "subject": group_subject.subject,
     }
 
+# BUSCAR: Consultar materias y docentes del grupo
 @router.get("/grupos/{group_id}/materias")
 def list_group_subjects(
     group_id: int,
@@ -590,6 +605,7 @@ def list_group_subjects(
         for subject, teacher_name in rows
     ]
 
+# BUSCAR: Consultar personas para asignaciones
 @router.get("/personas")
 def people(user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "administrador")
@@ -635,6 +651,8 @@ def people(user=Depends(evaluation_user), db: Session = Depends(get_db)):
     return result
 
 
+# ===== PERIODOS DE EVALUACION =====
+# BUSCAR: Consultar periodos
 @router.get("/periodos")
 def periods(user=Depends(evaluation_user), db: Session = Depends(get_db)):
     stmt = select(Period)
@@ -654,6 +672,7 @@ class PeriodPayload(Payload):
     minimum_responses: int = Field(ge=2, le=500)
 
 
+# BUSCAR: CREAR PERIODO - fechas, cuestionario y minimo de respuestas
 @router.post("/periodos", status_code=201)
 def create_period(payload: PeriodPayload, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "administrador")
@@ -674,6 +693,7 @@ class PeriodTransition(Payload):
     version: int = Field(ge=1)
 
 
+# BUSCAR: PUBLICAR PERIODOS - abrir, cerrar y publicar evaluaciones
 @router.post("/periodos/{period_id}/estado")
 def transition_period(period_id: int, payload: PeriodTransition, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "administrador")
@@ -711,6 +731,8 @@ class GroupAssignmentPayload(Payload):
     group_subject_id: int
 
 
+# ===== ASIGNACIONES =====
+# BUSCAR: Asignar evaluaciones a un grupo
 @router.post("/asignaciones/grupo", status_code=201)
 def create_group_assignments(
     payload: GroupAssignmentPayload,
@@ -808,6 +830,7 @@ class AssignmentPayload(Payload):
     group_name: str = Field(min_length=1, max_length=80)
 
 
+# BUSCAR: Asignar evaluacion individual
 @router.post("/asignaciones", status_code=201)
 def create_assignment(payload: AssignmentPayload, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "administrador")
@@ -824,6 +847,7 @@ def create_assignment(payload: AssignmentPayload, user=Depends(evaluation_user),
     return {"id": assignment.id}
 
 
+# BUSCAR: Consultar asignaciones por rol
 @router.get("/asignaciones")
 def assignments(user=Depends(evaluation_user), db: Session = Depends(get_db)):
     student = aliased(User)
@@ -841,6 +865,8 @@ def assignments(user=Depends(evaluation_user), db: Session = Depends(get_db)):
         **({"student_id": a.student_id, "student_name": student_name} if user.role == "administrador" else {})} for a, p, t, submission, student_name in rows]
 
 
+# ===== RESPUESTAS DEL ESTUDIANTE =====
+# BUSCAR: Ver cuestionario asignado al estudiante
 @router.get("/asignaciones/{assignment_id}")
 def assignment_detail(assignment_id: int, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "estudiante")
@@ -861,6 +887,7 @@ class SubmissionPayload(Payload):
     comment: str = Field(default="", max_length=2000)
 
 
+# BUSCAR: ENVIAR EVALUACION - validar y guardar respuestas
 @router.post("/asignaciones/{assignment_id}/respuesta", status_code=201)
 def submit(assignment_id: int, payload: SubmissionPayload, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "estudiante")
@@ -883,6 +910,8 @@ def submit(assignment_id: int, payload: SubmissionPayload, user=Depends(evaluati
     return {"message": "Evaluación guardada. No puedes modificar las respuestas.", "submitted": True}
 
 
+# ===== MODERACION DE COMENTARIOS =====
+# BUSCAR: Consultar comentarios para moderacion
 @router.get("/comentarios")
 def comments(
     period_id: int,
@@ -919,6 +948,7 @@ class Moderation(Payload):
     public_comment: str = Field(max_length=2000)
 
 
+# BUSCAR: REVISAR COMENTARIOS - aprobar texto publico
 @router.post("/comentarios/{submission_id}/revision")
 def moderate(
     submission_id: int,
@@ -969,6 +999,8 @@ def moderate(
     return {"message": "Revisión guardada."}
 
 
+# ===== RESULTADOS DOCENTES =====
+# BUSCAR: CALCULAR RESULTADOS - promedios y umbral de privacidad
 def results_for(db, period, teacher_id):
     teacher = db.get(User, teacher_id)
     if not teacher or teacher.role != "docente":
@@ -1010,6 +1042,7 @@ def results_for(db, period, teacher_id):
         "calculation": "Media de respuestas por pregunta; se pondera cada pregunta con el peso configurado. No constituye una clasificación institucional."}
 
 
+# BUSCAR: CONSULTAR RESULTADOS - permisos por docente
 @router.get("/resultados")
 def results(period_id: int, teacher_id: str | None = None, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "docente", "administrador")
@@ -1025,6 +1058,8 @@ def results(period_id: int, teacher_id: str | None = None, user=Depends(evaluati
 
 
 
+# ===== ANALISIS CON INTELIGENCIA ARTIFICIAL =====
+# BUSCAR: Ocultar identificadores antes de analizar
 def _anonimizar_para_ia(texto):
     """Oculta identificadores comunes; la moderación humana sigue siendo obligatoria."""
     texto = re.sub(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b", "[CORREO OCULTO]", texto)
@@ -1232,6 +1267,7 @@ def _tema_respaldado_por_cita(tema, cita):
         for patron in equivalencias.get(tema_normalizado, ())
     )
 
+# BUSCAR: IA - enviar comentario a Qwen y validar evidencias
 def _hallazgos_de_comentario(comentario):
     """Qwen propone temas abiertos; solo pasan las citas literalmente comprobadas."""
     instrucciones = (
@@ -1333,6 +1369,7 @@ def _hallazgos_de_comentario(comentario):
     return validados, True
 
 
+# BUSCAR: IA - contar y agrupar temas por comentario
 def _agrupar_hallazgos(hallazgos):
     """Cada tema se cuenta una vez por comentario; no por citas repetidas."""
     grupos = []
@@ -1374,6 +1411,7 @@ def _mostrar_temas(grupos, vacio):
     )
 
 
+# BUSCAR: IA - generar resumen y recomendaciones
 @router.post("/analisis-ia")
 def generar_analisis_ia(
     period_id: int,
@@ -1488,6 +1526,8 @@ def generar_analisis_ia(
     return {"resultados": analisis}
 
 
+# ===== EXPORTACION =====
+# BUSCAR: DESCARGAR CSV - exportar resultados
 @router.get("/reportes.csv")
 def export_results(period_id: int, teacher_id: str | None = None, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     reports = results(period_id, teacher_id, user, db)
@@ -1504,6 +1544,8 @@ def export_results(period_id: int, teacher_id: str | None = None, user=Depends(e
     return Response("\ufeff" + output.getvalue(), media_type="text/csv", headers={"Content-Disposition": 'attachment; filename="evaluacion-docente.csv"'})
 
 
+# ===== PLANES Y RETROALIMENTACION =====
+# BUSCAR: Consultar planes de mejora
 @router.get("/planes")
 def plans(user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "docente", "administrador")
@@ -1526,6 +1568,7 @@ class FeedbackPayload(Payload):
     teacher_id: str
     feedback: str = Field(min_length=10, max_length=4000)
 
+# BUSCAR: Consultar retroalimentacion academica
 @router.get("/retroalimentacion")
 def get_feedback(
         period_id: int,
@@ -1558,6 +1601,7 @@ def get_feedback(
             for item in db.scalars(stmt)
         ]
 
+# BUSCAR: Registrar retroalimentacion academica
 @router.post("/retroalimentacion", status_code=201)
 def create_feedback(
     payload: FeedbackPayload,
@@ -1602,6 +1646,7 @@ def create_feedback(
 
     return {"id": feedback.id}
 
+# BUSCAR: Crear plan de mejora
 @router.post("/planes", status_code=201)
 def create_plan(payload: PlanPayload, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "administrador")
@@ -1621,6 +1666,7 @@ class PlanProgress(Payload):
     version: int = Field(ge=1)
 
 
+# BUSCAR: Actualizar plan de mejora
 @router.post("/planes/{plan_id}/avance")
 def update_plan(plan_id: int, payload: PlanProgress, user=Depends(evaluation_user), db: Session = Depends(get_db)):
     require_role(user, "docente")

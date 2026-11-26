@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Download, Printer } from "lucide-react";
 import { useAuth } from "../../app/Auth";
@@ -29,12 +29,10 @@ export function Results() {
       visible ? api(`${BASE}/resultados?period_id=${id}`) : Promise.resolve([]),
     [id, visible],
   );
-
   const plans = useAsync(
   () => visible ? api(`${BASE}/planes`) : Promise.resolve([]),
   [visible],
 );
-
 const feedbacks = useAsync(
   () =>
     visible && id
@@ -42,7 +40,6 @@ const feedbacks = useAsync(
       : Promise.resolve([]),
   [id, visible],
 );
-
 async function analizarDocente(teacherId) {
   setCargandoIA(teacherId);
   setErrorIA("");
@@ -53,14 +50,14 @@ async function analizarDocente(teacherId) {
     );
     const resultado = respuesta.resultados?.[0];
     if (!resultado) {
-      throw new Error("No se recibió un análisis de la IA.");
+      throw new Error("No se recibiÃ³ un anÃ¡lisis de la IA.");
     }
     setAnalisisIA((anteriores) => ({
       ...anteriores,
       [teacherId]: resultado.analisis,
     }));
   } catch (error) {
-    setErrorIA(error.message || "No se pudo generar el análisis.");
+    setErrorIA(error.message || "No se pudo generar el anÃ¡lisis.");
   } finally {
     setCargandoIA(null);
   }
@@ -71,8 +68,8 @@ async function analizarDocente(teacherId) {
        <Heading
         eyebrow={
           admin
-            ? "Evaluación docente / Coordinación"
-            : "Evaluación docente / Docente"
+            ? "EvaluaciÃ³n docente / CoordinaciÃ³n"
+            : "EvaluaciÃ³n docente / Docente"
         }
         title={admin ? "Resultados por periodo" : "Mis resultados"}
         action={
@@ -96,17 +93,14 @@ async function analizarDocente(teacherId) {
       >
         {admin
           ? "Consulta resultados agregados y verifica el umbral de privacidad antes de publicar."
-          : "Consulta tus resultados y los comentarios revisados después de su publicación."}
+          : "Consulta tus resultados y los comentarios revisados despuÃ©s de su publicaciÃ³n."}
       </Heading>
-
-      
     </div>
-     
       <LoadState state={periods} empty="No hay periodos asignados">
         <div className="work-toolbar no-print">
           <Field
             as="select"
-            label="Periodo de evaluación"
+            label="Periodo de evaluaciÃ³n"
             value={id}
             onChange={(e) => setSelection(e.target.value)}
           >
@@ -120,13 +114,13 @@ async function analizarDocente(teacherId) {
             <Status value={period.status}>
               {period.status === "publicado"
                 ? "Publicado"
-                : "Pendiente de publicación"}
+                : "Pendiente de publicaciÃ³n"}
             </Status>
           )}
         </div>
         {!visible ? (
-          <Empty title="Resultados pendientes de publicación">
-            El área responsable debe cerrar la recepción, revisar los
+          <Empty title="Resultados pendientes de publicaciÃ³n">
+            El Ã¡rea responsable debe cerrar la recepciÃ³n, revisar los
             comentarios y publicar el periodo.
           </Empty>
         ) : (
@@ -137,7 +131,7 @@ async function analizarDocente(teacherId) {
             {state.data?.map((report) => (
           <article className="work-report" key={report.teacher_id} data-teacher-id={report.teacher_id}
 >                <span className="eyebrow">
-                  {report.period_title} ·{" "}
+                  {report.period_title} Â·{" "}
                   {report.published ? "Publicado" : "Vista interna"}
                 </span>
                 <h2>{report.teacher_name}</h2>
@@ -147,28 +141,23 @@ async function analizarDocente(teacherId) {
                 className="button button-secondary"
                 onClick={() => {
                 const teacherId = String(report.teacher_id);
-
                 document.querySelectorAll(".work-report").forEach((element) => {
                   element.classList.toggle(
                     "print-selected",
                     element.dataset.teacherId === teacherId
                   );
                 });
-
                 document.body.dataset.printTeacher = teacherId;
-
                 window.addEventListener(
                   "afterprint",
                   () => {
                     delete document.body.dataset.printTeacher;
-
                     document.querySelectorAll(".work-report").forEach((element) => {
                       element.classList.remove("print-selected");
                     });
                   },
                   { once: true }
                 );
-
                 window.print();
               }}
               >
@@ -180,7 +169,6 @@ async function analizarDocente(teacherId) {
            <strong>Asignaturas:</strong> {report.subjects.join(", ")}
            </p>
         )}
-
         {report.careers?.length > 0 && (
           <p className="work-help">
           <strong>Carreras:</strong> {report.careers.join(", ")}
@@ -209,7 +197,7 @@ async function analizarDocente(teacherId) {
                     </dl>
                     <div
                       className="work-bars"
-                      aria-label="Promedios por sección"
+                      aria-label="Promedios por secciÃ³n"
                     >
                       {report.sections.map((s) => (
                         <div key={s.name} className="work-bar">
@@ -227,10 +215,8 @@ async function analizarDocente(teacherId) {
                         </div>
                       ))}
                     </div>
-                    <details open>
-                      <summary className="text-link">
-                        Consultar resultados por pregunta
-                      </summary>
+              <details className="question-results-table">
+                        <summary className="text-link">Consultar resultados por pregunta</summary>
                       <div
                         className="work-table"
                         role="region"
@@ -240,7 +226,7 @@ async function analizarDocente(teacherId) {
                         <table>
                           <thead>
                             <tr>
-                              <th>Sección y pregunta</th>
+                              <th>SecciÃ³n y pregunta</th>
                               <th>Peso</th>
                               <th>Promedio</th>
                             </tr>
@@ -261,6 +247,24 @@ async function analizarDocente(teacherId) {
                       </div>
                     </details>
                   <p className="work-help">{report.calculation}</p>
+          <div className="work-bars question-chart-grid" aria-label="GrÃ¡fica de resultados por pregunta">
+                <h4>Promedios por pregunta</h4>
+                  {report.questions.map((q) => (
+                    <div key={q.id} className="work-bar">
+                      <div>
+                        <span>{q.text}</span>
+                        <strong>{q.average.toFixed(2)}</strong>
+                      </div>
+                      <div className="work-bar-track" aria-hidden="true">
+                        <span
+                          style={{
+                            width: `${(q.average / Math.max(...report.scale.map((o) => o.value))) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
 <div className="work-actions">
   <button
     type="button"
@@ -272,46 +276,37 @@ async function analizarDocente(teacherId) {
       ? "Analizando con IA..."
       : "Analizar con IA"}
   </button>
-
 </div>
-
 {analisisIA[report.teacher_id] && (
   <section className="work-section">
-    <h3>Resumen de evaluación docente</h3>
-
+    <h3>Resumen de evaluaciÃ³n docente</h3>
     {(() => {
       const lineas = analisisIA[report.teacher_id].split("\n");
-
       const obtener = (titulo) => {
         const linea = lineas.find((l) => l.startsWith(titulo));
         return linea ? linea.slice(titulo.length).trim() : "";
       };
-
       const fortalezas = obtener("Fortalezas mencionadas:");
-      const mejoras = obtener("Áreas de oportunidad:");
+      const mejoras = obtener("Ãreas de oportunidad:");
       const recurrentes = obtener("Temas recurrentes:");
       const recomendaciones = obtener("Recomendaciones sugeridas:");
-
       return (
         <div>
           {fortalezas && (
             <p>
-              <strong>Valoración positiva:</strong> {fortalezas}
+              <strong>ValoraciÃ³n positiva:</strong> {fortalezas}
             </p>
           )}
-
           {mejoras && (
             <p>
-              <strong>Áreas de mejora:</strong> {mejoras}
+              <strong>Ãreas de mejora:</strong> {mejoras}
             </p>
           )}
-
           {recurrentes && (
             <p>
               <strong>Temas recurrentes:</strong> {recurrentes}
             </p>
           )}
-
           {recomendaciones && (
                 <div>
                   <p>
@@ -324,17 +319,14 @@ async function analizarDocente(teacherId) {
                   </ul>
                 </div>
               )}
-
           <p className="work-help">
-            Análisis asistido por IA. Requiere revisión humana.
+            AnÃ¡lisis asistido por IA. Requiere revisiÃ³n humana.
           </p>
-  
         </div>
       );
     })()}
   </section>
 )}
-
 {errorIA && (
   <p role="alert" className="work-help">
     {errorIA}
@@ -355,8 +347,7 @@ async function analizarDocente(teacherId) {
                       )}
                     </section>
               <section className="work-section">
-              <h3>Retroalimentación de Dirección Académica</h3>
-
+              <h3>RetroalimentaciÃ³n de DirecciÃ³n AcadÃ©mica</h3>
                {admin && report.available && !feedbacks.data?.some(
               (item) =>
                 String(item.teacher_id) === String(report.teacher_id) &&
@@ -368,7 +359,6 @@ async function analizarDocente(teacherId) {
                   e.preventDefault();
                   const form = e.currentTarget;
                   const feedback = new FormData(form).get("feedback");
-
                   try {
                     await api(`${BASE}/retroalimentacion`, {
                       method: "POST",
@@ -378,55 +368,50 @@ async function analizarDocente(teacherId) {
                         feedback,
                       },
                     });
-
                     await feedbacks.refresh();
                     form.reset();
                   } catch (error) {
-                    alert(error.message || "No se pudo guardar la retroalimentación.");
+                    alert(error.message || "No se pudo guardar la retroalimentaciÃ³n.");
                   }
                 }}
               >
-                <h3>Registrar retroalimentación</h3>
+                <h3>Registrar retroalimentaciÃ³n</h3>
                 <textarea
                   name="feedback"
                   required
                   minLength={10}
                   maxLength={4000}
                   rows={4}
-                  placeholder="Escribe la retroalimentación de Dirección Académica..."
+                  placeholder="Escribe la retroalimentaciÃ³n de DirecciÃ³n AcadÃ©mica..."
                 />
                 <div className="work-actions">
                   <button type="submit" className="button button-primary">
-                    Guardar retroalimentación
+                    Guardar retroalimentaciÃ³n
                   </button>
                 </div>
               </form>
             )}
-
               {(() => {
                 const feedback = feedbacks.data?.find(
                   (item) =>
                     String(item.teacher_id) === String(report.teacher_id) &&
                     String(item.period_id) === String(id)
                 );
-
                 if (feedbacks.loading) {
                   return (
-                    <p className="work-help">Cargando retroalimentación...</p>
+                    <p className="work-help">Cargando retroalimentaciÃ³n...</p>
                   );
                 }
-
                 return (
                   <p className="work-help">
                     {feedback?.feedback ||
-                      "Pendiente de registrar por Dirección Académica."}
+                      "Pendiente de registrar por DirecciÃ³n AcadÃ©mica."}
                   </p>
                 );
               })()}
-            </section>                       
-                                
+            </section>
                   <section className="work-section">
-                    <h3>Plan de acción</h3>
+                    <h3>Plan de acciÃ³n</h3>
                     {admin && (
                   <div className="work-actions no-print">
                     <Link
@@ -443,22 +428,19 @@ async function analizarDocente(teacherId) {
                           String(p.teacher_id) === String(report.teacher_id) &&
                           String(p.period_id) === String(id)
                       );
-
                       if (plans.loading) {
                         return <p className="work-help">Cargando plan de mejora...</p>;
                       }
-
                       if (!plan) {
                         return (
                           <p className="work-help">
-                            No hay un plan de mejora registrado para este docente y período.
+                            No hay un plan de mejora registrado para este docente y perÃ­odo.
                           </p>
                         );
                       }
-
                       return (
                         <div>
-                          <p><strong>Acción de mejora:</strong> {plan.action}</p>
+                          <p><strong>AcciÃ³n de mejora:</strong> {plan.action}</p>
                           <p><strong>Evidencia esperada:</strong> {plan.evidence || "No registrada"}</p>
                           <p><strong>Fecha de cumplimiento:</strong> {new Date(plan.due_date).toLocaleDateString("es-MX", { timeZone: "UTC" })}</p>
                           <p><strong>Estado:</strong> {plan.status}</p>
@@ -466,7 +448,6 @@ async function analizarDocente(teacherId) {
                       );
                     })()}
                   </section>
-
                   </>
                 ) : (
                   <p className="work-note">{report.reason}</p>
@@ -483,9 +464,9 @@ export function TeacherSubjects() {
   const state = useAsync(() => api(`${BASE}/asignaciones`), []);
   return (
     <>
-      <Heading eyebrow="Evaluación docente / Docente" title="Mis asignaturas">
-        Asignaturas y grupos incluidos en tus periodos de evaluación. La
-        participación individual de estudiantes permanece reservada.
+      <Heading eyebrow="EvaluaciÃ³n docente / Docente" title="Mis asignaturas">
+        Asignaturas y grupos incluidos en tus periodos de evaluaciÃ³n. La
+        participaciÃ³n individual de estudiantes permanece reservada.
       </Heading>
       <LoadState state={state} empty="No hay asignaturas asignadas">
         <div className="work-records">
@@ -493,7 +474,7 @@ export function TeacherSubjects() {
             <article className="work-record" key={`${a.period_id}-${i}`}>
               <div>
                 <span className="record-code">
-                  {a.period_title} · {a.group_name}
+                  {a.period_title} Â· {a.group_name}
                 </span>
                 <h2>{a.subject}</h2>
               </div>
@@ -533,15 +514,15 @@ export function ModerateComments() {
           body: { public_comment: form.get("public_comment") },
         });
         await state.refresh();
-      }, "Revisión del comentario guardada.")
+      }, "RevisiÃ³n del comentario guardada.")
     )
       setSelected(null);
   }
   return (
     <>
       <Heading
-        eyebrow="Evaluación docente / Revisión previa"
-        title="Comentarios para publicación"
+        eyebrow="EvaluaciÃ³n docente / RevisiÃ³n previa"
+        title="Comentarios para publicaciÃ³n"
         action={
           <Link
             className="button button-secondary"
@@ -618,7 +599,7 @@ export function ModerateComments() {
                       {c.teacher_name || "Docente sin nombre registrado"}
                     </strong>
                     <Status value={c.reviewed ? "validado" : "pendiente"}>
-                      {c.reviewed ? "Revisado" : "Pendiente de revisión"}
+                      {c.reviewed ? "Revisado" : "Pendiente de revisiÃ³n"}
                     </Status>
                   </div>
                   <div style={{ marginBottom: c.reviewed ? 16 : 0 }}>
@@ -638,7 +619,7 @@ export function ModerateComments() {
                       }}
                     >
                       <p className="work-help" style={{ marginTop: 0, marginBottom: 6 }}>
-                        Versión para publicar
+                        VersiÃ³n para publicar
                       </p>
                       <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>
                         {c.public_comment || "Excluido del informe"}
@@ -671,7 +652,7 @@ export function ModerateComments() {
         >
           <form onSubmit={submit}>
             <MutationState state={mutation} />
-            <p className="work-help">Original reservado al área revisora</p>
+            <p className="work-help">Original reservado al Ã¡rea revisora</p>
             <blockquote className="work-comment">{selected.comment}</blockquote>
             <Field
               name="public_comment"
@@ -682,7 +663,7 @@ export function ModerateComments() {
               defaultValue={
                 selected.reviewed ? selected.public_comment : selected.comment
               }
-              hint="Retira datos identificables. Deja este campo vacío para excluir el comentario del informe."
+              hint="Retira datos identificables. Deja este campo vacÃ­o para excluir el comentario del informe."
             />
             <div className="work-actions">
               <BusyButton
@@ -690,7 +671,7 @@ export function ModerateComments() {
                 busy={mutation.busy}
                 className="button button-primary"
               >
-                Guardar revisión
+                Guardar revisiÃ³n
               </BusyButton>
               <button
                 type="button"
