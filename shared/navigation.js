@@ -116,6 +116,25 @@ export const MODULES = [
       administrador: "Administrar autoevaluaciones",
     },
   },
+  {
+    id: "coevaluacion",
+    path: "/coevaluacion",
+    name: "Coevaluación",
+    shortName: "Coevaluación",
+    area: "Área académica",
+    description:
+      "Valora la colaboración en las actividades que tienes asignadas.",
+    roles: ["estudiante", "administrador"],
+    pages: {
+      "mis-asignaciones": "Mis coevaluaciones",
+      actividades: "Actividades",
+      cuestionarios: "Criterios",
+    },
+    actions: {
+      estudiante: "Consultar mis coevaluaciones",
+      administrador: "Preparar coevaluaciones",
+    },
+  },
 ];
 
 export function moduleLinks(module, role) {
@@ -177,6 +196,14 @@ export function moduleLinks(module, role) {
       ["/autoevaluacion/cuestionarios", "Cuestionarios"],
     ];
   }
+  if (module === "coevaluacion") {
+    if (role === "estudiante")
+      return [["/coevaluacion/mis-asignaciones", "Mis coevaluaciones"]];
+    return [
+      ["/coevaluacion/actividades", "Actividades"],
+      ["/coevaluacion/cuestionarios", "Criterios"],
+    ];
+  }
   return [
     ["/titulacion", role === "estudiante" ? "Mi expediente" : "Solicitudes"],
   ];
@@ -235,6 +262,16 @@ export function homeShortcuts(role) {
       path: "/autoevaluacion/evaluaciones",
       label: "Administrar autoevaluaciones",
     });
+  if (role === "estudiante")
+    shortcuts.push({
+      path: "/coevaluacion/mis-asignaciones",
+      label: "Mis coevaluaciones",
+    });
+  if (role === "administrador")
+    shortcuts.push({
+      path: "/coevaluacion/actividades",
+      label: "Preparar coevaluaciones",
+    });
   return [...shortcuts, { path: "/notificaciones", label: "Notificaciones" }];
 }
 
@@ -269,26 +306,26 @@ export function breadcrumbsFor(pathname, authenticated, entityLabel) {
       { label: module.name, path: module.path },
       { label: "Responder evaluación" },
     ];
-  if (
-    module.id === "autoevaluacion" &&
-    /^evaluar\/\d+$/.test(sub)
-  ) {
+  if (module.id === "autoevaluacion" && /^evaluar\/\d+$/.test(sub)) {
     return [
       root,
       { label: module.name, path: module.path },
       { label: "Responder autoevaluación" },
     ];
   }
-  if (
-    module.id === "autoevaluacion" &&
-    /^resultados\/\d+$/.test(sub)
-  ) {
+  if (module.id === "autoevaluacion" && /^resultados\/\d+$/.test(sub)) {
     return [
       root,
       { label: module.name, path: module.path },
       { label: "Resultados" },
     ];
   }
+  if (module.id === "coevaluacion" && /^responder\/\d+$/.test(sub))
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Responder coevaluación" },
+    ];
   const leaf = module.pages?.[sub];
   const isEntity = /^(?:expediente|solicitud)\/\d+$/.test(sub);
   if (!leaf && !isEntity) return unknown;

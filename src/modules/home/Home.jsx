@@ -4,6 +4,7 @@ import {
   GraduationCap,
   Award,
   ClipboardCheck,
+  UsersRound,
   ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../../app/Auth";
@@ -31,6 +32,8 @@ export default function Home() {
                     <Award size={23} />
                   ) : m.id === "evaluacion-docente" ? (
                     <ClipboardCheck size={23} />
+                  ) : m.id === "coevaluacion" ? (
+                    <UsersRound size={23} />
                   ) : (
                     <GraduationCap size={23} />
                   )}

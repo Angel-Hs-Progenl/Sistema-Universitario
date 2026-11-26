@@ -10,6 +10,7 @@ import { Help, Privacy, Notifications } from "../modules/home/Information";
 import { scholarshipRoutes } from "../modules/becas/routes";
 import { evaluationRoutes } from "../modules/evaluacion-docente/routes";
 import { selfEvaluationRoutes } from "../modules/autoevaluacion/routes";
+import { peerEvaluationRoutes } from "../modules/coevaluacion/routes";
 import { MODULES } from "../../shared/navigation";
 const TitleLayout = lazy(() => import("../modules/titulacion/Layout"));
 const Workspace = lazy(() => import("../modules/titulacion/Workspace"));
@@ -66,6 +67,7 @@ export default function App() {
             {scholarshipRoutes}
             {evaluationRoutes}
             {selfEvaluationRoutes}
+            {peerEvaluationRoutes}
             <Route
               path="*"
               element={

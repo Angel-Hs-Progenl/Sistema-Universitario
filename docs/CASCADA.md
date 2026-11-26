@@ -135,3 +135,9 @@ La interpretación gráfica de la mascota sigue siendo una propuesta; no se decl
 - El área de Tesorería es la responsable exclusiva de generar las órdenes de pago institucionales vinculadas a la cuota ordinaria de reinscripción ($1,850.00 MXN) calculando el monto neto a pagar.
 - Emisión de la referencia institucional / línea de captura para el portal oficial de **Pagos en Línea del Gobierno del Estado de Puebla** (`https://pagosenlinea.puebla.gob.mx/`).
 - Flujo de confirmación y validación de pago por Tesorería tras la liquidación en línea del estudiante.
+
+## Registro CR-013 · Integración del prototipo de Coevaluación
+
+26 de noviembre de 2026. El líder solicita integrar la carpeta `Coevaluación/` recibida por pull, conectar sus tareas con la aplicación y roles existentes, y adaptar su diseño al portal. Se conserva la propuesta de seis criterios y escala 1–5 como base editable; su promedio es descriptivo, no una nota institucional. El Administrador prepara cuestionarios versionados, actividades y parejas; Estudiante responde solo sus asignaciones. Se sustituyen el selector de rol y `localStorage` del prototipo por sesión, permisos, CSRF, PostgreSQL y auditoría compartidos.
+
+Impacto transversal autorizado por esta solicitud: rutas y navegación compartida, ayuda, router FastAPI y migración Alembic 0010. Los archivos de la página independiente se retiraron; su procedencia se conserva en Git y en `Coevaluación/README.md`. Detalle y decisiones pendientes en [COEVALUACION.md](COEVALUACION.md). La autorización para integrar esta propuesta no sustituye la ratificación de reglas académicas, privacidad o fases institucionales.

@@ -12,10 +12,12 @@ flowchart LR
   F --> T[Titulación]
   F --> E[Evaluación docente]
   F --> B[Becas]
+  F --> C[Coevaluación]
   E --> P
   B --> P
   I --> P[(PostgreSQL)]
   T --> P
+  C --> P
   T --> A[Archivos privados]
   I --> M[SMTP o buzón de desarrollo]
 ```
@@ -33,6 +35,7 @@ src/
     titulacion/         Expedientes y revisión por área
     becas/              Convocatorias, solicitudes y revisión
     evaluacion-docente/ Asignaciones, cuestionarios, informes y coordinación
+    coevaluacion/        Parejas, criterios y respuestas de coevaluación
 backend/
   app/
     core/               Configuración, DB, identidad y sesiones compartidas
@@ -40,6 +43,7 @@ backend/
       titulacion/       Expedientes y documentos
       becas/            Solicitudes, estudio y apoyos
       evaluacion_docente/ Cuestionarios, periodos, respuestas y planes
+      coevaluacion/       Actividades, parejas y respuestas definitivas
     main.py             Registro de routers y middleware
   migrations/           Versiones Alembic revisadas por el líder
   tests/                Pruebas de API y seguridad
@@ -93,8 +97,12 @@ En frontend, shared/Brand.jsx sirve la identidad común; app/AccountMenu.jsx pre
 
 Las rutas se extraen a cada dominio; el Shell conserva su Suspense durante la carga. `ModuleLayout` y `Work` complementan los componentes compartidos. La preferencia de movimiento permanece centralizada. Los módulos no incluyen otro login, identidad o CSS global por rol.
 
-Alembic registra explícitamente los modelos de los tres módulos. La migración 0005 incorpora Docente, el método de sesión y la integridad económica de Becas; 0006 añade evaluación. Los índices del ORM reflejan los nombres y tipos ya migrados. No se reescriben migraciones anteriores ni se borran registros.
+Alembic registra explícitamente los modelos de los módulos integrados. La migración 0005 incorpora Docente, el método de sesión y la integridad económica de Becas; 0006 añade evaluación; 0010 añade Coevaluación. Los índices del ORM reflejan los nombres y tipos ya migrados. No se reescriben migraciones anteriores ni se borran registros.
 
 Evaluación conserva una definición inmutable de cuestionario por versión. El envío bloquea el periodo y usa una clave única por asignación; el cierre usa el mismo bloqueo. Los informes se calculan en el servidor con participantes distintos y comentarios revisados, sin identidad estudiantil. En producción se exige sesión Google; vincular Google no convierte una sesión de contraseña en SSO.
 
 Matriz, límites y recorridos: [INTEGRACION-MODULOS.md](INTEGRACION-MODULOS.md). La bitácora y la configuración de datos académicos siguen pendientes de ratificación institucional; no se presentan como decisiones oficiales.
+
+## Coevaluación
+
+El prototipo HTML/CSS/JS recibido se integra como módulo del monolito: rutas del cliente dentro del Shell, router FastAPI propio, sesión y CSRF compartidos y migración 0010. La matriz de roles, estados y límites está en [COEVALUACION.md](COEVALUACION.md). No se usa `localStorage` para respuestas ni se crea otro encabezado o login.

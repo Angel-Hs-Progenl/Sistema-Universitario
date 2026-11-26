@@ -155,3 +155,13 @@ Frontend: 12 pruebas aprobadas y compilación correcta. Guardia del repositorio:
 - Evidencia ficticia seleccionada en docs/capturas: inicio-integrado.jpg, becas-integrado.jpg, evaluacion-resultados.jpg, evaluacion-periodos.jpg evaluacion-movil.jpg y becas-expediente.jpg.
 
 Docker Desktop no está instalado en este equipo: se verificó PostgreSQL local. La configuración Compose se hizo coherente con .env.example, pero no se declara ejecutada aquí. Google OAuth, SMTP institucional, SPEI, SAT, padrón, MFA y proveedor IA no se probaron ni se simulan como servicios activos. Pendientes académicos y formatos de reporte en INTEGRACION-MODULOS.md. No es una validación de producción.
+
+## Coevaluación · CR-013 · 26 de noviembre de 2026
+
+- `npm run build`: correcto; Vite compila las rutas y vistas nuevas.
+- `node --test tests/navigation.test.js`: 11/11; incluye rol, acceso directo y migas de Coevaluación.
+- `git diff --check`: sin errores de espacios.
+- `npm test`: 12/14; las dos pruebas de contrato que lanzan `python` no arrancan porque el alias de Windows devuelve `spawnSync python EACCES`. Las otras 12 pasan.
+- La suite `backend/tests/test_coevaluacion.py` y la migración 0010 quedaron preparadas, pero no se ejecutaron: el alias `python` no tiene acceso y `.venv/Scripts/python.exe` apunta a un intérprete de Windows Store que ya no está disponible. Tampoco se pudo ejecutar `scripts/check_repository.py` por ese motivo.
+
+No se realizó una prueba visual en navegador ni una validación con PostgreSQL en este equipo. Antes de integrar el PR deben ejecutarse la migración y las pruebas de API con un intérprete Python funcional y una base desechable, además de revisar los flujos de estudiante y administrador en móvil/escritorio.
