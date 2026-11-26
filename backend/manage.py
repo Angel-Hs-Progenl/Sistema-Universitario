@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 import getpass
 import json
 import os
@@ -180,7 +180,7 @@ def seed():
                     end_date=now() + timedelta(days=45),
                     periodo_actual=cdata["periodo_actual"],
                     periodo_anterior=cdata["periodo_anterior"],
-                    cuatrimestres_habilitados=cdata["cuatrimestres_habilitados"],
+                    cuatrimestres_habilitados=json.dumps(cdata["cuatrimestres_habilitados"], ensure_ascii=False),
                 )
                 db.add(new_call)
                 db.flush()
@@ -191,7 +191,7 @@ def seed():
                 existing_call.min_gpa = cdata["min_gpa"]
                 existing_call.periodo_actual = cdata["periodo_actual"]
                 existing_call.periodo_anterior = cdata["periodo_anterior"]
-                existing_call.cuatrimestres_habilitados = cdata["cuatrimestres_habilitados"]
+                existing_call.cuatrimestres_habilitados = json.dumps(cdata["cuatrimestres_habilitados"], ensure_ascii=False)
                 created_calls[cdata["code"]] = existing_call
 
         mariana = db.scalar(select(User).where(User.email == "estudiante@demo.uto.local"))

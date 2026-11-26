@@ -1,10 +1,10 @@
-"""Ajustes formulario oficial UTO: carreras, periodos y campos de solicitud."""
+﻿"""Ajustes formulario oficial UTO: carreras, periodos y campos de solicitud."""
 
 from alembic import op
 import sqlalchemy as sa
 
-revision = "0011"
-down_revision = "0010"
+revision = "0012"
+down_revision = "0011"
 branch_labels = None
 depends_on = None
 
@@ -15,13 +15,13 @@ def upgrade():
 
     call_cols = [c["name"] for c in insp.get_columns("scholarship_calls")]
     if "periodo_actual" not in call_cols:
-        op.add_column("scholarship_calls", sa.Column("periodo_actual", sa.String(50), nullable=True, server_default="septiembre - diciembre 2026"))
+        op.add_column("scholarship_calls", sa.Column("periodo_actual", sa.String(50), nullable=False, server_default="septiembre - diciembre 2026"))
     if "periodo_anterior" not in call_cols:
-        op.add_column("scholarship_calls", sa.Column("periodo_anterior", sa.String(50), nullable=True, server_default="mayo - agosto 2026"))
+        op.add_column("scholarship_calls", sa.Column("periodo_anterior", sa.String(50), nullable=False, server_default="mayo - agosto 2026"))
     if "cuatrimestres_habilitados" not in call_cols:
-        op.add_column("scholarship_calls", sa.Column("cuatrimestres_habilitados", sa.Text(), nullable=True, server_default='["3°", "5°", "6°", "9°"]'))
+        op.add_column("scholarship_calls", sa.Column("cuatrimestres_habilitados", sa.Text(), nullable=False, server_default='["3°", "5°", "6°", "9°"]'))
     if "carreras_habilitadas" not in call_cols:
-        op.add_column("scholarship_calls", sa.Column("carreras_habilitadas", sa.Text(), nullable=True, server_default="[]"))
+        op.add_column("scholarship_calls", sa.Column("carreras_habilitadas", sa.Text(), nullable=False, server_default="[]"))
 
     app_cols = [c["name"] for c in insp.get_columns("scholarship_applications")]
     if "study_system" not in app_cols:
