@@ -136,6 +136,39 @@ La interpretación gráfica de la mascota sigue siendo una propuesta; no se decl
 - Emisión de la referencia institucional / línea de captura para el portal oficial de **Pagos en Línea del Gobierno del Estado de Puebla** (`https://pagosenlinea.puebla.gob.mx/`).
 - Flujo de confirmación y validación de pago por Tesorería tras la liquidación en línea del estudiante.
 
+## Registro CR-013 · Finalización al 100% del Módulo de Becas
+
+24 de noviembre de 2026. Culminación al 100% del alcance funcional del módulo de Becas de la UT de Oriental en la rama `feat/modulo-becas`:
+- Migración 0010 de Alembic (`0010_becas_100_publicacion_constancias.py`) agregando bandera de publicación de resultados a convocatorias y folio de constancia a solicitudes.
+- Publicación oficial de resultados por parte de Escolares/Comité con lista protegida de beneficiarios (folios anónimos, carrera, periodo y porcentaje otorgado) conforme a la Ley General de Protección de Datos Personales.
+- Generación y consulta de la **Constancia Oficial de Asignación de Beca** institucional con sello digital de verificación SHA-256, desglose financiero UTO (cuota base, beca exenta, importe neto), línea de captura para Pagos en Línea del Gobierno de Puebla e impresión directa.
+- Buzón institucional de notificaciones del aspirante integrado en el seguimiento de solicitudes para consulta de estatus, órdenes de pago emitidas y avisos de comité.
+- Conclusión formal del ciclo de vida del expediente por parte del personal de Servicios Escolares / Administración.
+- Actualización de contratos de dominio sincronizados con el frontend y pruebas automatizadas (17/17 pytest pasando, 13/13 node test pasando, 0 alertas en check_repository.py).
+- Línea base de requisitos actualizada a 100% de cobertura (BEC-01 a BEC-23). Propuesta lista para validación institucional de usuarios.
+
+## Registro CR-014 · Formulario Oficial UTO, Catálogo de 14 Carreras Vigentes, Periodos Configurables y Anexo 1
+
+25 de noviembre de 2026. Adecuación e integración oficial autorizada por el usuario del formato y convocatoria de la Universidad Tecnológica de Oriental (UTO):
+- **Catálogo Oficial de 14 Programas Educativos Vigentes:** Agricultura Sustentable y Protegida, Cadena de Suministro, Clasificación Arancelaria y Despacho Aduanero, Desarrollo de Software Multiplataforma, Mercadotecnia, Mantenimiento Industrial, Sistemas Automotrices, Tecnología de Alimentos, Desarrollo y Gestión de Software, Diseño y Gestión de Redes Logísticas, Enfermería, Innovación de Negocios y Mercadotecnia, Logística Comercial Global, Procesos Alimentarios.
+- **Configuración Dinámica por Convocatoria:** Almacenamiento y edición sin hardcodear periodos de: `periodo_actual` (ej. septiembre - diciembre 2026), `periodo_anterior` evaluado (ej. mayo - agosto 2026), `cuatrimestres_habilitados` (ej. 3°, 5°, 6°, 9°) y activación de programas educativos.
+- **Migración 0011 de Alembic:** `0011_becas_formulario_uto_carreras.py` agregando columnas a `scholarship_calls` (`periodo_actual`, `periodo_anterior`, `cuatrimestres_habilitados`, `carreras_habilitadas`) y a `scholarship_applications` (`study_system`, `study_level`, `phone`, `curp`, `gender`).
+- **Flujo Condicional del Formulario UTO (`FormularioSolicitudUTO`):**
+  - Sección A: Datos generales, nivel de estudios, carrera del catálogo de 14, cuatrimestre, matrícula, CURP, teléfono, promedio anterior evaluado y documento obligatorio base: Constancia de No Adeudo de Tesorería (PDF, máx. 1 MB).
+  - Sección B: Bifurcación por Modalidad y Sistema:
+    - *Beca Alimenticia:* Exclusiva del sistema presencial, solicita valoración médica del área de Enfermería UTO, edad, estado civil y pasa directo al estudio socioeconómico sin Anexo 1.
+    - *Resto de Modalidades (`Académica`, `Escasos Recursos`, `Hijos del Personal`):* Preguntan sistema de estudio (`Presencial` o `Mixto/Híbrido`). Si es Mixto solicitan Constancia laboral entregada a Coordinador (PDF, máx. 10 MB) con aviso de condonación inamovible.
+    - *Académica:* Presencial avanza directo a secciones finales; Mixto añade constancia de coordinador. Promedio mínimo 9.70.
+    - *Escasos Recursos:* Si es Mixto solicita además comprobante de ingresos mensual. En ambos sistemas exige el Anexo 1 firmado con tinta azul y el estudio socioeconómico completo (vivienda, padres, bienes, servicios, gastos, empleo, hijos, transporte con ruta/costo/tiempo). Promedio mínimo 8.50.
+    - *Hijas e Hijos del Personal:* Requiere acta de nacimiento y constancia laboral emitida por RH de la UTO (ambos PDF máx. 10 MB). 100% de descuento.
+  - Sección C: 3 Secciones finales obligatorias:
+    1. Declaración bajo protesta de decir verdad y aceptación de los Artículos 72° y 73° del Reglamento Académico.
+    2. Aviso de Privacidad (Ley de Protección de Datos de Puebla) y reporte de no discriminación durante el trámite.
+    3. Encuesta de Satisfacción en escala Likert (1 al 5) sobre el área de Becas y comentarios abiertos.
+- **Generador e Impresión del Anexo 1 Oficial:** Componente modal `Anexo1Modal` fiel al formato oficial de la convocatoria institucional para prellenado y descarga.
+- **Administración de Convocatorias:** Edición y actualización inmediata desde la vista de gestión administrativa para coordinadores y escolares.
+- **Pruebas y Verificación:** 17/17 pruebas de backend pasando en pytest, 13/13 pruebas en node contract tests, 0 alertas en `scripts/check_repository.py`, bundle Vite compilado exitosamente.
+
 ## Registro CR-013 · Integración del prototipo de Coevaluación
 
 26 de noviembre de 2026. El líder solicita integrar la carpeta `Coevaluación/` recibida por pull, conectar sus tareas con la aplicación y roles existentes, y adaptar su diseño al portal. Se conserva la propuesta de seis criterios y escala 1–5 como base editable; su promedio es descriptivo, no una nota institucional. El Administrador prepara cuestionarios versionados, actividades y parejas; Estudiante responde solo sus asignaciones. Se sustituyen el selector de rol y `localStorage` del prototipo por sesión, permisos, CSRF, PostgreSQL y auditoría compartidos.

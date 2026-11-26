@@ -5,6 +5,8 @@ import {
   DollarSign,
   Plus,
   CheckCircle,
+  XCircle,
+  Trash2,
   Clock,
   ArrowUpRight,
   FileSpreadsheet,
@@ -51,6 +53,28 @@ export default function OrdenesCobro() {
     try {
       await api(`/becas/ordenes-cobro/${orderId}/confirmar-pago`, { method: "POST" });
       setSuccessMsg("Pago validado por Tesorería correctamente. Beca y reinscripción confirmadas.");
+      refreshOrders();
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
+  }
+
+  async function handleRejectPayment(orderId) {
+    if (!window.confirm("¿Rechazar comprobante y devolver la orden a estado pendiente de pago?")) return;
+    try {
+      await api(`/becas/ordenes-cobro/${orderId}/rechazar-pago`, { method: "POST" });
+      setSuccessMsg("Comprobante rechazado. La orden volvió a estado pendiente de pago.");
+      refreshOrders();
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
+  }
+
+  async function handleCancelOrder(orderId, folio) {
+    if (!window.confirm(`¿Confirmas anular/eliminar la orden ${folio}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await api(`/becas/ordenes-cobro/${orderId}`, { method: "DELETE" });
+      setSuccessMsg(`Orden ${folio} anulada con éxito.`);
       refreshOrders();
     } catch (err) {
       setErrorMsg(err.message);
@@ -275,8 +299,20 @@ export default function OrdenesCobro() {
                             className="button button-primary"
                             style={{ fontSize: "0.75rem", padding: "4px 8px" }}
                             onClick={() => handleConfirmPayment(ord.id)}
+                            title="Aceptar y validar pago liquidado"
                           >
                             <CheckCircle size={12} /> Validar Pago
+                          </button>
+                        )}
+                        {user.role !== "estudiante" && ord.status === "pagada" && (
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            style={{ fontSize: "0.75rem", padding: "4px 8px", color: "#B8862B" }}
+                            onClick={() => handleRejectPayment(ord.id)}
+                            title="Rechazar comprobante y devolver a pendiente"
+                          >
+                            <XCircle size={12} /> Rechazar Comprobante
                           </button>
                         )}
                         {user.role !== "estudiante" && ord.status !== "dispersada" && (
@@ -290,6 +326,17 @@ export default function OrdenesCobro() {
                             }}
                           >
                             <CreditCard size={12} /> Dispersar SPEI
+                          </button>
+                        )}
+                        {user.role !== "estudiante" && (
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            style={{ fontSize: "0.75rem", padding: "4px 8px", color: "#b91c1c" }}
+                            onClick={() => handleCancelOrder(ord.id, ord.folio_orden)}
+                            title="Anular / Eliminar orden"
+                          >
+                            <Trash2 size={12} /> Anular
                           </button>
                         )}
                       </div>

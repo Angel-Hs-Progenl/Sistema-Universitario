@@ -26,7 +26,7 @@ def config():
 def url():
     load_dotenv(ROOT / ".env")
     value = make_url(os.getenv("DATABASE_URL", ""))
-    if value.drivername != "postgresql+psycopg":
+    if os.getenv("APP_ENV") == "production" and value.drivername != "postgresql+psycopg":
         raise RuntimeError("DATABASE_URL debe utilizar postgresql+psycopg.")
     return value
 
@@ -39,8 +39,8 @@ def check(schema=True):
         if schema:
             revisions = set(connection.scalars(text("SELECT version_num FROM alembic_version")))
             if revisions != set(ScriptDirectory.from_config(config()).get_heads()):
-                raise RuntimeError("Hay migraciones pendientes. Ejecuta python scripts/database.py migrate antes de iniciar.")
-    print(f"PostgreSQL disponible en {value.host}:{value.port or 5432}; esquema {'actualizado' if schema else 'sin comprobar'}.")
+                raise RuntimeError("Hay migraciones pendientes. Ejecuta alembic upgrade head antes de iniciar.")
+    print(f"Base de datos ({value.drivername}) disponible; esquema {'actualizado' if schema else 'sin comprobar'}.")
 
 
 def backup():

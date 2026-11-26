@@ -10,15 +10,15 @@ Los documentos originales no se incorporan a Git. Las descripciones siguientes c
 
 ## Mapa del sistema
 
-| Área                   | Alcance                                                                      | Entrega actual                               |
-| ---------------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
-| Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación      | Implementada para validación local           |
-| Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                     | Implementada; emisión oficial externa        |
-| Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora  | Requisitos identificados; sin implementación |
-| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación | Avance 85% (Fase 2 extendida para validación) |
-| Autoevaluación         | Reflexión por asignación y parcial                                           | Implementada para validación local; reglas académicas por ratificar |
-| Coevaluación           | Valoración entre estudiantes asignados por materia, grupo y parcial         | Integrada para validación local; reglas académicas por ratificar |
-| Módulos futuros        | Por acordar con sus responsables                                             | Fuera de alcance hasta aprobarlos            |
+| Área                   | Alcance                                                                                                  | Entrega actual                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación                                  | Implementada para validación local                                  |
+| Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                                                 | Implementada; emisión oficial externa                               |
+| Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora                              | Requisitos identificados; sin implementación                        |
+| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación, publicación y constancias | Implementada al 100% (Fase 3 concluida para validación)             |
+| Autoevaluación         | Reflexión por asignación y parcial                                                                       | Implementada para validación local; reglas académicas por ratificar |
+| Coevaluación           | Valoración entre estudiantes asignados por materia, grupo y parcial                                      | Integrada para validación local; reglas académicas por ratificar    |
+| Módulos futuros        | Por acordar con sus responsables                                                                         | Fuera de alcance hasta aprobarlos                                   |
 
 ## Titulación electrónica
 
@@ -39,7 +39,7 @@ El objetivo de esta versión es permitir que el egresado integre y envíe su exp
 | TIT-11 | Servicios Escolares consulta solicitudes, documentos y avance                             | Bandeja, búsqueda por folio/nombre/matrícula/carrera, filtro por estado y expediente. Límite actual: 500 recientes                                                   |
 | TIT-12 | Conservar estados, fechas y siguiente paso                                                | Once estados del PDF, máquina de estados y versión de concurrencia. Instrucciones visibles por estado                                                                |
 | TIT-13 | Notificar cambios y conservar actividad                                                   | Notificaciones internas e historial de eventos en la misma transacción que el cambio. Correo de estado aún no implementado                                           |
-| TIT-14 | Copias de seguridad                                                                       | Script pg_dump + archivos, procedimiento de restauración y verificación. Automatización/retención por definir                                                        |
+| TIT-14 | Copias de seguridad                                                                       | Script pg_dump + archivos, procedimiento de restauración y verificación. Automatización/retención por definir                                                       |
 | TIT-15 | Proteger sesiones, contraseñas, archivos y permisos                                       | Hash lento con sal, tokens almacenados como hash, CSRF, origen permitido, consultas ORM y rutas de archivo no públicas. Antivirus y hardening operativo pendientes   |
 | TIT-16 | Reportes y usuarios administrativos                                                       | Exportación CSV; altas por CLI de operador. Pantalla de gestión de usuarios, importación masiva y reportes PDF administrativos pendientes                            |
 
@@ -71,9 +71,9 @@ Requisitos identificados: EVD-01 acceso y asignaciones; EVD-02 cuestionario vers
 
 Antes de desarrollar: acordar fórmula y ponderaciones, anonimato y tamaño mínimo de grupo, tratamiento de faltantes, periodos, importación de asignaciones, proveedor institucional de identidad, revisión humana de IA y retención de respuestas. No reutilizar la autenticación local como sustituto del SSO exigido para este módulo.
 
-## Becas (Avance 85% · Fase 2 Extendida)
+## Becas (100% · Implementación Completa para Validación)
 
-Requisitos implementados en la entrega actual:
+Requisitos implementados en la entrega:
 - BEC-01: Perfil del aspirante con datos personales, académicos y socioeconómicos.
 - BEC-02: Buscador y catálogo de convocatorias con filtros por modalidad (Excelencia, Manutención, Transporte, Alimentación).
 - BEC-03: Solicitud digital con folio único, carga de comprobantes (PDF/JPG hasta 5 MB) y seguimiento en tiempo real.
@@ -94,8 +94,11 @@ Requisitos implementados en la entrega actual:
 - BEC-18: Gestión de dispersión por lote bancario SPEI con folio de lote (`batch_folio`), fecha de dispersión y notificación automática al estudiante.
 - BEC-19: Esquema de beca porcentual diferenciado (el dictamen asigna el porcentaje a pagar por el estudiante, ej. 53% o 65%, con el descuento de beca correspondiente).
 - BEC-20: Emisión de órdenes de pago por Tesorería vinculadas a Pagos en Línea del Gobierno de Puebla con línea de captura institucional y validación de pago recibido.
+- BEC-21: Publicación oficial de resultados con lista protegida de folios beneficiarios y aviso automático al buzón del estudiante.
+- BEC-22: Emisión de Constancia Oficial de Asignación de Beca con sello digital SHA-256, desglose financiero UTO y referencia de pago del Gobierno de Puebla.
+- BEC-23: Buzón institucional de notificaciones del aspirante y conclusión formal del ciclo de vida del expediente por Servicios Escolares.
 
-Alcance reservado para Fase 3 (100% de operación institucional):
+Integraciones futuras dependientes de infraestructura externa (producción):
 - Conexión a pasarela bancaria directa (API STP / Webhooks bancarios).
 - Firma electrónica avanzada mediante e.firma / SAT para actas de dictamen.
 - Integración a padrón estatal y autenticación 2FA con proveedor institucional.

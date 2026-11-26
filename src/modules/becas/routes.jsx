@@ -48,13 +48,13 @@ export const scholarshipRoutes = (
       path="socioeconomico"
       element={allowed(["estudiante"], <Socioeconomic />)}
     />
-    <Route path="admin-convocatorias" element={allowed(REVIEW, <Manage />)} />
-    <Route path="dictamen" element={allowed(REVIEW, <Review />)} />
-    <Route path="ordenes-cobro" element={<Orders />} />
+    <Route path="admin-convocatorias" element={allowed(["administrador", "escolares"], <Manage />)} />
+    <Route path="dictamen" element={allowed(["administrador", "evaluador"], <Review />)} />
+    <Route path="ordenes-cobro" element={allowed(["administrador", "tesoreria"], <Orders />)} />
     <Route
       path="renovacion"
-      element={allowed(["estudiante", ...REVIEW], <Renewals />)}
+      element={allowed(["estudiante", "administrador", "evaluador"], <Renewals />)}
     />
-    <Route path="dashboard" element={allowed(REPORT, <Activity />)} />
+    <Route path="dashboard" element={allowed(["administrador", "auditor", "escolares"], <Activity />)} />
   </Route>
 );
