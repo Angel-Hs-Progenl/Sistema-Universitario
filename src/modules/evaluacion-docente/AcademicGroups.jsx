@@ -50,45 +50,180 @@ function GenerateEvaluationsModal({ group, onClose, mutation }) {
     </Modal>
   );
 }
-
 function GroupSubjectsList({ group }) {
-  const subjects = useAsync(() => api(`${BASE}/grupos/${group.id}/materias`), [group.id]);
-  return (
-    <section>
-      <h3>Materias y docentes asignados</h3>
-      <LoadState state={subjects} empty="Este grupo todavía no tiene materias asignadas">
-        <div className="work-records">
-          {subjects.data?.map((item) => (
-            <article className="work-record" key={item.id}>
-              <div><h4>{item.subject}</h4><p className="work-help">Docente: {item.teacher_name}</p></div>
-            </article>
-          ))}
-        </div>
-      </LoadState>
-    </section>
+  const subjects = useAsync(
+    () => api(`${BASE}/grupos/${group.id}/materias`),
+    [group.id]
   );
-}
 
-function GroupStudentsList({ group }) {
-  const students = useAsync(() => api(`${BASE}/grupos/${group.id}/estudiantes`), [group.id]);
+  const [search, setSearch] = useState("");
+
+  const filteredSubjects = (subjects.data || []).filter(
+    (item) =>
+      `${item.subject} ${item.teacher_name}`
+        .toLowerCase()
+        .includes(search.trim().toLowerCase())
+  );
+
   return (
     <section>
       <details>
-        <summary style={{ cursor: "pointer", padding: "12px 0", fontWeight: 600 }}>
-          Estudiantes inscritos ({students.data?.length ?? 0})
+        <summary
+          style={{
+            cursor: "pointer",
+            padding: "12px 0",
+            fontWeight: 600,
+          }}
+        >
+          Materias y docentes asignados ({subjects.data?.length ?? 0})
         </summary>
+
         <div style={{ marginTop: 12 }}>
-          <LoadState state={students} empty="Este grupo todavía no tiene estudiantes inscritos">
-            <div className="work-records">
-              {students.data?.map((student) => (
-                <article className="work-record" key={student.id}>
-                  <div style={{ minWidth: 0 }}>
-                    <h4>{student.name}</h4>
-                    <p className="work-help" style={{ overflowWrap: "anywhere" }}>{student.email}</p>
-                  </div>
+          <LoadState
+            state={subjects}
+            empty="Este grupo todavía no tiene materias asignadas"
+          >
+            <Field
+              label="Buscar materia o docente"
+              placeholder="Asignatura o nombre del docente"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <div
+              style={{
+                maxHeight: 250,
+                overflowY: "auto",
+                border: "1px solid #deded6",
+                borderRadius: 6,
+                marginTop: 12,
+              }}
+            >
+              {filteredSubjects.map((item) => (
+                <article
+                  key={item.id}
+                  style={{
+                    padding: "10px 14px",
+                    borderBottom: "1px solid #deded6",
+                  }}
+                >
+                  <h4 style={{ margin: "0 0 4px" }}>
+                    {item.subject}
+                  </h4>
+
+                  <p
+                    className="work-help"
+                    style={{
+                      margin: 0,
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    Docente: {item.teacher_name}
+                  </p>
                 </article>
               ))}
+
+              {!filteredSubjects.length && (
+                <p style={{ padding: 12 }}>
+                  No se encontraron materias o docentes.
+                </p>
+              )}
             </div>
+
+            <p className="work-help" style={{ marginTop: 8 }}>
+              Mostrando {filteredSubjects.length} de{" "}
+              {subjects.data?.length ?? 0} materias asignadas.
+            </p>
+          </LoadState>
+        </div>
+      </details>
+    </section>
+  );
+}
+function GroupStudentsList({ group }) {
+  const students = useAsync(
+    () => api(`${BASE}/grupos/${group.id}/estudiantes`),
+    [group.id]
+  );
+
+  const [search, setSearch] = useState("");
+
+  const filteredStudents = (students.data || []).filter(
+    (student) =>
+      `${student.name} ${student.email}`
+        .toLowerCase()
+        .includes(search.trim().toLowerCase())
+  );
+
+  return (
+    <section>
+      <details>
+        <summary
+          style={{
+            cursor: "pointer",
+            padding: "12px 0",
+            fontWeight: 600,
+          }}
+        >
+          Estudiantes inscritos ({students.data?.length ?? 0})
+        </summary>
+
+        <div style={{ marginTop: 12 }}>
+          <LoadState
+            state={students}
+            empty="Este grupo todavía no tiene estudiantes inscritos"
+          >
+            <Field
+              label="Buscar estudiante inscrito"
+              placeholder="Nombre o correo"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <div
+              style={{
+                maxHeight: 250,
+                overflowY: "auto",
+                border: "1px solid #deded6",
+                borderRadius: 6,
+                marginTop: 12,
+              }}
+            >
+              {filteredStudents.map((student) => (
+                <article
+                  key={student.id}
+                  style={{
+                    padding: "10px 14px",
+                    borderBottom: "1px solid #deded6",
+                  }}
+                >
+                  <h4 style={{ margin: "0 0 4px" }}>
+                    {student.name}
+                  </h4>
+
+                  <p
+                    className="work-help"
+                    style={{
+                      margin: 0,
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {student.email}
+                  </p>
+                </article>
+              ))}
+
+              {!filteredStudents.length && (
+                <p style={{ padding: 12 }}>
+                  No se encontraron estudiantes.
+                </p>
+              )}
+            </div>
+
+            <p className="work-help" style={{ marginTop: 8 }}>
+              Mostrando {filteredStudents.length} de{" "}
+              {students.data?.length ?? 0} estudiantes inscritos.
+            </p>
           </LoadState>
         </div>
       </details>
