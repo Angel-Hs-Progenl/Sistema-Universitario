@@ -62,7 +62,7 @@ def audit_becas(db: Session, user: User, action: str, target_type: str, target_i
 
 @router.get("/carreras")
 def list_carreras():
-    """Retorna el catálogo oficial vigente de los 14 programas educativos de la UTO."""
+    """Retorna el catálogo configurado de programas para este portal."""
     return CARRERAS_UTO
 
 
@@ -321,7 +321,7 @@ def publish_call_results(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Cierra la convocatoria y publica oficialmente la lista de folios beneficiarios."""
+    """Cierra la convocatoria y publica los resultados registrados en el portal."""
     require_role(user, "administrador", "evaluador", "escolares")
     call = db.get(ScholarshipCall, call_id)
     if not call:
@@ -336,45 +336,52 @@ def publish_call_results(
         db.add(
             Notification(
                 user_id=a.user_id,
-                message=f"Se publicaron los resultados oficiales de la convocatoria '{call.title}'. El dictamen de tu folio {a.folio} es: {status_txt}.",
+                message=f"Se publicaron los resultados registrados de la convocatoria '{call.title}'. El dictamen de tu folio {a.folio} es: {status_txt}.",
             )
         )
 
     audit_becas(
         db,
         user,
-        f"Resultados oficiales publicados: {call.code}",
+        f"Resultados publicados en el portal: {call.code}",
         "ScholarshipCall",
         str(call.id),
         f"Convocatoria: {call.title}, Folios evaluados: {len(apps)}",
         request.client.host if request.client else "127.0.0.1",
     )
     db.commit()
-    return {"message": "Resultados oficiales publicados exitosamente.", "results_published": True, "published": True}
+    return {"message": "Resultados publicados en el portal.", "results_published": True, "published": True}
 
 
 @router.get("/convocatorias/{call_id}/resultados")
-def get_call_public_results(call_id: int, db: Session = Depends(get_db)):
-    """Lista oficial pública de folios beneficiarios de la convocatoria (protección de datos personales)."""
+def get_call_results(
+    call_id: int,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Resultados publicados; el estudiante consulta solo su folio."""
+    require_role(user, "estudiante", "administrador", "escolares", "evaluador")
     call = db.get(ScholarshipCall, call_id)
     if not call:
         raise HTTPException(404, "Convocatoria no encontrada.")
     if not getattr(call, "results_published", False):
         raise HTTPException(400, "Los resultados de esta convocatoria aún no han sido publicados por el Comité.")
 
-    apps = db.scalars(
-        select(ScholarshipApplication)
-        .where(ScholarshipApplication.call_id == call_id, ScholarshipApplication.status.in_(("aprobada", "renovada", "concluida")))
-        .order_by(ScholarshipApplication.folio)
-    ).all()
+    stmt = select(ScholarshipApplication).where(
+        ScholarshipApplication.call_id == call_id,
+        ScholarshipApplication.status.in_(("aprobada", "renovada", "concluida")),
+    )
+    if user.role == "estudiante":
+        stmt = stmt.where(ScholarshipApplication.user_id == user.id)
+    apps = db.scalars(stmt.order_by(ScholarshipApplication.folio)).all()
     return [
         {
             "folio": a.folio,
             "major": a.major,
             "academic_term": a.academic_term,
-            "student_percentage": a.student_percentage or 50.0,
-            "discount_percentage": a.discount_percentage or 50.0,
-            "dictamen_session": a.dictamen_session or "Sesión Ordinaria",
+            "student_percentage": a.student_percentage,
+            "discount_percentage": a.discount_percentage,
+            "dictamen_session": a.dictamen_session,
             "status": a.status,
         }
         for a in apps
@@ -622,8 +629,8 @@ class DictamenPayload(BaseModel):
     decision: str  # "aprobada", "rechazada", "revision"
     committee_notes: str = PydField(min_length=3)
     score: float | None = None
-    discount_percentage: float | None = None
-    student_percentage: float | None = None
+    discount_percentage: float | None = PydField(default=None, ge=0, le=100)
+    student_percentage: float | None = PydField(default=None, ge=0, le=100)
     version: int | None = None
 
 
@@ -657,6 +664,9 @@ def submit_dictamen(
 
     # Asignación de porcentaje de beca / porcentaje a pagar por el estudiante
     if payload.decision == "aprobada":
+        if (payload.student_percentage is not None and payload.discount_percentage is not None
+                and abs(payload.student_percentage + payload.discount_percentage - 100) > 0.01):
+            raise HTTPException(400, "Los porcentajes de aportación y apoyo deben sumar 100.")
         required_kinds = {d["id"] for d in DOCUMENTOS if d.get("required")}
         docs = db.scalars(select(ScholarshipDocument).where(ScholarshipDocument.application_id == app.id)).all()
         validated_kinds = {d.kind for d in docs if d.status == "validado"}
@@ -669,9 +679,8 @@ def submit_dictamen(
             app.discount_percentage = float(payload.discount_percentage)
             app.student_percentage = round(100.0 - app.discount_percentage, 1)
         else:
-            # Por defecto 50% de beca / 50% de pago
-            app.discount_percentage = 50.0
-            app.student_percentage = 50.0
+            app.discount_percentage = None
+            app.student_percentage = None
 
     app.updated_at = now()
 
@@ -754,7 +763,7 @@ async def upload_document(
 
     allowed_mimes = ["application/pdf", "application/x-pdf", "application/octet-stream"]
     if not (file.filename.lower().endswith(".pdf") or file.content_type in allowed_mimes):
-        raise HTTPException(400, "Formato no permitido. Solo se aceptan documentos oficiales en formato PDF.")
+        raise HTTPException(400, "Formato no permitido. Solo se aceptan archivos PDF.")
 
     if not content.startswith(b"%PDF-"):
         raise HTTPException(422, "El archivo PDF está dañado o no es válido.")
@@ -962,13 +971,40 @@ def save_socioeconomic(
     }
 
 
-# ---------------- ÓRDENES DE COBRO Y CALENDARIO ---------------- #
+# ---------------- ÓRDENES INTERNAS DE COBRO ---------------- #
+
+@router.get("/ordenes-cobro/elegibles")
+def list_payment_order_candidates(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Datos mínimos de solicitudes aprobadas para registrar órdenes internas."""
+    require_role(user, "tesoreria")
+    rows = db.execute(
+        select(ScholarshipApplication, ScholarshipCall, User)
+        .join(ScholarshipCall, ScholarshipApplication.call_id == ScholarshipCall.id)
+        .join(User, ScholarshipApplication.user_id == User.id)
+        .where(ScholarshipApplication.status == "aprobada")
+        .order_by(ScholarshipApplication.folio)
+    ).all()
+    return [
+        {
+            "id": app.id,
+            "folio": app.folio,
+            "applicant": {"name": student.name},
+            "call_title": call.title,
+            "student_percentage": app.student_percentage,
+        }
+        for app, call, student in rows
+    ]
+
 
 @router.get("/ordenes-cobro")
 def list_payment_orders(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    require_role(user, "estudiante", "tesoreria", "administrador", "auditor", "escolares", "evaluador")
     stmt = select(ScholarshipPaymentOrder, ScholarshipApplication, ScholarshipCall, User).join(
         ScholarshipApplication, ScholarshipPaymentOrder.application_id == ScholarshipApplication.id
     ).join(
@@ -989,21 +1025,19 @@ def list_payment_orders(
             "folio_orden": order.folio_orden,
             "application_folio": app.folio,
             "call_title": call.title,
-            "student_name": student.name,
+            "student_name": student.name if user.role != "auditor" else None,
             "amount": order.amount,
-            "cuota_base": order.cuota_base or (order.amount if not order.student_percentage else round(order.amount / (order.student_percentage / 100.0), 2)),
-            "discount_percentage": order.discount_percentage or (100.0 - (order.student_percentage or 50.0)),
-            "student_percentage": order.student_percentage or (app.student_percentage or 50.0),
+            "cuota_base": order.cuota_base if order.cuota_base is not None else order.amount,
+            "discount_percentage": order.discount_percentage,
+            "student_percentage": order.student_percentage if order.student_percentage is not None else app.student_percentage,
             "period": order.period,
             "scheduled_date": order.scheduled_date.isoformat(),
             "status": order.status,
-            "reference": order.reference,
-            "puebla_reference": order.puebla_reference or order.reference,
-            "puebla_url": order.puebla_url or "https://pagosenlinea.puebla.gob.mx/",
+            "reference": order.reference if user.role in ("estudiante", "tesoreria") else order.folio_orden,
             "paid_at": order.paid_at.isoformat() if order.paid_at else None,
-            "bank_name": order.bank_name or app.bank_name,
-            "bank_clabe": order.bank_clabe or app.bank_clabe,
-            "batch_folio": order.batch_folio,
+            "bank_name": (order.bank_name or app.bank_name) if user.role != "auditor" else None,
+            "bank_clabe": (order.bank_clabe or app.bank_clabe) if user.role == "tesoreria" else None,
+            "batch_folio": order.batch_folio if user.role in ("estudiante", "tesoreria") else None,
             "dispersed_at": order.dispersed_at.isoformat() if order.dispersed_at else None,
         }
         for order, app, call, student in rows
@@ -1013,9 +1047,9 @@ def list_payment_orders(
 class GeneratePaymentOrderPayload(BaseModel):
     application_id: int
     period: str = PydField(min_length=2, max_length=50)
-    scheduled_date: str
-    cuota_base: float | None = None
-    student_percentage: float | None = None
+    scheduled_date: datetime
+    cuota_base: float = PydField(gt=0)
+    student_percentage: float | None = PydField(default=None, ge=0, le=100)
 
 
 @router.post("/ordenes-cobro/generar")
@@ -1025,7 +1059,7 @@ def generate_payment_order(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Tesorería emite la orden de pago con línea de captura de Pagos en Línea del Gobierno de Puebla."""
+    """Tesorería registra una orden interna; no crea referencias de pago externas."""
     require_role(user, "tesoreria")
     app = db.get(ScholarshipApplication, payload.application_id)
     if not app:
@@ -1042,28 +1076,15 @@ def generate_payment_order(
     if existing_order:
         raise HTTPException(409, "Ya existe una orden de cobro registrada para esta solicitud y periodo.")
 
-    call = db.get(ScholarshipCall, app.call_id)
-    count = db.scalar(select(func.count(ScholarshipPaymentOrder.id))) or 0
-    folio_orden = f"ORD-PUE-UTO-{count + 1:04d}"
+    folio_orden = f"ORD-BEC-{uid().replace('-', '')[:12].upper()}"
+    sched_dt = payload.scheduled_date
 
-    try:
-        sched_dt = datetime.fromisoformat(payload.scheduled_date.replace("Z", "+00:00"))
-    except ValueError:
-        sched_dt = now()
-
-    # Cálculo porcentual institucional según dictamen
-    pct_pago = payload.student_percentage if payload.student_percentage is not None else (app.student_percentage or 50.0)
+    pct_pago = payload.student_percentage if payload.student_percentage is not None else app.student_percentage
+    if pct_pago is None:
+        raise HTTPException(400, "Indica el porcentaje autorizado antes de registrar la orden.")
     pct_beca = round(100.0 - pct_pago, 1)
-    if payload.cuota_base is None and payload.student_percentage is None and app.student_percentage is None:
-        cuota_base = float(call.amount)
-        monto_a_pagar = round(float(call.amount), 2)
-    else:
-        cuota_base = float(payload.cuota_base or 1850.0)
-        monto_a_pagar = round(cuota_base * (pct_pago / 100.0), 2)
-
-    # Línea de captura institucional para Pagos en Línea del Gobierno de Puebla
-    puebla_ref = f"PUE-UTO-2026-{app.id:04d}-{count + 1:04d}"
-    puebla_url = "https://pagosenlinea.puebla.gob.mx/"
+    cuota_base = payload.cuota_base
+    monto_a_pagar = round(cuota_base * (pct_pago / 100.0), 2)
 
     order = ScholarshipPaymentOrder(
         application_id=app.id,
@@ -1075,22 +1096,20 @@ def generate_payment_order(
         period=payload.period,
         scheduled_date=sched_dt,
         status="programada",
-        reference="",
-        puebla_reference=puebla_ref,
-        puebla_url=puebla_url,
+        reference=folio_orden,
+        puebla_reference=None,
+        puebla_url=None,
         bank_name=app.bank_name,
         bank_clabe=app.bank_clabe,
     )
     db.add(order)
 
-    # Notificar estudiante con datos del Gobierno de Puebla
     db.add(
         Notification(
             user_id=app.user_id,
             message=(
-                f"Tesorería emitió tu orden de pago ({folio_orden}) por ${monto_a_pagar:,.2f} MXN "
-                f"(cubres el {pct_pago:.1f}% con beca del {pct_beca:.1f}%). "
-                f"Realiza tu pago en Pagos en Línea del Gobierno de Puebla con la referencia: {puebla_ref}."
+                f"Tesorería registró una orden interna ({folio_orden}) por ${monto_a_pagar:,.2f} MXN "
+                f"(aportación del {pct_pago:.1f}%). Consulta las instrucciones de pago con Tesorería."
             ),
             target_path="/becas/ordenes-cobro",
         )
@@ -1102,7 +1121,7 @@ def generate_payment_order(
         f"Orden de pago emitida por Tesorería: {folio_orden}",
         "ScholarshipPaymentOrder",
         str(app.id),
-        f"Monto: ${monto_a_pagar:,.2f} (% a pagar: {pct_pago}%), Referencia Puebla: {puebla_ref}",
+        f"Monto programado: ${monto_a_pagar:,.2f} (% a pagar: {pct_pago}%).",
         request.client.host if request.client else "127.0.0.1",
     )
     db.commit()
@@ -1113,33 +1132,43 @@ def generate_payment_order(
         "amount": monto_a_pagar,
         "student_percentage": pct_pago,
         "discount_percentage": pct_beca,
-        "puebla_reference": puebla_ref,
-        "puebla_url": puebla_url,
+        "reference": folio_orden,
     }
 
 
+class PaymentVerificationPayload(BaseModel):
+    external_reference: str = PydField(min_length=3, max_length=100)
+
+
 @router.post("/ordenes-cobro/{order_id}/confirmar-pago")
-def confirm_puebla_payment(
+def confirm_manual_payment(
     order_id: int,
+    payload: PaymentVerificationPayload,
     request: Request,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Tesorería valida que el alumno liquidó la orden a través de Pagos en Línea del Gobierno de Puebla."""
-    require_role(user, "tesoreria", "administrador")
+    """Tesorería registra una verificación manual respaldada por una referencia externa."""
+    require_role(user, "tesoreria")
     order = db.get(ScholarshipPaymentOrder, order_id)
     if not order:
         raise HTTPException(404, "Orden de pago no encontrada.")
+    if order.status != "programada":
+        raise HTTPException(409, "Solo se puede verificar una orden programada.")
+    reference = payload.external_reference.strip()
+    if len(reference) < 3:
+        raise HTTPException(422, "Indica una referencia externa válida.")
 
     order.status = "pagada"
     order.paid_at = now()
+    order.reference = reference
 
     app = db.get(ScholarshipApplication, order.application_id)
     if app:
         db.add(
             Notification(
                 user_id=app.user_id,
-                message=f"Tesorería validó tu pago ({order.folio_orden}). Tu reinscripción y beca están formalmente confirmadas.",
+                message=f"Tesorería registró la verificación manual del pago de la orden {order.folio_orden}.",
                 target_path="/becas/ordenes-cobro",
             )
         )
@@ -1150,35 +1179,38 @@ def confirm_puebla_payment(
         f"Pago validado por Tesorería: {order.folio_orden}",
         "ScholarshipPaymentOrder",
         str(order.id),
-        f"Referencia Gob. Puebla: {order.puebla_reference}, Monto pagado: ${order.amount:,.2f}",
+        f"Referencia externa registrada: {order.reference}; monto: ${order.amount:,.2f}",
         request.client.host if request.client else "127.0.0.1",
     )
     db.commit()
-    return {"message": "Pago validado por Tesorería correctamente.", "status": order.status}
+    return {"message": "Verificación manual registrada por Tesorería.", "status": order.status}
 
 
 @router.post("/ordenes-cobro/{order_id}/rechazar-pago")
-def reject_puebla_payment(
+def revert_manual_payment(
     order_id: int,
     request: Request,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Tesorería rechaza o devuelve a pendiente el comprobante de pago por inconsistencias."""
-    require_role(user, "tesoreria", "administrador")
+    """Tesorería revierte una verificación manual y conserva su auditoría."""
+    require_role(user, "tesoreria")
     order = db.get(ScholarshipPaymentOrder, order_id)
     if not order:
         raise HTTPException(404, "Orden de pago no encontrada.")
+    if order.status != "pagada":
+        raise HTTPException(409, "Solo se puede devolver a pendiente un pago verificado.")
 
     order.status = "programada"
     order.paid_at = None
+    order.reference = order.folio_orden
 
     app = db.get(ScholarshipApplication, order.application_id)
     if app:
         db.add(
             Notification(
                 user_id=app.user_id,
-                message=f"Tesorería reportó una inconsistencia en tu comprobante de pago ({order.folio_orden}). Por favor acude o revisa tu referencia estatal.",
+                message=f"Tesorería devolvió a pendiente la verificación de la orden {order.folio_orden}. Consulta al área para conocer el motivo.",
                 target_path="/becas/ordenes-cobro",
             )
         )
@@ -1193,7 +1225,7 @@ def reject_puebla_payment(
         request.client.host if request.client else "127.0.0.1",
     )
     db.commit()
-    return {"message": "Comprobante rechazado / devuelto a pendiente de pago.", "status": order.status}
+    return {"message": "Verificación devuelta a pendiente por Tesorería.", "status": order.status}
 
 
 @router.delete("/ordenes-cobro/{order_id}")
@@ -1203,25 +1235,27 @@ def cancel_payment_order(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Tesorería o Administrador cancela o anula una orden de cobro emitida."""
-    require_role(user, "tesoreria", "administrador")
+    """Tesorería anula una orden interna conservando su registro y auditoría."""
+    require_role(user, "tesoreria")
     order = db.get(ScholarshipPaymentOrder, order_id)
     if not order:
         raise HTTPException(404, "Orden de pago no encontrada.")
+    if order.status != "programada":
+        raise HTTPException(409, "Solo se puede anular una orden programada.")
 
     folio = order.folio_orden
-    db.delete(order)
+    order.status = "cancelada"
     audit_becas(
         db,
         user,
-        f"Orden de pago cancelada/eliminada: {folio}",
+        f"Orden de pago anulada: {folio}",
         "ScholarshipPaymentOrder",
         str(order_id),
         f"Cancelada por {user.name}",
         request.client.host if request.client else "127.0.0.1",
     )
     db.commit()
-    return {"message": f"Orden de pago {folio} cancelada exitosamente."}
+    return {"message": f"Orden de pago {folio} anulada."}
 
 
 class DisperseOrderPayload(BaseModel):
@@ -1236,15 +1270,20 @@ def disperse_payment_order(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Tesorería o Administrador registra la dispersión bancaria SPEI para una orden de cobro."""
-    require_role(user, "administrador", "tesoreria")
+    """Tesorería registra una dispersión reportada fuera del sistema."""
+    require_role(user, "tesoreria")
     order = db.get(ScholarshipPaymentOrder, order_id)
     if not order:
         raise HTTPException(404, "Orden de cobro no encontrada.")
+    if order.status != "pagada":
+        raise HTTPException(409, "La orden debe tener un pago verificado antes de registrar la dispersión.")
+    batch_folio = payload.batch_folio.strip()
+    if len(batch_folio) < 3:
+        raise HTTPException(422, "Indica una referencia de operación externa válida.")
 
     app = db.get(ScholarshipApplication, order.application_id)
     order.status = "dispersada"
-    order.batch_folio = payload.batch_folio
+    order.batch_folio = batch_folio
     order.dispersed_at = now()
     if app and not order.bank_clabe:
         order.bank_name = app.bank_name
@@ -1254,7 +1293,7 @@ def disperse_payment_order(
         db.add(
             Notification(
                 user_id=app.user_id,
-                message=f"Tu orden de pago {order.folio_orden} ha sido dispersada exitosamente vía SPEI (Lote {payload.batch_folio}).",
+                message=f"Tesorería registró una dispersión externa para la orden {order.folio_orden}, con referencia {batch_folio}. El portal no ejecuta transferencias.",
                 target_path="/becas/ordenes-cobro",
             )
         )
@@ -1265,13 +1304,13 @@ def disperse_payment_order(
         f"Orden de cobro dispersada: {order.folio_orden}",
         "ScholarshipPaymentOrder",
         str(order.id),
-        f"Lote SPEI: {payload.batch_folio}, Monto: ${order.amount:.2f}",
+        f"Referencia externa: {batch_folio}; monto: ${order.amount:.2f}",
         request.client.host if request.client else "127.0.0.1",
     )
     db.commit()
 
     return {
-        "message": "Dispersión registrada con éxito.",
+        "message": "Referencia de dispersión externa registrada por Tesorería.",
         "folio_orden": order.folio_orden,
         "batch_folio": order.batch_folio,
         "dispersed_at": order.dispersed_at.isoformat(),
@@ -1367,6 +1406,7 @@ def get_dashboard_stats(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    require_role(user, "administrador", "escolares", "evaluador", "auditor")
     total_apps = db.scalar(select(func.count(ScholarshipApplication.id))) or 0
     approved_apps = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.status == "aprobada")) or 0
     in_review_apps = db.scalar(select(func.count(ScholarshipApplication.id)).where(ScholarshipApplication.status == "revision")) or 0
@@ -1407,7 +1447,8 @@ def get_beneficiaries_padron(
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ):
-    """Devuelve el padrón oficial de beneficiarios con estatus bancario y montos para auditoría."""
+    """Devuelve la relación interna de beneficiarios al personal revisor autorizado."""
+    require_role(user, "administrador", "escolares", "evaluador")
     stmt = (
         select(ScholarshipApplication, ScholarshipCall, User)
         .join(ScholarshipCall, ScholarshipApplication.call_id == ScholarshipCall.id)
@@ -1445,7 +1486,7 @@ def export_scholarships_csv(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    require_role(user, "administrador", "evaluador", "auditor", "escolares", "tesoreria")
+    require_role(user, "administrador", "evaluador", "auditor", "escolares")
     stmt = select(ScholarshipApplication, ScholarshipCall, User).join(
         ScholarshipCall, ScholarshipApplication.call_id == ScholarshipCall.id
     ).join(User, ScholarshipApplication.user_id == User.id).order_by(desc(ScholarshipApplication.created_at))
@@ -1475,12 +1516,12 @@ def export_scholarships_csv(
             app.folio,
             call.code,
             call.modalidad,
-            profile.get("matricula", "N/A"),
-            student.name,
+            profile.get("matricula", "N/A") if user.role != "auditor" else "",
+            student.name if user.role != "auditor" else "",
             app.major,
             app.academic_term,
-            app.gpa,
-            app.socioeconomic_score,
+            app.gpa if user.role != "auditor" else "",
+            app.socioeconomic_score if user.role != "auditor" else "",
             call.amount,
             ESTADOS.get(app.status, app.status),
             app.created_at.strftime("%Y-%m-%d %H:%M"),
@@ -1745,22 +1786,25 @@ def save_formal_dictamen(
     }
 
 
-# ---------------- CONSTANCIAS, CONCLUSIÓN Y NOTIFICACIONES (100%) ---------------- #
+# ---------------- RESUMEN DE ASIGNACIÓN, CONCLUSIÓN Y NOTIFICACIONES ---------------- #
 
 @router.get("/solicitudes/{app_id}/constancia")
-def get_official_scholarship_certificate(
+def get_scholarship_assignment_summary(
     app_id: int,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Genera la constancia oficial de asignación de beca institucional con línea de captura de Puebla."""
+    """Consulta el resumen interno de una solicitud favorable, sin emitir una constancia."""
     app = db.get(ScholarshipApplication, app_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
-    if user.role == "estudiante" and app.user_id != user.id:
-        raise HTTPException(403, "No puedes consultar la constancia de otro estudiante.")
+    if user.role == "estudiante":
+        if app.user_id != user.id:
+            raise HTTPException(403, "No puedes consultar la solicitud de otro estudiante.")
+    else:
+        require_role(user, "administrador", "escolares", "evaluador")
     if app.status not in ("aprobada", "renovada", "concluida"):
-        raise HTTPException(400, "Solo las becas con dictamen favorable cuentan con constancia oficial.")
+        raise HTTPException(400, "El resumen de asignación requiere un dictamen favorable.")
 
     call = db.get(ScholarshipCall, app.call_id)
     applicant = db.get(User, app.user_id)
@@ -1770,73 +1814,24 @@ def get_official_scholarship_certificate(
         .order_by(desc(ScholarshipPaymentOrder.created_at))
     )
 
-    if not app.constancia_folio:
-        app.constancia_folio = f"CONST-BEC-UTO-2026-{app.id:05d}"
-        db.commit()
-
-    import hashlib
-    verification_hash = hashlib.sha256(f"UTO-{app.folio}-{app.constancia_folio}-{app.created_at}".encode()).hexdigest()[:16].upper()
-
-    cuota_base = order.cuota_base if (order and order.cuota_base) else 1850.0
-    student_pct = app.student_percentage or 50.0
-    discount_pct = app.discount_percentage or (100.0 - student_pct)
-    monto_neto = round(cuota_base * (student_pct / 100.0), 2)
-    puebla_ref = order.puebla_reference if (order and order.puebla_reference) else f"PUE-UTO-2026-{app.id:04d}-0001"
-
     return {
-        "constancia_folio": app.constancia_folio,
-        "folio_constancia": app.constancia_folio,
-        "verification_code": f"VERIF-UTO-{verification_hash}",
-        "sha256_hash": f"SHA256:{verification_hash}",
-        "institution": "Universidad Tecnológica de Oriental",
-        "state": "Gobierno del Estado de Puebla",
-        "issue_date": now().strftime("%d/%m/%Y"),
-        "issued_at": now().isoformat(),
+        "document_type": "resumen_no_oficial",
+        "application_folio": app.folio,
+        "status": app.status,
         "student_name": applicant.name,
-        "student_id": applicant.email.split("@")[0].upper(),
         "major": app.major,
         "term": app.academic_term,
         "call_title": call.title,
         "modalidad": call.modalidad,
-        "discount_percentage": discount_pct,
-        "student_percentage": student_pct,
-        "base_tuition": cuota_base,
-        "discounted_cost": monto_neto,
-        "capture_line": puebla_ref,
-        "puebla_payment_url": "https://pagosenlinea.puebla.gob.mx/",
-        "committee_agreement": app.dictamen_agreement or "Acuerdo Institucional de Dictamen UTO",
-        "application": {
-            "folio": app.folio,
-            "status": app.status,
-            "gpa": app.gpa,
-            "major": app.major,
-            "academic_term": app.academic_term,
-            "created_at": app.created_at.isoformat(),
-        },
-        "applicant": {
-            "name": applicant.name,
-            "email": applicant.email,
-        },
-        "call": {
-            "title": call.title,
-            "code": call.code,
-            "modalidad": call.modalidad,
-        },
-        "financial_breakdown": {
-            "cuota_base": cuota_base,
-            "discount_percentage": discount_pct,
-            "student_percentage": student_pct,
-            "monto_a_pagar": monto_neto,
-            "puebla_reference": puebla_ref,
-            "puebla_url": "https://pagosenlinea.puebla.gob.mx/",
-            "payment_status": order.status if order else "pendiente",
-        },
-        "committee": {
-            "session": app.dictamen_session or "Sesión Ordinaria de Comité",
-            "agreement": app.dictamen_agreement or "Acuerdo Institucional de Dictamen",
-            "date": app.dictamen_date.isoformat() if app.dictamen_date else app.updated_at.isoformat(),
-            "notes": app.committee_notes,
-        },
+        "decision_date": app.dictamen_date.isoformat() if app.dictamen_date else None,
+        "agreement": app.dictamen_agreement or None,
+        "student_percentage": app.student_percentage,
+        "payment_order": {
+            "folio": order.folio_orden,
+            "amount": order.amount,
+            "status": order.status,
+        } if order else None,
+        "notice": "Resumen para consulta. No es una constancia oficial ni una referencia de pago.",
     }
 
 
@@ -1846,7 +1841,7 @@ def get_anexo1_protesta(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    """Genera la estructura oficial del Anexo 1 (Carta bajo protesta de decir verdad) para impresión."""
+    """Prepara los datos del formato de Anexo 1 para revisión e impresión."""
     app = db.get(ScholarshipApplication, app_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")

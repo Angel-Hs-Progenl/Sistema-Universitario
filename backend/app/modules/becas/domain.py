@@ -120,7 +120,9 @@ DOCUMENTOS = [
 ESTADOS_ORDEN = {
     "programada": "Programada",
     "emitida": "Orden emitida",
-    "dispersada": "Dispersada",
+    "pagada": "Pago verificado manualmente",
+    "dispersada": "Dispersión externa registrada",
+    "cancelada": "Anulada",
 }
 
 

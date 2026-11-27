@@ -1,116 +1,181 @@
-// Dibujo original: alas anchas, cola larga barrada y ceja clara del azor.
-// Referencias anatómicas y alcance gráfico: docs/DISENO.md, CR-009.
+// Azor en vuelo: dibujo vectorial original a partir de las referencias del líder.
+// La clase scene-azor conserva la entrada y el control de movimiento del portal.
 export default function Goshawk() {
+  const tail = "M254 190c-31 12-72 31-122 52-11 5-10 12 1 16l10 3c-4 6 3 10 13 9l9 2c2 6 12 7 22 3 34-13 67-30 95-52Z";
+  const breast = "M326 164c-8 14-25 24-39 33-12 8-25 13-38 16 22 18 48 26 71 23 26-3 44-19 49-47l-10-24Z";
+  const nearWing = "M296 171c-21-35-39-62-62-86-22-24-48-39-78-46l-24-5c-8-2-12 3-8 9l25 23-23-7c-9-2-13 2-7 10l27 25-20-6c-10-2-12 4-4 11l29 24-19-4c-10-1-11 5-2 11l32 22-15-2c-10 1-9 8 1 13l34 15c17 9 42 12 61 6 18-6 31-16 43-33Z";
   return (
     <g className="scene-azor" strokeLinejoin="round" strokeLinecap="round">
-      {/* Ala lejana con plumas redondeadas y borde posterior amplio. */}
-      <path
-        d="M307 159c14-34 45-77 90-101 12-7 24-11 28-7 4 5-7 16-20 27 16-11 31-16 35-11 4 6-9 20-24 31 17-10 29-11 31-5 2 7-12 19-27 28 14-5 23-4 22 2-2 8-19 17-35 22 10 0 16 3 11 9-14 13-44 24-65 24Z"
-        fill="var(--brand-soft)"
-        stroke="var(--ink)"
-        strokeWidth="1.6"
-      />
-      <g stroke="var(--brand)" strokeWidth="1.1" opacity=".6">
-        <path d="M405 78c-28 22-49 49-65 78m76-58c-26 17-45 36-61 61m65-38c-20 9-36 23-50 41m37-17-23 20" />
-      </g>
+      <defs>
+        <clipPath id="goshawk-tail-clip">
+          <path d={tail} />
+        </clipPath>
+        <clipPath id="goshawk-near-wing-clip">
+          <path d={nearWing} />
+        </clipPath>
+        <pattern id="goshawk-barring" width="18" height="11" patternUnits="userSpaceOnUse">
+          <path
+            d="M-5 2q5 0 9 4l5-4m0 0q5 0 9 4l5-4"
+            fill="none"
+            stroke="var(--ink)"
+            strokeWidth="1.25"
+            opacity=".8"
+          />
+        </pattern>
+      </defs>
 
-      {/* Cola larga, ligeramente abierta, con bandas transversales. */}
+      {/* Ala lejana: rémiges abiertas y extremo redondeado. */}
       <path
-        d="M246 191c-32 14-68 33-113 52-7 3-6 9 1 11l9 3c-7 4-3 9 5 10l12 2c-1 5 10 7 21 4 38-12 68-30 91-55Z"
-        fill="var(--brand)"
-        stroke="var(--ink)"
-        strokeWidth="1.6"
-      />
-      <path
-        d="M170 235q9 12 25 22m3-35q12 12 24 21m4-36q12 12 21 17"
-        stroke="var(--canvas)"
-        strokeWidth="5"
-      />
-      <path
-        d="m145 253 79-38m-65 49 72-43"
-        stroke="var(--ink)"
-        strokeWidth=".9"
-        opacity=".5"
-      />
-
-      {/* Tronco robusto y pecho claro; el barrado no es un adorno geométrico. */}
-      <path
-        d="M221 182c23-24 57-37 92-28 14 2 24 1 32-5l25 20c-13 18-17 39-34 52-22 15-54 14-84 3l-33-13Z"
-        fill="var(--brand)"
-        stroke="var(--ink)"
-        strokeWidth="1.7"
-      />
-      <path
-        d="M335 174c2 16-11 27-31 30-20 1-38 5-54 16 29 18 64 22 85 5 16-12 25-34 28-49Z"
-        fill="var(--canvas)"
-        stroke="var(--ink)"
-        strokeWidth="1.3"
-      />
-      <g stroke="var(--ink)" strokeWidth="1.05" opacity=".65">
-        <path d="M328 190q10 6 21 3m-30 7q11 6 23 3m-35 5q12 5 24 2m-44 6q12 6 25 3m-9 6q10 3 19-1m-43-3q8 4 15 3" />
-      </g>
-
-      {/* Ala cercana: contorno orgánico, rémiges separadas y plumas de cobertura. */}
-      <path
-        d="M293 164c-17-22-33-48-53-72-23-28-59-50-97-55-8-1-14 3-11 9l29 27c-12-7-24-10-31-8-6 2-3 9 4 14l31 24c-15-7-26-8-31-4-5 4 0 10 9 15l35 22c-18-7-27-8-32-4-5 6 2 11 13 16l37 21c-15-6-26-5-26 2 1 10 23 22 45 27 35 11 63-3 78-34Z"
-        fill="var(--surface)"
+        d="M310 180c6-30 22-65 46-88 16-16 38-30 61-39 8-3 12-2 10 3l-13 18 18-12c8-4 11-2 8 4l-17 21 17-10c8-4 11 0 7 6l-19 21 17-6c8-2 10 3 4 9l-21 17 15-2c8 0 9 5 2 10l-26 14c6 1 8 4 2 8-18 12-47 21-72 24Z"
+        fill="var(--muted)"
         stroke="var(--ink)"
         strokeWidth="1.8"
       />
-      <g stroke="var(--ink)" strokeWidth="1.15" opacity=".8">
-        <path d="M151 49c42 25 79 59 116 108m-106-84c37 25 67 53 97 88m-93-58c33 17 61 39 85 63m-72-30c25 11 47 23 65 36m-47-3c16 6 30 11 42 12" />
-      </g>
-      <g stroke="var(--brand)" strokeWidth="1.8" opacity=".55">
-        <path d="m169 70 13-7m-3 23 17-10m-5 25 19-11m-2 27 20-12m-5 28 19-13m-2 30 16-13m-49 4 16-10m-1 25 14-9m-46-14 13-7" />
-      </g>
       <path
-        d="M260 148c10 1 22 7 30 17-6 17-18 26-32 30 6-14 7-29 2-47Z"
-        fill="var(--brand)"
+        d="M317 175c20-36 43-63 85-93m-72 88c20-29 42-51 85-80m-73 78c21-24 45-43 79-64m-65 60c20-17 39-27 61-38"
+        fill="none"
+        stroke="var(--surface)"
+        strokeWidth="2"
+        opacity=".75"
       />
       <path
-        d="m267 164 12 4m-14 6 10 4m-13 5 8 4"
-        stroke="var(--canvas)"
-        strokeWidth="1.2"
+        d="M371 112l12 8m6-20 14 9m2-23 14 7m-61 43 14 8m17-23 15 8m-44 24 12 6"
+        stroke="var(--ink)"
+        strokeWidth="2.5"
+        opacity=".6"
       />
 
-      {/* Cabeza compacta, ceja clara y pico corto con gancho definido. */}
+      {/* Cola larga, ancha y transversalmente barrada. */}
+      <path d={tail} fill="var(--muted)" stroke="var(--ink)" strokeWidth="1.8" />
+      <g clipPath="url(#goshawk-tail-clip)">
+        <path
+          d="M145 226l22 47m7-61 23 53m5-66 24 53m4-62 24 49m-112 9 119-52"
+          stroke="var(--ink)"
+          strokeWidth="7"
+          opacity=".78"
+        />
+        <path
+          d="M137 252c46-20 88-39 127-58m-110 67c41-15 80-32 113-51m-90 57c34-13 65-26 91-43"
+          stroke="var(--surface)"
+          strokeWidth="1.3"
+          opacity=".75"
+        />
+      </g>
+
+      {/* Espalda gris pizarra y cuerpo compacto. */}
       <path
-        d="M325 164c4-18 0-33 13-43 9-9 25-7 36 3 5 6 6 12 5 18l10 5c-1 11-7 20-16 24-15 7-32 5-42 12Z"
+        d="M220 178c19-21 46-33 75-32 17 1 31 8 46 7l25 15c-9 17-24 41-42 53-17 13-45 16-72 6l-37-20Z"
         fill="var(--ink)"
         stroke="var(--ink)"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
       />
       <path
-        d="M337 132c11-5 24-7 35-5 4 1 4 3 0 5l-27 7Z"
-        fill="var(--canvas)"
+        d="M227 179c19-16 40-23 62-21 18 2 31 9 44 8-18 12-37 23-55 37-16 10-31 12-45 8Z"
+        fill="var(--muted)"
+        opacity=".72"
       />
-      <circle cx="366" cy="140" r="4.4" fill="var(--gold)" />
-      <circle cx="367" cy="140" r="2.2" fill="var(--ink)" />
-      <circle cx="367.6" cy="138.8" r=".7" fill="var(--surface)" />
-      <path d="M379 142c6-2 12 1 15 6l-5 9-8-5Z" fill="var(--gold)" />
+      <path d={breast} fill="var(--canvas)" stroke="var(--ink)" strokeWidth="1.5" />
+      <path d={breast} fill="url(#goshawk-barring)" />
       <path
-        d="M391 146c9 1 15 7 13 15l-6 5v-8c-2-4-6-5-11-5Z"
+        d="M266 213c16 10 34 15 52 14m-38-22c17 9 36 11 53 7m-27-16c15 5 29 3 39-3"
+        fill="none"
+        stroke="var(--ink)"
+        strokeWidth=".8"
+        opacity=".4"
+      />
+
+      {/* Ala cercana: borde ancho, primarias separadas y barras de pluma. */}
+      <path d={nearWing} fill="var(--muted)" stroke="var(--ink)" strokeWidth="1.9" />
+      <g clipPath="url(#goshawk-near-wing-clip)">
+        <path
+          d="M125 44c36 15 89 57 136 110m-134-89c38 21 81 57 127 101m-124-74c33 16 77 45 113 81m-108-54c31 11 65 32 95 61m-92-30c25 6 53 19 77 37"
+          fill="none"
+          stroke="var(--surface)"
+          strokeWidth="3"
+          opacity=".7"
+        />
+        <path
+          d="M145 64l21 16m-14-4 25 19m-11-5 23 18m-8-4 24 19m-10-5 24 18m-9-4 24 17m-11-4 25 15m-104-48 20 14m-8-3 20 14m-9-3 22 14m-8-2 23 14m-9-1 24 13m-9-2 25 11m-14-2 22 9"
+          fill="none"
+          stroke="var(--ink)"
+          strokeWidth="3"
+          opacity=".7"
+        />
+        <path
+          d="M213 155c24 6 43 15 58 27m-54-16c18 4 32 11 44 20m-85-52c28 5 51 17 70 30"
+          fill="none"
+          stroke="var(--ink)"
+          strokeWidth="1.2"
+          opacity=".65"
+        />
+      </g>
+      <path
+        d="M255 142c18 7 31 17 42 29-8 19-19 27-39 29 8-17 8-37-3-58Z"
         fill="var(--ink)"
       />
       <path
-        d="M341 156c8 6 14 7 22 7-7 10-15 16-25 20l-3-12Z"
+        d="M264 158l15 9m-16 2 14 8m-16 4 10 6"
+        stroke="var(--surface)"
+        strokeWidth="1.4"
+        opacity=".7"
+      />
+
+      {/* Cara: capucha oscura, ceja blanca, iris ámbar y pico ganchudo. */}
+      <path
+        d="M322 160c3-17 5-29 15-38 9-9 23-12 36-7 11 3 18 10 20 21l10 8c1 12-6 23-18 28-15 6-29 3-42 11l-15-8Z"
+        fill="var(--ink)"
+        stroke="var(--ink)"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M334 150c9-9 22-14 35-13 14 0 21 8 22 19-7 11-17 16-30 18-10 1-18 5-24 9l-9-8Z"
         fill="var(--canvas)"
       />
-      <path d="m344 164 8 3m-11 4 7 3" stroke="var(--ink)" strokeWidth="1.1" />
-
-      {/* Tarsos y dedos articulados; puntas oscuras de las garras. */}
       <path
-        d="m291 220 9 18q-1 6 8 10m21-35 8 16q0 9 11 12"
+        d="M331 139c11-13 27-18 42-16 7 1 13 4 17 8-16-5-31-2-44 5l-15 13Z"
+        fill="var(--muted)"
+      />
+      <path
+        d="M334 136c12-12 28-16 42-11l11 7c-16-4-29-1-41 8l-13 5"
+        fill="none"
+        stroke="var(--surface)"
+        strokeWidth="5"
+      />
+      <path
+        d="M338 149c8-5 18-7 27-6m-19 11c7-3 14-4 22-2m-23 8c7-2 15-1 22 1m-23 6c7-1 13 0 19 2"
+        fill="none"
+        stroke="var(--ink)"
+        strokeWidth="1.1"
+        opacity=".7"
+      />
+      <ellipse cx="372" cy="140" rx="5.5" ry="5.7" fill="var(--gold)" stroke="var(--ink)" strokeWidth="1.2" />
+      <circle cx="373" cy="140" r="2.3" fill="var(--ink)" />
+      <circle cx="374" cy="138.7" r=".8" fill="var(--surface)" />
+      <path d="M389 143c4-2 9-1 13 3l-3 7-11-3Z" fill="var(--gold)" />
+      <path
+        d="M398 144c8 1 13 6 11 13l-7 10-7-1 4-7c-1-4-5-6-10-7Z"
+        fill="var(--ink)"
+        stroke="var(--ink)"
+        strokeWidth="1"
+      />
+      <path d="m392 151 8 3m-43 21 11 2" stroke="var(--muted)" strokeWidth="1.1" />
+
+      {/* Patas amarillas y uñas oscuras, independientes de la hoja animada. */}
+      <path
+        d="m291 225 8 17 10 8m18-30 9 15 12 10"
+        fill="none"
         stroke="var(--gold)"
         strokeWidth="4"
       />
-      <g stroke="var(--gold)" strokeWidth="2.5">
-        <path d="M308 248c10-4 17-1 14 5m-14-5c5 6 10 11 6 15m-14-25c-6 5-8 9-3 13" />
-        <path d="M348 241c10-3 17 1 14 7m-14-7c4 5 9 10 5 14m-16-26c-6 5-7 11-3 14" />
+      <g fill="none" stroke="var(--gold)" strokeWidth="2.8">
+        <path d="M309 250c8-5 17-3 17 3m-17-3c5 5 8 11 5 15m-15-23c-7 4-9 10-4 14" />
+        <path d="M348 245c9-3 17 1 16 7m-16-7c4 7 7 12 3 16m-15-26c-7 5-8 10-4 15" />
       </g>
-      <g stroke="var(--ink)" strokeWidth="1.6">
-        <path d="m322 253-4 2m-4 8-3-3m-14-9 2-4m63 1-4 1m-5 6-2-3m-17-9 2-3" />
-      </g>
+      <path
+        d="m326 253-5 2m-7 10-4-3m-15-6 3-5m66 1-5 1m-8 8-3-3m-16-8 3-4"
+        stroke="var(--ink)"
+        strokeWidth="1.8"
+      />
     </g>
   );
 }

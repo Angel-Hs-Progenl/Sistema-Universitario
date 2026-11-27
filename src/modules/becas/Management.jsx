@@ -348,7 +348,7 @@ export function ManageCalls() {
           </p>
           <p>
             Configura el periodo cuatrimestral actual y el cuatrimestre anterior evaluado
-            según el calendario académico oficial de la UTO.
+            según las fechas configuradas para la convocatoria.
           </p>
         </aside>
       </div>
@@ -414,7 +414,7 @@ export function ManageCalls() {
                             onClick={async () => {
                               if (
                                 !window.confirm(
-                                  `¿Publicar resultados oficiales para ${c.title}? Los folios beneficiarios serán visibles para los estudiantes.`
+                                  `¿Publicar los resultados registrados para ${c.title}? Cada estudiante podrá consultar su propio folio.`
                                 )
                               )
                                 return;
