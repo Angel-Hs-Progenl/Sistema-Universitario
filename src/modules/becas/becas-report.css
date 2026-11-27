@@ -1,0 +1,147 @@
+.becas-report-sheet {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0;
+  }
+
+  body:has(> .becas-report-sheet) > *:not(.becas-report-sheet) {
+    display: none !important;
+  }
+
+  html:has(> body > .becas-report-sheet),
+  body:has(> .becas-report-sheet) {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body > .becas-report-sheet {
+    display: block !important;
+    position: relative;
+    width: 8.5in;
+    height: 11in;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--surface);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .becas-report-membrete {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 8.5in;
+    height: 11in;
+    object-fit: fill;
+  }
+
+  .becas-report-content {
+    position: relative;
+    z-index: 1;
+    margin: 1.48in 0.85in 0;
+    font-size: 10pt;
+    line-height: 1.35;
+  }
+
+  .becas-report-heading {
+    border-bottom: 1px solid var(--brand);
+    padding-bottom: 0.12in;
+    margin-bottom: 0.3in;
+  }
+
+  .becas-report-heading p {
+    margin: 0 0 0.04in;
+    color: var(--brand);
+    font-size: 9pt;
+    font-weight: 700;
+  }
+
+  .becas-report-heading h1 {
+    margin: 0 0 0.05in;
+    color: var(--ink);
+    font-size: 19pt;
+    line-height: 1.15;
+  }
+
+  .becas-report-heading span {
+    color: var(--muted);
+    font-size: 8.5pt;
+  }
+
+  .becas-report-content section {
+    margin-bottom: 0.3in;
+    break-inside: avoid;
+  }
+
+  .becas-report-content h2 {
+    margin: 0 0 0.13in;
+    color: var(--brand);
+    font-size: 11pt;
+    line-height: 1.2;
+  }
+
+  .becas-report-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.18in 0.15in;
+  }
+
+  .becas-report-metrics div {
+    border-top: 1px solid var(--line);
+    padding-top: 0.08in;
+  }
+
+  .becas-report-metrics strong,
+  .becas-report-metrics span {
+    display: block;
+  }
+
+  .becas-report-metrics strong {
+    color: var(--ink);
+    font-size: 18pt;
+    line-height: 1.1;
+  }
+
+  .becas-report-metrics span {
+    margin-top: 0.03in;
+    font-size: 8pt;
+  }
+
+  .becas-report-content table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+
+  .becas-report-content th,
+  .becas-report-content td {
+    padding: 0.08in 0.06in;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+  }
+
+  .becas-report-content th:last-child,
+  .becas-report-content td:last-child {
+    width: 0.9in;
+    text-align: right;
+  }
+
+  .becas-report-content th {
+    color: var(--brand);
+    font-weight: 700;
+  }
+
+  .becas-report-note {
+    margin-top: 0.25in;
+    border-top: 1px solid var(--line);
+    padding-top: 0.1in;
+    color: var(--muted);
+    font-size: 8pt;
+  }
+}

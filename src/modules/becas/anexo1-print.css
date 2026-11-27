@@ -1,0 +1,198 @@
+.anexo1-document {
+  color: var(--ink);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.anexo1-document > p {
+  margin: 0 0 14px;
+  text-align: justify;
+}
+
+.anexo1-heading {
+  border-bottom: 2px solid var(--brand);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.anexo1-heading h2 {
+  margin: 0 0 4px;
+  color: var(--brand);
+  font-size: 1.125rem;
+  line-height: 1.25;
+}
+
+.anexo1-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.anexo1-document > .anexo1-date {
+  text-align: right;
+  font-size: 0.8125rem;
+}
+
+.anexo1-recipient {
+  text-align: left !important;
+}
+
+.anexo1-economic-data {
+  padding: 12px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.anexo1-signature {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.anexo1-signature > p {
+  margin: 0 0 45px;
+  font-weight: 600;
+}
+
+.anexo1-signature > div {
+  display: inline-block;
+  min-width: 280px;
+  border-top: 1px solid var(--ink);
+  padding-top: 6px;
+}
+
+.anexo1-signature small {
+  color: var(--muted);
+}
+
+.anexo1-document > .anexo1-privacy {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+
+.anexo1-instructions {
+  padding: 10px 14px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+}
+
+.anexo1-instructions ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+.anexo1-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.anexo1-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.anexo1-print-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.anexo1-print-sheet {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0;
+  }
+
+  body:has(> .anexo1-print-sheet) > *:not(.anexo1-print-sheet) {
+    display: none !important;
+  }
+
+  html:has(> body > .anexo1-print-sheet),
+  body:has(> .anexo1-print-sheet) {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body > .anexo1-print-sheet {
+    display: block !important;
+    position: relative;
+    width: 8.5in;
+    height: 11in;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--surface);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .anexo1-print-membrete {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 8.5in;
+    height: 11in;
+    object-fit: fill;
+  }
+
+  .anexo1-document-print {
+    position: relative;
+    z-index: 1;
+    margin: 1.48in 0.84in 0;
+    font-size: 10pt;
+    line-height: 1.4;
+  }
+
+  .anexo1-document-print > p {
+    margin-bottom: 0.16in;
+  }
+
+  .anexo1-document-print .anexo1-heading {
+    margin-bottom: 0.18in;
+    padding-bottom: 0.1in;
+    border-bottom-width: 1px;
+  }
+
+  .anexo1-document-print .anexo1-heading h2 {
+    font-size: 13pt;
+  }
+
+  .anexo1-document-print .anexo1-heading p,
+  .anexo1-document-print > .anexo1-date {
+    font-size: 9.5pt;
+  }
+
+  .anexo1-document-print .anexo1-economic-data {
+    padding: 0.09in;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .anexo1-document-print .anexo1-signature {
+    margin-top: 0.38in;
+    break-inside: avoid;
+  }
+
+  .anexo1-document-print .anexo1-signature > p {
+    margin-bottom: 0.45in;
+  }
+
+  .anexo1-document-print > .anexo1-privacy {
+    margin-top: 0.2in;
+    padding-top: 0.09in;
+    font-size: 8pt;
+  }
+}

@@ -13,10 +13,12 @@ import { api, date } from "../../shared/api";
 import { useAuth } from "../../app/Auth";
 import { Alert, useAsync } from "../../shared/ui";
 import { MODALIDADES } from "../../../shared/becas";
+import BecasReport from "./BecasReport";
 
 export default function DashboardAuditoria() {
   const { user } = useAuth();
   const [downloadingCsv, setDownloadingCsv] = useState(false);
+  const [pdfError, setPdfError] = useState("");
 
   const { data: stats, loading: loadingStats, error: statsError } = useAsync(
     () => api("/becas/estadisticas"),
@@ -70,6 +72,19 @@ export default function DashboardAuditoria() {
     setDownloadingCsv(true);
     window.location.href = "/api/v1/becas/reportes/export";
     setTimeout(() => setDownloadingCsv(false), 1500);
+  }
+
+  async function handlePrintPdf() {
+    if (!stats) return;
+    setPdfError("");
+    try {
+      const letterhead = document.querySelector(".becas-report-membrete");
+      await letterhead.decode();
+      await document.fonts.ready;
+      window.print();
+    } catch {
+      setPdfError("No se pudo cargar el membrete para el PDF. Vuelve a intentarlo.");
+    }
   }
 
   return (
@@ -196,8 +211,11 @@ export default function DashboardAuditoria() {
           <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Exportar actividad de becas</h3>
         </div>
         <p style={{ margin: "0 0 16px 0", fontSize: "0.875rem", color: "var(--muted)" }}>
-          Descarga el CSV disponible para tu rol. La versión de auditoría omite identidad y datos socioeconómicos individuales.
+          Descarga los datos en CSV o guarda un resumen estadístico en PDF con el membrete proporcionado.
+          La versión de auditoría omite identidad y datos socioeconómicos individuales.
         </p>
+
+        {pdfError && <Alert>{pdfError}</Alert>}
 
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <button
@@ -208,8 +226,18 @@ export default function DashboardAuditoria() {
           >
             <Download size={16} /> {downloadingCsv ? "Preparando CSV…" : "Descargar CSV"}
           </button>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={handlePrintPdf}
+            disabled={!stats || loadingStats}
+          >
+            Imprimir / Guardar resumen en PDF
+          </button>
         </div>
       </section>
+
+      <BecasReport stats={stats} />
 
       {/* Matriz de Seguridad y Roles */}
       <section

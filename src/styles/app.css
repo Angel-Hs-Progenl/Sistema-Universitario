@@ -752,6 +752,9 @@ progress::-webkit-progress-value {
 .doc-description .doc-note {
   color: var(--error);
 }
+.doc-description .payment-review-note {
+  color: var(--ink);
+}
 .doc-actions {
   display: flex;
   gap: 12px;
@@ -811,6 +814,21 @@ progress::-webkit-progress-value {
   font-size: 12px;
   margin-top: 5px;
   max-width: 460px;
+}
+.validation-pending {
+  margin-top: 14px;
+  border-left: 2px solid var(--gold);
+  padding-left: 12px;
+}
+.validation-pending ul {
+  margin: 6px 0;
+  padding-left: 18px;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.validation-pending p {
+  max-width: none;
 }
 .action-buttons {
   display: flex;

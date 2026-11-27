@@ -84,13 +84,44 @@ def test_becas_full_flow(clients):
         "gpa": 9.4,
         "academic_term": "4to Cuatrimestre",
         "major": "Ingeniería en Tecnologías de la Información",
-        "custom_answers": {"¿Participas en proyectos de investigación?": "Sí, en robótica"},
+        "custom_answers": {
+            "¿Participas en proyectos de investigación?": "Sí, en robótica",
+            "anexo1": {
+                "depende_de": "Persona de prueba",
+                "parentesco": "Tutor",
+                "ocupacion": "Comerciante",
+                "ingreso_familiar_mensual": 5200,
+                "dependientes_conteo": 3,
+                "gastos_familiares_mensuales": 4100,
+                "transporte_diario": 45,
+            },
+            "beca_externa": {"tiene": False},
+        },
     }
     res_app = student.post("/api/v1/becas/solicitudes", json=app_payload)
     assert res_app.status_code == 200
     app_id = res_app.json()["id"]
     assert res_app.json()["status"] == "recibida"
     assert res_app.json()["folio"].startswith("BEC-2026-")
+
+    anexo = student.get(f"/api/v1/becas/solicitudes/{app_id}/anexo1")
+    assert anexo.status_code == 200
+    anexo_data = anexo.json()
+    assert anexo_data["student"]["matricula"] == ""
+    assert anexo_data["anexo1_data"]["depende_de"] == "Persona de prueba"
+    assert anexo_data["anexo1_data"]["ingreso_mensual"] == 5200
+    assert anexo_data["anexo1_data"]["no_beca_externa"] is True
+    pdf = student.get(f"/api/v1/becas/solicitudes/{app_id}/anexo1.pdf")
+    assert pdf.status_code == 200
+    assert pdf.headers["content-type"] == "application/pdf"
+    assert pdf.headers["cache-control"] == "no-store"
+    assert pdf.content.startswith(b"%PDF-")
+    assert b"/MediaBox [ 0 0 612 792 ]" in pdf.content
+    assert clients["otro"].get(f"/api/v1/becas/solicitudes/{app_id}/anexo1").status_code == 403
+    assert admin.get(f"/api/v1/becas/solicitudes/{app_id}/anexo1").status_code == 403
+    assert auditor.get(f"/api/v1/becas/solicitudes/{app_id}/anexo1").status_code == 403
+    assert clients["otro"].get(f"/api/v1/becas/solicitudes/{app_id}/anexo1.pdf").status_code == 403
+    assert admin.get(f"/api/v1/becas/solicitudes/{app_id}/anexo1.pdf").status_code == 403
 
     # Duplicate application rejected
     res_dup = student.post("/api/v1/becas/solicitudes", json=app_payload)

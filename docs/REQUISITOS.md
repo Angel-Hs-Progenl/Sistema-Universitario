@@ -76,14 +76,14 @@ Antes de desarrollar: acordar fórmula y ponderaciones, anonimato y tamaño mín
 Alcance propuesto por el equipo. Las funciones que requieren acuerdos o servicios externos siguen pendientes de ratificación; el estado técnico vigente se aclara en CR-015 de CASCADA.md.
 - BEC-01: Perfil del aspirante con datos personales, académicos y socioeconómicos.
 - BEC-02: Buscador y catálogo de convocatorias con filtros por modalidad (Excelencia, Manutención, Transporte, Alimentación).
-- BEC-03: Solicitud digital con folio único, carga de comprobantes (PDF/JPG hasta 5 MB) y seguimiento en tiempo real.
+- BEC-03: Solicitud digital con folio único, carga de comprobantes (PDF/JPG hasta 5 MB) y seguimiento en tiempo real. En «Mis solicitudes», el estudiante descarga directamente el Anexo 1 prellenado en PDF tamaño carta con el membrete a página completa, para revisión, firma autógrafa y posterior carga. La vista previa durante la captura conserva la impresión del navegador.
 - BEC-04: Estudio socioeconómico digital con cálculo automático del índice de vulnerabilidad (10 - 100 pts).
 - BEC-05: Creador de convocatorias y gestor de formularios con preguntas personalizadas por tipo de apoyo.
 - BEC-06: Motor de reglas y filtros automáticos por promedio mínimo institucional.
 - BEC-07: Panel de dictaminación colegiada para comités con revisión de expedientes, comentarios y votación manual.
 - BEC-08: Registro de órdenes internas foliadas; no se genera una línea de captura externa.
 - BEC-09: Proceso simplificado de renovación para becarios activos.
-- BEC-10: Vista de actividad y exportación CSV según rol; PDF y Excel pendientes.
+- BEC-10: Vista de actividad y exportación CSV según rol. Resumen estadístico imprimible en PDF con membrete proporcionado por el líder; no es constancia oficial. Excel y reportes PDF detallados pendientes.
 - BEC-11: Roles dedicados (Administrador, Evaluador de Comité, Auditor Institucional y Estudiante).
 - BEC-12: Bitácora persistente de acciones; su inmutabilidad no está garantizada frente al administrador de la base.
 - BEC-13: Captura y validación de datos bancarios (CLABE interbancaria de 18 dígitos, banco y titular) para órdenes de dispersión.

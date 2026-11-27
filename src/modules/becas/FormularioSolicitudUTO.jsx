@@ -350,17 +350,18 @@ export default function FormularioSolicitudUTO({ call, user, onSuccess, onCancel
       curp: curp,
     },
     call: {
-      periodo: call.periodo_actual || "septiembre - diciembre 2026",
+      periodo: call.periodo_actual || "",
       title: call.title,
     },
     anexo1_data: {
       depende_de: dependeDe,
       parentesco: dependeParentesco,
       ocupacion: dependeOcupacion,
-      ingreso_mensual: Number(ingresoMensual) || 0,
-      personas_dependientes: Number(numDependientes) || 1,
-      gastos_mensuales: Number(totalGastos) || 0,
-      transporte_diario: Number(transporteDiario) || 0,
+      ingreso_mensual: ingresoMensual === "" ? null : Number(ingresoMensual),
+      personas_dependientes: numDependientes === "" ? null : Number(numDependientes),
+      gastos_mensuales: totalGastos === "" ? null : Number(totalGastos),
+      transporte_diario: transporteDiario === "" ? null : Number(transporteDiario),
+      no_beca_externa: tieneBecaExterna === "No" ? true : tieneBecaExterna === "Sí" ? false : null,
     },
   };
 

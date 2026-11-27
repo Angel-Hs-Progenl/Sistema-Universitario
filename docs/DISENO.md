@@ -91,3 +91,11 @@ Brand.jsx reserva un espacio de 44 px para el PNG oficial y el azor, sin mover l
 El header privado usa un avatar local como disparador de cuenta, con nombre/correo/rol dentro del desplegable. Se abre por clic o teclado; Escape devuelve el foco y los clics fuera cierran. Editar perfil cambia el nombre visible; no identidad legal, permisos o credenciales.
 
 El acceso conserva la imagen lateral, pero centra una columna con Google institucional y alternativas correo/teléfono. El botón utiliza el recurso original de Google y solo se habilita con configuración real de API. Los campos explican que la contraseña pertenece al portal. [Procedencia de recursos](../public/brand/README.md).
+
+## Resumen imprimible de Becas · CR-017
+
+El tablero de Becas ofrece un resumen estadístico de una página tamaño carta con el membrete PNG entregado por el líder. El contenido se sitúa debajo de los logotipos y sobre la marca de agua tenue; conserva texto legible y una nota de alcance interno. La imagen se usa sin modificar. El botón abre la impresión del navegador para guardar como PDF; el CSV sigue siendo una descarga tabular independiente. El resumen no incluye identidad estudiantil ni se presenta como constancia.
+
+## Anexo 1 de Becas · CR-018
+
+El estudiante abre el Anexo 1 prellenado en «Mis solicitudes» o durante la captura. La vista previa permanece en un diálogo accesible; desde una solicitud guardada, «Descargar Anexo 1 en PDF» entrega directamente un archivo carta con el membrete a página completa, el texto bajo los logotipos y una zona despejada para firma autógrafa. La vista previa previa al envío mantiene la impresión del navegador. Los datos no capturados aparecen como espacios por completar y se exige revisar cualquier declaración sobre becas externas antes de firmar. Se comprobó que el texto, la firma y el aviso de privacidad caben en una página con datos ficticios.

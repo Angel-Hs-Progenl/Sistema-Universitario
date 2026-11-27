@@ -146,6 +146,12 @@ export default function Workspace() {
         DOCUMENTS.find((k) => k.id === d.kind)?.required,
     ).length;
   const requiredTotal = DOCUMENTS.filter((doc) => doc.required).length;
+  const pendingValidation = DOCUMENTS.filter(
+    (kind) =>
+      kind.required &&
+      !documents.some((doc) => doc.kind === kind.id && doc.status === "validado"),
+  );
+  const validationBlocked = pendingValidation.length > 0 || !app.clearance;
   const docsOnly = view === "documentos",
     timelineOnly = view === "seguimiento";
   return (
@@ -392,17 +398,34 @@ export default function Workspace() {
                         <p>
                           {doc
                             ? `${doc.name} · ${(doc.size / 1024).toFixed(0)} KB`
-                            : kind.area === "tesoreria"
-                              ? "Validación por Tesorería"
-                              : "Sin archivo adjunto"}
+                            : "Sin archivo adjunto"}
                         </p>
+                        {kind.id === "pago" &&
+                          ["escolares", "administrador"].includes(user.role) && (
+                            <p className="payment-review-note">
+                              {!doc
+                                ? "El estudiante debe adjuntar el comprobante; Tesorería lo validará después."
+                                : doc.status === "validado"
+                                  ? "Pago validado por Tesorería."
+                                  : doc.status === "rechazado"
+                                    ? "Tesorería solicitó una corrección al estudiante."
+                                    : "Comprobante recibido. El dictamen de pago corresponde a Tesorería."}
+                            </p>
+                          )}
                         {doc?.note && (
                           <p className="doc-note">Observación: {doc.note}</p>
                         )}
                       </div>
                       <div className="doc-actions">
                         <Badge status={doc?.status || "pendiente"} />
-                        {doc && (
+                        {doc && (kind.id === "pago" && ["escolares", "administrador"].includes(user.role) ? (
+                          <a
+                            className="button button-secondary small"
+                            href={`/api/v1/titulacion/documents/${doc.id}/download`}
+                          >
+                            <Download size={14} /> Consultar comprobante
+                          </a>
+                        ) : (
                           <a
                             className="icon-button"
                             href={`/api/v1/titulacion/documents/${doc.id}/download`}
@@ -410,7 +433,7 @@ export default function Workspace() {
                           >
                             <Download size={17} />
                           </a>
-                        )}
+                        ))}
                         {student &&
                           EDITABLE.includes(app.status) &&
                           doc?.status !== "validado" && (
@@ -471,6 +494,20 @@ export default function Workspace() {
                           : "Consulta el estado y las observaciones en el historial."
                         : "Cada cambio quedará registrado en el historial."}
                     </p>
+                    {!student && app.status === "revision" && validationBlocked && (
+                      <div className="validation-pending" id="validation-pending">
+                        <strong>Antes de validar faltan:</strong>
+                        <ul>
+                          {pendingValidation.map((kind) => (
+                            <li key={kind.id}>
+                              {kind.name} · {kind.area === "tesoreria" ? "dictamen de Tesorería" : "dictamen de Escolares o Administración"}
+                            </li>
+                          ))}
+                          {!app.clearance && <li>Liberación de Vinculación</li>}
+                        </ul>
+                        <p>Actualiza el expediente después de que cada área registre su dictamen.</p>
+                      </div>
+                    )}
                   </div>
                   <div className="action-buttons">
                     {student && app.status === "cancelado" && (
@@ -495,6 +532,8 @@ export default function Workspace() {
                         <button
                           key={s}
                           className={`button ${s === "cancelado" ? "button-quiet" : s === "incompleta" || s === "rechazada" ? "button-secondary" : "button-primary"}`}
+                          disabled={s === "validada" && validationBlocked}
+                          aria-describedby={s === "validada" && validationBlocked ? "validation-pending" : undefined}
                           onClick={() =>
                             setModal({ type: "transition", status: s })
                           }

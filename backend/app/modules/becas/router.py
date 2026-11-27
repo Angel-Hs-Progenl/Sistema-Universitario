@@ -37,6 +37,7 @@ from .domain import (
     evaluate_applicant_rules,
     validate_clabe,
 )
+from .pdf import render_anexo1_pdf
 
 router = APIRouter(prefix="/api/v1/becas", tags=["Becas"])
 
@@ -1842,34 +1843,55 @@ def get_anexo1_protesta(
     db: Session = Depends(get_db),
 ):
     """Prepara los datos del formato de Anexo 1 para revisión e impresión."""
+    require_role(user, "estudiante")
     app = db.get(ScholarshipApplication, app_id)
     if not app:
         raise HTTPException(404, "Solicitud no encontrada.")
-    if user.role == "estudiante" and app.user_id != user.id:
+    if app.user_id != user.id:
         raise HTTPException(403, "No puedes consultar datos de otro estudiante.")
 
     applicant = db.get(User, app.user_id)
     call = db.get(ScholarshipCall, app.call_id)
     socio = db.scalar(select(ScholarshipSocioeconomic).where(ScholarshipSocioeconomic.user_id == app.user_id))
     answers = json.loads(app.custom_answers or "{}")
+    anexo = answers.get("anexo1")
+    anexo = anexo if isinstance(anexo, dict) else {}
+    beca_externa = answers.get("beca_externa")
+    beca_externa = beca_externa if isinstance(beca_externa, dict) else {}
+    profile = json.loads(applicant.profile or "{}")
 
-    dependencia = answers.get("dependencia_persona") or answers.get("de_quien_depende") or "Padres de familia"
-    ocupacion = answers.get("dependencia_ocupacion") or answers.get("ocupacion_tutor") or "Empleado / Campesino"
-    parentesco = answers.get("dependencia_parentesco") or "Padre / Madre"
-    ingreso = answers.get("ingreso_familiar_mensual") or (socio.monthly_income if socio else 0)
-    dependientes = answers.get("numero_dependientes") or (socio.dependents_count if socio else 1)
-    gastos = answers.get("gastos_familiares_mensuales") or (socio.monthly_expenses if socio else 0)
-    transporte_diario = answers.get("transporte_gasto_diario") or answers.get("costo_diario_transporte") or 0
+    dependencia = anexo.get("depende_de") or answers.get("dependencia_persona") or answers.get("de_quien_depende")
+    ocupacion = anexo.get("ocupacion") or answers.get("dependencia_ocupacion") or answers.get("ocupacion_tutor")
+    parentesco = anexo.get("parentesco") or answers.get("dependencia_parentesco")
+    ingreso = anexo.get("ingreso_familiar_mensual")
+    if ingreso is None:
+        ingreso = answers.get("ingreso_familiar_mensual")
+    if ingreso is None and socio:
+        ingreso = socio.monthly_income
+    dependientes = anexo.get("dependientes_conteo")
+    if dependientes is None:
+        dependientes = answers.get("numero_dependientes")
+    if dependientes is None and socio:
+        dependientes = socio.dependents_count
+    gastos = anexo.get("gastos_familiares_mensuales")
+    if gastos is None:
+        gastos = answers.get("gastos_familiares_mensuales")
+    if gastos is None and socio:
+        gastos = socio.monthly_expenses
+    transporte_diario = anexo.get("transporte_diario")
+    if transporte_diario is None:
+        transporte_diario = answers.get("transporte_gasto_diario") or answers.get("costo_diario_transporte")
 
     return {
+        "application_id": app.id,
         "institution": "Universidad Tecnológica de Oriental",
         "committee": "COMITÉ DE BECAS DE LA UNIVERSIDAD TECNOLÓGICA DE ORIENTAL",
         "city": "Oriental",
         "state": "Puebla",
-        "date_str": now().strftime("%d de %B de %Y"),
+        "date_str": now().strftime("%d/%m/%Y"),
         "student": {
             "name": applicant.name,
-            "matricula": applicant.email.split("@")[0].upper(),
+            "matricula": profile.get("matricula") or answers.get("matricula") or "",
             "major": app.major,
             "academic_term": app.academic_term,
             "curp": getattr(app, "curp", "") or "",
@@ -1882,13 +1904,31 @@ def get_anexo1_protesta(
             "depende_de": dependencia,
             "parentesco": parentesco,
             "ocupacion": ocupacion,
-            "ingreso_mensual": float(ingreso) if ingreso else 0.0,
-            "personas_dependientes": int(dependientes) if dependientes else 1,
-            "gastos_mensuales": float(gastos) if gastos else 0.0,
-            "transporte_diario": float(transporte_diario) if transporte_diario else 0.0,
-            "no_beca_externa": True,
+            "ingreso_mensual": float(ingreso) if ingreso is not None else None,
+            "personas_dependientes": int(dependientes) if dependientes is not None else None,
+            "gastos_mensuales": float(gastos) if gastos is not None else None,
+            "transporte_diario": float(transporte_diario) if transporte_diario is not None else None,
+            "no_beca_externa": beca_externa.get("tiene") is False if isinstance(beca_externa.get("tiene"), bool) else None,
         },
     }
+
+
+@router.get("/solicitudes/{app_id}/anexo1.pdf")
+def download_anexo1_pdf(
+    app_id: int,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Descarga el Anexo 1 del estudiante como PDF carta con membrete de página completa."""
+    data = get_anexo1_protesta(app_id=app_id, user=user, db=db)
+    return Response(
+        content=render_anexo1_pdf(data),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="anexo1-beca-{app_id}.pdf"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.post("/solicitudes/{app_id}/concluir")
