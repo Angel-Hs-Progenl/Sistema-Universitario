@@ -3,7 +3,6 @@ import {
   BarChart3,
   Download,
   Shield,
-  FileSpreadsheet,
   Lock,
   UserCheck,
   TrendingUp,
@@ -18,7 +17,6 @@ import { MODALIDADES } from "../../../shared/becas";
 export default function DashboardAuditoria() {
   const { user } = useAuth();
   const [downloadingCsv, setDownloadingCsv] = useState(false);
-  const [simulatingExport, setSimulatingExport] = useState("");
 
   const { data: stats, loading: loadingStats, error: statsError } = useAsync(
     () => api("/becas/estadisticas"),
@@ -30,8 +28,8 @@ export default function DashboardAuditoria() {
     []
   );
 
-  const { data: padron, loading: loadingPadron } = useAsync(
-    () => api("/becas/padron-beneficiarios"),
+  const { data: padron, loading: loadingPadron, error: padronError } = useAsync(
+    () => (["administrador", "escolares"].includes(user.role) ? api("/becas/padron-beneficiarios") : Promise.resolve(null)),
     []
   );
 
@@ -40,42 +38,38 @@ export default function DashboardAuditoria() {
     const headers = ["Folio", "Estudiante", "Correo", "Carrera", "Cuatrimestre", "Promedio", "Convocatoria", "Modalidad", "Monto", "Estado", "Banco", "CLABE"];
     const rows = padron.map((b) => [
       b.folio,
-      `"${b.student_name}"`,
+      b.student_name,
       b.student_email,
-      `"${b.major}"`,
-      `"${b.academic_term}"`,
+      b.major,
+      b.academic_term,
       b.gpa,
-      `"${b.call_title}"`,
+      b.call_title,
       b.modalidad,
       b.amount,
       b.status,
-      `"${b.bank_name}"`,
+      b.bank_name,
       b.clabe_masked,
     ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvCell = (value) => {
+      const raw = String(value ?? "");
+      const safe = /^[=+@\-\t\r]/.test(raw) ? `'${raw}` : raw;
+      return `"${safe.replaceAll('"', '""')}"`;
+    };
+    const csvContent = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
+    const encodedUri = URL.createObjectURL(new Blob(["\uFEFF", csvContent], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `padron_oficial_becarios_uto_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `relacion_interna_becas_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(encodedUri);
   }
 
   function handleCsvExport() {
     setDownloadingCsv(true);
     window.location.href = "/api/v1/becas/reportes/export";
     setTimeout(() => setDownloadingCsv(false), 1500);
-  }
-
-  function handleSimulatedExport(type) {
-    setSimulatingExport(type);
-    setTimeout(() => {
-      setSimulatingExport("");
-      alert(
-        `Generación de reporte ${type.toUpperCase()} completada para demostración institucional. Para datos crudos en vivo, utiliza la descarga oficial en CSV.`
-      );
-    }, 800);
   }
 
   return (
@@ -199,10 +193,10 @@ export default function DashboardAuditoria() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", color: "var(--brand)" }}>
           <Download size={20} />
-          <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Exportación oficial de reportes y concentrados</h3>
+          <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Exportar actividad de becas</h3>
         </div>
         <p style={{ margin: "0 0 16px 0", fontSize: "0.875rem", color: "var(--muted)" }}>
-          Descarga las relaciones completas de becarios, montos, promedios e índices de vulnerabilidad para auditoría institucional o entrega a Rectoría.
+          Descarga el CSV disponible para tu rol. La versión de auditoría omite identidad y datos socioeconómicos individuales.
         </p>
 
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
@@ -212,21 +206,7 @@ export default function DashboardAuditoria() {
             onClick={handleCsvExport}
             disabled={downloadingCsv}
           >
-            <Download size={16} /> {downloadingCsv ? "Generando CSV…" : "Descargar reporte completo en CSV"}
-          </button>
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={() => handleSimulatedExport("excel")}
-          >
-            <FileSpreadsheet size={16} /> Descargar plantilla Excel (.xlsx)
-          </button>
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={() => handleSimulatedExport("pdf")}
-          >
-            Generar resumen ejecutivo en PDF
+            <Download size={16} /> {downloadingCsv ? "Preparando CSV…" : "Descargar CSV"}
           </button>
         </div>
       </section>
@@ -271,14 +251,14 @@ export default function DashboardAuditoria() {
           <div style={{ background: "var(--canvas)", padding: "12px", borderRadius: "var(--radius)" }}>
             <strong>Auditor Institucional</strong>
             <p style={{ margin: "4px 0 0 0", fontSize: "0.8125rem", color: "var(--muted)" }}>
-              Consulta en tiempo real de logs de auditoría, exportaciones masivas y trazabilidad anti-fraude.
+              Consulta de actividad y exportación CSV sin identidad estudiantil.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Padrón Oficial de Beneficiarios */}
-      <section
+      {/* Relación nominal reservada al personal revisor */}
+      {["administrador", "escolares"].includes(user.role) && <section
         style={{
           background: "var(--surface)",
           border: "1px solid var(--line)",
@@ -291,10 +271,10 @@ export default function DashboardAuditoria() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--brand)" }}>
               <UserCheck size={20} />
-              <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Padrón Oficial de Beneficiarios (Becas Otorgadas)</h3>
+              <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Relación interna de beneficiarios</h3>
             </div>
             <p style={{ margin: "4px 0 0 0", fontSize: "0.875rem", color: "var(--muted)" }}>
-              Relación nominal de estudiantes con dictamen favorable para entrega a Tesorería y Contraloría Universitaria.
+              Solicitudes con dictamen favorable, disponibles para el personal revisor autorizado.
             </p>
           </div>
           <button
@@ -304,11 +284,12 @@ export default function DashboardAuditoria() {
             onClick={handleExportPadron}
             disabled={!padron || padron.length === 0}
           >
-            <Download size={14} /> Descargar Padrón Oficial (CSV)
+            <Download size={14} /> Descargar relación (CSV)
           </button>
         </div>
 
-        {loadingPadron && <p>Cargando padrón oficial…</p>}
+        {loadingPadron && <p>Cargando relación…</p>}
+        {padronError && <Alert>{padronError}</Alert>}
 
         {padron && (
           <div className="audit-table-wrapper">
@@ -329,7 +310,7 @@ export default function DashboardAuditoria() {
                 {padron.length === 0 ? (
                   <tr>
                     <td colSpan={8} style={{ padding: "20px", textAlign: "center", color: "var(--muted)" }}>
-                      Aún no hay becas con dictamen favorable en el padrón institucional.
+                      Aún no hay becas con dictamen favorable.
                     </td>
                   </tr>
                 ) : (
@@ -363,7 +344,7 @@ export default function DashboardAuditoria() {
             </table>
           </div>
         )}
-      </section>
+      </section>}
 
       {/* Historial de Auditoría (Logs) */}
       <section>
@@ -372,7 +353,7 @@ export default function DashboardAuditoria() {
           <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Bitácora de Auditoría y Trazabilidad (Logs del Sistema)</h3>
         </div>
         <p style={{ margin: "0 0 16px 0", fontSize: "0.875rem", color: "var(--muted)" }}>
-          Registro cronológico inmutable de qué usuario realizó qué cambio y en qué momento para prevenir fraudes.
+          Registro cronológico de acciones. Su integridad depende de la operación y protección de la base de datos.
         </p>
 
         {auditError && <Alert>{auditError}</Alert>}

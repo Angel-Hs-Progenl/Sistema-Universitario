@@ -44,7 +44,7 @@ export default function Solicitudes() {
   const [bankMsg, setBankMsg] = useState("");
   const [bankErr, setBankErr] = useState("");
 
-  // Constancia state
+  // Resumen de asignación para consulta
   const [constanciaData, setConstanciaData] = useState(null);
   const [constanciaLoading, setConstanciaLoading] = useState(false);
   const [constanciaError, setConstanciaError] = useState("");
@@ -148,7 +148,7 @@ export default function Solicitudes() {
       const data = await api(`/becas/solicitudes/${appId}/constancia`);
       setConstanciaData(data);
     } catch (err) {
-      setConstanciaError(err.message || "No se pudo obtener la constancia oficial.");
+      setConstanciaError(err.message || "No se pudo consultar el resumen de asignación.");
     } finally {
       setConstanciaLoading(false);
     }
@@ -214,7 +214,7 @@ export default function Solicitudes() {
             Seguimiento de mis solicitudes de beca
           </h2>
           <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--muted)" }}>
-            Consulta el estado de tu trámite, constancias oficiales emitidas y avisos institucionales.
+            Consulta el estado de tu trámite, el resumen de asignación y los avisos del portal.
           </p>
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -295,14 +295,14 @@ export default function Solicitudes() {
                           alignItems: "center",
                         }}
                       >
-                        {["aprobada", "renovada", "concluido"].includes(app.status) && (
+                        {["aprobada", "renovada", "concluida"].includes(app.status) && (
                           <button
                             type="button"
                             className="button button-secondary"
                             style={{ fontSize: "0.8125rem", color: "var(--brand)" }}
                             onClick={() => viewConstancia(app.id)}
                           >
-                            <Award size={14} /> Constancia
+                            <Award size={14} /> Ver resumen
                           </button>
                         )}
                         {app.status === "aprobada" && !app.bank_clabe && (
@@ -397,7 +397,7 @@ export default function Solicitudes() {
                     style={{ fontSize: "0.6875rem" }}
                   >
                     {n.type === "resultado"
-                      ? "Resultados oficiales"
+                      ? "Resultados publicados"
                       : n.type === "pago"
                       ? "Orden de pago"
                       : "Trámite institucional"}
@@ -468,8 +468,8 @@ export default function Solicitudes() {
                 )}
               </div>
 
-              {/* Botón de constancia si aprobada/renovada/concluido */}
-              {["aprobada", "renovada", "concluido"].includes(appDetail.status) && (
+              {/* Resumen disponible tras el dictamen favorable */}
+              {["aprobada", "renovada", "concluida"].includes(appDetail.status) && (
                 <div
                   style={{
                     background: "var(--surface)",
@@ -484,9 +484,9 @@ export default function Solicitudes() {
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <Award size={20} color="var(--gold)" />
                     <div>
-                      <strong style={{ fontSize: "0.875rem" }}>Constancia Oficial de Beca UTO</strong>
+                      <strong style={{ fontSize: "0.875rem" }}>Resumen de asignación</strong>
                       <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)" }}>
-                        Documento oficial con sello digital SHA-256 y línea de captura del Estado de Puebla.
+                        Consulta los datos registrados de tu dictamen. No es una constancia oficial.
                       </p>
                     </div>
                   </div>
@@ -496,7 +496,7 @@ export default function Solicitudes() {
                     style={{ fontSize: "0.8125rem" }}
                     onClick={() => viewConstancia(appDetail.id)}
                   >
-                    Ver Constancia
+                    Ver resumen
                   </button>
                 </div>
               )}
@@ -521,7 +521,7 @@ export default function Solicitudes() {
                     <div>
                       <strong style={{ fontSize: "0.875rem" }}>Anexo 1: Carta bajo protesta de decir verdad</strong>
                       <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)" }}>
-                        Genera el formato oficial prellenado para firmar con tinta azul y adjuntarlo escaneado.
+                        Revisa el formato prellenado antes de firmarlo y adjuntarlo escaneado.
                       </p>
                     </div>
                   </div>
@@ -729,177 +729,34 @@ export default function Solicitudes() {
         </Modal>
       )}
 
-      {/* Modal de Constancia Oficial */}
+      {/* Resumen interno, sin formato de constancia oficial */}
       {(constanciaData || constanciaLoading || constanciaError) && (
-        <Modal
-          title="Constancia Oficial de Asignación de Beca"
-          onClose={() => {
-            setConstanciaData(null);
-            setConstanciaError("");
-          }}
-        >
-          {constanciaLoading && <p>Generando constancia oficial con validación institucional…</p>}
+        <Modal title="Resumen de asignación de beca" onClose={() => { setConstanciaData(null); setConstanciaError(""); }}>
+          {constanciaLoading && <p>Consultando el resumen…</p>}
           {constanciaError && <Alert>{constanciaError}</Alert>}
           {constanciaData && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* Encabezado Institucional */}
-              <div
-                style={{
-                  border: "2px solid var(--brand)",
-                  borderRadius: "var(--radius)",
-                  padding: "20px",
-                  background: "var(--surface)",
-                  position: "relative",
-                }}
-              >
-                <div style={{ textAlign: "center", borderBottom: "1px solid var(--line)", paddingBottom: "14px", marginBottom: "16px" }}>
-                  <h3 style={{ margin: 0, color: "var(--brand)", fontSize: "1.125rem", letterSpacing: "0.02em" }}>
-                    {constanciaData.institution}
-                  </h3>
-                  <p style={{ margin: "2px 0", fontSize: "0.8125rem", color: "var(--muted)", fontWeight: "600" }}>
-                    SECRETARÍA DE EDUCACIÓN PÚBLICA DEL ESTADO DE PUEBLA
-                  </p>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "0.75rem", color: "var(--gold)", fontWeight: "700" }}>
-                    DIRECCIÓN DE SERVICIOS ESCOLARES Y COMITÉ TÉCNICO DE BECAS
-                  </p>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "14px", fontSize: "0.8125rem" }}>
-                  <div>
-                    <span style={{ color: "var(--muted)" }}>Folio Constancia: </span>
-                    <strong style={{ color: "var(--brand)" }}>{constanciaData.folio_constancia}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: "var(--muted)" }}>Expediente: </span>
-                    <strong>{constanciaData.application_folio}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: "var(--muted)" }}>Fecha de Emisión: </span>
-                    <strong>{date(constanciaData.issued_at, true)}</strong>
-                  </div>
-                </div>
-
-                <div style={{ background: "var(--canvas)", padding: "14px", borderRadius: "var(--radius)", marginBottom: "14px" }}>
-                  <p style={{ margin: "0 0 6px 0", fontSize: "0.875rem" }}>
-                    Se hace constar que el(la) estudiante:
-                  </p>
-                  <p style={{ margin: "0 0 6px 0", fontSize: "1.0625rem", fontWeight: "700", color: "var(--brand)" }}>
-                    {constanciaData.student_name}
-                  </p>
-                  <p style={{ margin: 0, fontSize: "0.8125rem", color: "var(--muted)" }}>
-                    Matrícula: <strong>{constanciaData.student_id}</strong> | Carrera: <strong>{constanciaData.major}</strong> | Cuatrimestre: <strong>{constanciaData.term}</strong>
-                  </p>
-                </div>
-
-                <div style={{ marginBottom: "14px" }}>
-                  <p style={{ margin: "0 0 8px 0", fontSize: "0.875rem" }}>
-                    Ha sido dictaminado(a) como <strong>BENEFICIARIO(A)</strong> de la convocatoria:
-                  </p>
-                  <p style={{ margin: "0 0 4px 0", fontWeight: "600", color: "var(--ink)" }}>
-                    {constanciaData.call_title} ({constanciaData.modalidad})
-                  </p>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "0.8125rem", color: "var(--muted)" }}>
-                    {constanciaData.committee_agreement}
-                  </p>
-                </div>
-
-                {/* Desglose de porcentaje y cuota */}
-                <div
-                  style={{
-                    background: "var(--canvas)",
-                    border: "1px solid var(--line)",
-                    borderRadius: "var(--radius)",
-                    padding: "14px",
-                    marginBottom: "14px",
-                  }}
-                >
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", fontSize: "0.875rem" }}>
-                    <div>
-                      <span style={{ color: "var(--muted)" }}>Porcentaje de apoyo (Beca UTO):</span>
-                      <p style={{ margin: "2px 0 0 0", fontSize: "1.125rem", fontWeight: "700", color: "var(--green)" }}>
-                        {constanciaData.discount_percentage}% de exención
-                      </p>
-                    </div>
-                    <div>
-                      <span style={{ color: "var(--muted)" }}>Aportación estudiante:</span>
-                      <p style={{ margin: "2px 0 0 0", fontSize: "1.125rem", fontWeight: "700", color: "var(--brand)" }}>
-                        {constanciaData.student_percentage}% de la cuota
-                      </p>
-                    </div>
-                  </div>
-
-                  <hr style={{ border: "none", borderTop: "1px dashed var(--line)", margin: "10px 0" }} />
-
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8125rem" }}>
-                    <span>Cuota de reinscripción base: ${constanciaData.base_tuition.toLocaleString("es-MX")} MXN</span>
-                    <strong style={{ color: "var(--brand)" }}>
-                      Total a pagar en Tesorería / Línea: ${constanciaData.discounted_cost.toLocaleString("es-MX")} MXN
-                    </strong>
-                  </div>
-                </div>
-
-                {/* Portal del Gobierno de Puebla */}
-                <div
-                  style={{
-                    background: "#fdf8ee",
-                    border: "1px solid var(--gold)",
-                    borderRadius: "var(--radius)",
-                    padding: "12px 14px",
-                    marginBottom: "14px",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                    <div>
-                      <small style={{ color: "#7a5814", fontWeight: "700" }}>
-                        LÍNEA DE CAPTURA - GOBIERNO DEL ESTADO DE PUEBLA
-                      </small>
-                      <p style={{ margin: "2px 0 0 0", fontFamily: "monospace", fontSize: "1rem", fontWeight: "700", letterSpacing: "1px" }}>
-                        {constanciaData.capture_line}
-                      </p>
-                    </div>
-                    <a
-                      href={constanciaData.puebla_payment_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="button button-primary"
-                      style={{ fontSize: "0.75rem", padding: "6px 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                    >
-                      Pagar en Portal de Puebla <ExternalLink size={12} />
-                    </a>
-                  </div>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "0.75rem", color: "#7a5814" }}>
-                    Pago institucional en línea avalado por la Secretaría de Planeación y Finanzas del Estado de Puebla.
-                  </p>
-                </div>
-
-                {/* Sello de Validación */}
-                <div style={{ fontSize: "0.6875rem", color: "var(--muted)", wordBreak: "break-all", background: "var(--canvas)", padding: "8px 10px", borderRadius: "var(--radius)" }}>
-                  <strong>SELLO DIGITAL INSTITUCIONAL SHA-256:</strong>
-                  <br />
-                  <span style={{ fontFamily: "monospace" }}>{constanciaData.sha256_hash}</span>
-                </div>
-              </div>
-
-              {/* Botones */}
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={() => window.print()}
-                >
-                  <Printer size={16} /> Imprimir Constancia
-                </button>
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={() => {
-                    setConstanciaData(null);
-                    setConstanciaError("");
-                  }}
-                >
-                  Cerrar
-                </button>
-              </div>
+            <div style={{ display: "grid", gap: "14px" }}>
+              <p className="work-help">{constanciaData.notice}</p>
+              <dl style={{ display: "grid", gap: "10px", margin: 0 }}>
+                <div><dt>Folio de solicitud</dt><dd>{constanciaData.application_folio}</dd></div>
+                <div><dt>Estado</dt><dd>{ESTADOS_BECA[constanciaData.status] || constanciaData.status}</dd></div>
+                <div><dt>Estudiante</dt><dd>{constanciaData.student_name}</dd></div>
+                <div><dt>Convocatoria</dt><dd>{constanciaData.call_title}</dd></div>
+                <div><dt>Programa y cuatrimestre</dt><dd>{constanciaData.major} · {constanciaData.term}</dd></div>
+                {constanciaData.decision_date && (
+                  <div><dt>Fecha de dictamen registrada</dt><dd>{date(constanciaData.decision_date, true)}</dd></div>
+                )}
+                {constanciaData.agreement && (
+                  <div><dt>Acuerdo registrado</dt><dd>{constanciaData.agreement}</dd></div>
+                )}
+                {constanciaData.student_percentage != null && (
+                  <div><dt>Porcentaje de aportación</dt><dd>{constanciaData.student_percentage}%</dd></div>
+                )}
+                {constanciaData.payment_order && (
+                  <div><dt>Orden interna</dt><dd>{constanciaData.payment_order.folio} · ${constanciaData.payment_order.amount.toLocaleString("es-MX")} MXN</dd></div>
+                )}
+              </dl>
+              <button type="button" className="button button-secondary" onClick={() => setConstanciaData(null)}>Cerrar</button>
             </div>
           )}
         </Modal>
@@ -910,7 +767,7 @@ export default function Solicitudes() {
         <Modal title="Datos Bancarios para Dispersión" onClose={() => setShowBankModal(false)}>
           <form onSubmit={handleBankSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--muted)" }}>
-              Estos datos serán usados por Tesorería para la dispersión de tu beca vía SPEI. Captura exactamente la CLABE de 18 dígitos que recibes en tu estado de cuenta.
+              Tesorería podrá consultar estos datos si registra una operación externa. Captura la CLABE de 18 dígitos de tu cuenta.
             </p>
             {bankMsg && <div className="alert success">{bankMsg}</div>}
             {bankErr && <Alert>{bankErr}</Alert>}
