@@ -96,6 +96,46 @@ export const MODULES = [
       administrador: "Preparar evaluación",
     },
   },
+  {
+    id: "autoevaluacion",
+    path: "/autoevaluacion",
+    name: "Autoevaluación",
+    shortName: "Autoevaluación",
+    area: "Área académica",
+    description:
+      "Reflexiona sobre tu desempeño académico y registra tus avances.",
+    roles: ["estudiante", "administrador"],
+    pages: {
+      cuestionarios: "Cuestionarios",
+      evaluaciones: "Evaluaciones",
+      "mis-evaluaciones": "Mis autoevaluaciones",
+      evaluar: "Responder autoevaluación",
+      historial: "Historial",
+    },
+    actions: {
+      estudiante: "Consultar mis autoevaluaciones",
+      administrador: "Administrar autoevaluaciones",
+    },
+  },
+  {
+    id: "coevaluacion",
+    path: "/coevaluacion",
+    name: "Coevaluación",
+    shortName: "Coevaluación",
+    area: "Área académica",
+    description:
+      "Valora la colaboración en las actividades que tienes asignadas.",
+    roles: ["estudiante", "administrador"],
+    pages: {
+      "mis-asignaciones": "Mis coevaluaciones",
+      actividades: "Actividades",
+      cuestionarios: "Criterios",
+    },
+    actions: {
+      estudiante: "Consultar mis coevaluaciones",
+      administrador: "Preparar coevaluaciones",
+    },
+  },
 ];
 
 export function moduleLinks(module, role) {
@@ -147,6 +187,26 @@ return [
   ["/evaluacion-docente/direccion/planes-accion", "Planes de mejora"],
 ];
   }
+  if (module === "autoevaluacion") {
+    if (role === "estudiante")
+      return [
+        ["/autoevaluacion/mis-evaluaciones", "Mis autoevaluaciones"],
+        ["/autoevaluacion/historial", "Historial"],
+      ];
+
+    return [
+      ["/autoevaluacion/evaluaciones", "Evaluaciones"],
+      ["/autoevaluacion/cuestionarios", "Cuestionarios"],
+    ];
+  }
+  if (module === "coevaluacion") {
+    if (role === "estudiante")
+      return [["/coevaluacion/mis-asignaciones", "Mis coevaluaciones"]];
+    return [
+      ["/coevaluacion/actividades", "Actividades"],
+      ["/coevaluacion/cuestionarios", "Criterios"],
+    ];
+  }
   return [
     ["/titulacion", role === "estudiante" ? "Mi expediente" : "Solicitudes"],
   ];
@@ -195,6 +255,26 @@ export function homeShortcuts(role) {
       path: "/evaluacion-docente/direccion/periodos",
       label: "Preparar evaluación docente",
     });
+  if (role === "estudiante")
+    shortcuts.push({
+      path: "/autoevaluacion/mis-evaluaciones",
+      label: "Mis autoevaluaciones",
+    });
+  if (role === "administrador")
+    shortcuts.push({
+      path: "/autoevaluacion/evaluaciones",
+      label: "Administrar autoevaluaciones",
+    });
+  if (role === "estudiante")
+    shortcuts.push({
+      path: "/coevaluacion/mis-asignaciones",
+      label: "Mis coevaluaciones",
+    });
+  if (role === "administrador")
+    shortcuts.push({
+      path: "/coevaluacion/actividades",
+      label: "Preparar coevaluaciones",
+    });
   return [...shortcuts, { path: "/notificaciones", label: "Notificaciones" }];
 }
 
@@ -228,6 +308,26 @@ export function breadcrumbsFor(pathname, authenticated, entityLabel) {
       root,
       { label: module.name, path: module.path },
       { label: "Responder evaluación" },
+    ];
+  if (module.id === "autoevaluacion" && /^evaluar\/\d+$/.test(sub)) {
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Responder autoevaluación" },
+    ];
+  }
+  if (module.id === "autoevaluacion" && /^resultados\/\d+$/.test(sub)) {
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Resultados" },
+    ];
+  }
+  if (module.id === "coevaluacion" && /^responder\/\d+$/.test(sub))
+    return [
+      root,
+      { label: module.name, path: module.path },
+      { label: "Responder coevaluación" },
     ];
   const leaf = module.pages?.[sub];
   const isEntity = /^(?:expediente|solicitud)\/\d+$/.test(sub);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { api, date } from "../../shared/api";
 import { Field, Modal, BusyButton, useAsync } from "../../shared/ui";
@@ -13,6 +13,7 @@ import {
   money,
 } from "../../shared/Work";
 import { MODALIDADES, DOCUMENTOS_BECA } from "../../../shared/becas";
+import FormularioSolicitudUTO from "./FormularioSolicitudUTO";
 
 export default function Calls() {
   const { user } = useAuth();
@@ -20,7 +21,9 @@ export default function Calls() {
   const [search, setSearch] = useState(""),
     [modality, setModality] = useState(""),
     [selected, setSelected] = useState(null),
-    [applying, setApplying] = useState(null);
+    [applying, setApplying] = useState(null),
+    [createdApp, setCreatedApp] = useState(null),
+    [viewingResults, setViewingResults] = useState(null);
   const mutation = useMutation();
   const rows = (state.data || []).filter(
     (c) =>
@@ -145,12 +148,23 @@ export default function Calls() {
                       </div>
                     </dl>
                   </div>
-                  <button
-                    className="button button-secondary"
-                    onClick={() => setSelected(c)}
-                  >
-                    Consultar bases <ArrowRight size={16} />
-                  </button>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button
+                      className="button button-secondary"
+                      onClick={() => setSelected(c)}
+                    >
+                      Consultar bases <ArrowRight size={16} />
+                    </button>
+                    {c.results_published && (
+                      <button
+                        className="button button-primary"
+                        style={{ fontSize: "0.8125rem" }}
+                        onClick={() => setViewingResults(c)}
+                      >
+                        Ver resultados oficiales
+                      </button>
+                    )}
+                  </div>
                 </article>
               ))}
             </div>
@@ -232,72 +246,115 @@ export default function Calls() {
       )}
       {applying && (
         <Modal
-          title="Registrar solicitud de beca"
-          onClose={() => {
-            if (!mutation.busy) setApplying(null);
-          }}
+          title={`Solicitud Oficial: ${applying.title}`}
+          onClose={() => setApplying(null)}
         >
-          <p>{applying.title}</p>
-          <form onSubmit={apply}>
-            <MutationState state={mutation} />
-            <Field
-              name="gpa"
-              label="Promedio del periodo anterior"
-              type="number"
-              min="6"
-              max="10"
-              step=".01"
-              required
-            />
-            <Field
-              name="academic_term"
-              label="Periodo académico actual"
-              maxLength={50}
-              required
-              placeholder="Ej. cuarto cuatrimestre"
-            />
-            <Field
-              name="major"
-              label="Programa educativo"
-              maxLength={150}
-              minLength={3}
-              required
-              defaultValue={user.profile?.carrera || ""}
-            />
-            {applying.custom_questions?.map((q, i) => (
-              <Field
-                name={`question-${i}`}
-                key={i}
-                label={q}
-                as="textarea"
-                maxLength={2000}
-                required
-              />
-            ))}
-            <p className="work-note">
-              Al registrar la solicitud recibirás un folio. Después podrás
-              adjuntar los documentos para revisión.
-            </p>
-            <div className="work-actions">
-              <BusyButton
-                className="button button-primary"
-                type="submit"
-                busy={mutation.busy}
-              >
-                Registrar solicitud
-              </BusyButton>
-              <button
-                type="button"
-                className="button button-secondary"
-                disabled={mutation.busy}
-                onClick={() => setApplying(null)}
-              >
-                Volver a convocatorias
-              </button>
-            </div>
-          </form>
+          <FormularioSolicitudUTO
+            call={applying}
+            user={user}
+            onSuccess={(app) => {
+              setApplying(null);
+              setCreatedApp(app);
+              state.refresh();
+            }}
+            onCancel={() => setApplying(null)}
+          />
         </Modal>
       )}
+      {createdApp && (
+        <Modal title="¡Solicitud Registrada Exitosamente!" onClose={() => setCreatedApp(null)}>
+          <div style={{ textAlign: "center", padding: "16px" }}>
+            <CheckCircle size={48} color="var(--green)" style={{ margin: "0 auto 12px auto" }} />
+            <h3 style={{ margin: "0 0 6px 0", color: "var(--brand)" }}>Folio Oficial: {createdApp.folio}</h3>
+            <p style={{ margin: "0 0 16px 0", color: "var(--muted)", fontSize: "0.875rem" }}>
+              Tu solicitud y documentación han sido recibidas en el sistema institucional de la Universidad Tecnológica de Oriental.
+            </p>
+            <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+              <Link to="/becas/solicitudes" className="button button-primary">
+                Ir al seguimiento de mis solicitudes
+              </Link>
+              <button type="button" className="button button-secondary" onClick={() => setCreatedApp(null)}>
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+      {viewingResults && (
+        <CallResultsModal
+          call={viewingResults}
+          onClose={() => setViewingResults(null)}
+        />
+      )}
     </>
+  );
+}
+
+function CallResultsModal({ call, onClose }) {
+  const { data: results, loading, error } = useAsync(
+    () => api(`/becas/convocatorias/${call.id}/resultados`),
+    [call.id]
+  );
+
+  return (
+    <Modal title={`Resultados Oficiales: ${call.title}`} onClose={onClose}>
+      <p className="work-help">
+        Convocatoria {call.code} · Dictamen institucional del Comité de Becas UTO
+      </p>
+      {loading && <p>Cargando lista de folios beneficiarios…</p>}
+      {error && <p className="alert error">{error}</p>}
+      {results && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <p style={{ margin: 0, fontSize: "0.875rem" }}>
+            Se publican los folios de los aspirantes con dictamen favorable conforme al marco normativo y de protección de datos personales:
+          </p>
+          <div className="audit-table-wrapper">
+            <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "var(--canvas)", textAlign: "left", fontSize: "0.8125rem" }}>
+                  <th style={{ padding: "8px 10px" }}>Folio</th>
+                  <th style={{ padding: "8px 10px" }}>Programa educativo</th>
+                  <th style={{ padding: "8px 10px" }}>Cuatrimestre</th>
+                  <th style={{ padding: "8px 10px" }}>Beca otorgada</th>
+                  <th style={{ padding: "8px 10px" }}>% a pagar</th>
+                  <th style={{ padding: "8px 10px" }}>Sesión Comité</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ padding: "16px", textAlign: "center", color: "var(--muted)" }}>
+                      No se registraron folios aprobados en esta convocatoria.
+                    </td>
+                  </tr>
+                ) : (
+                  results.map((r) => (
+                    <tr key={r.folio} style={{ borderTop: "1px solid var(--line)" }}>
+                      <td style={{ padding: "8px 10px", fontWeight: "700" }}>{r.folio}</td>
+                      <td style={{ padding: "8px 10px", fontSize: "0.875rem" }}>{r.major}</td>
+                      <td style={{ padding: "8px 10px" }}>{r.academic_term}</td>
+                      <td style={{ padding: "8px 10px", color: "var(--green)", fontWeight: "700" }}>
+                        {r.discount_percentage}% de beca
+                      </td>
+                      <td style={{ padding: "8px 10px", fontWeight: "600" }}>
+                        {r.student_percentage}%
+                      </td>
+                      <td style={{ padding: "8px 10px", fontSize: "0.8125rem", color: "var(--muted)" }}>
+                        {r.dictamen_session}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "12px" }}>
+            <button className="button button-secondary" onClick={onClose}>
+              Cerrar resultados
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 }

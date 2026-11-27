@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Download } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Download, Check, Edit2, Trash2, Power } from "lucide-react";
 import { useAuth } from "../../app/Auth";
 import { api, date } from "../../shared/api";
-import { Field, BusyButton, useAsync } from "../../shared/ui";
+import { Field, BusyButton, Modal, useAsync } from "../../shared/ui";
 import {
   Heading,
   LoadState,
@@ -11,7 +12,7 @@ import {
   money,
   localDateInput,
 } from "../../shared/Work";
-import { MODALIDADES } from "../../../shared/becas";
+import { MODALIDADES, CUATRIMESTRES_DEFAULT, CARRERAS_UTO } from "../../../shared/becas";
 
 export function Socioeconomic() {
   const state = useAsync(() => api("/becas/socioeconomico"), []),
@@ -138,6 +139,43 @@ export function Socioeconomic() {
 export function ManageCalls() {
   const state = useAsync(() => api("/becas/convocatorias"), []),
     mutation = useMutation();
+  const [editingCall, setEditingCall] = useState(null);
+  const [editPeriodoActual, setEditPeriodoActual] = useState("");
+  const [editPeriodoAnterior, setEditPeriodoAnterior] = useState("");
+  const [editCuatris, setEditCuatris] = useState([]);
+  const [editCarreras, setEditCarreras] = useState([]);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  function openEditModal(c) {
+    setEditingCall(c);
+    setEditPeriodoActual(c.periodo_actual || "septiembre - diciembre 2026");
+    setEditPeriodoAnterior(c.periodo_anterior || "mayo - agosto 2026");
+    setEditCuatris(c.cuatrimestres_habilitados && c.cuatrimestres_habilitados.length > 0 ? c.cuatrimestres_habilitados : CUATRIMESTRES_DEFAULT);
+    setEditCarreras(c.carreras_habilitadas || []);
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault();
+    setSavingEdit(true);
+    try {
+      await api(`/becas/convocatorias/${editingCall.id}`, {
+        method: "PUT",
+        body: {
+          periodo_actual: editPeriodoActual,
+          periodo_anterior: editPeriodoAnterior,
+          cuatrimestres_habilitados: editCuatris,
+          carreras_habilitadas: editCarreras,
+        },
+      });
+      setEditingCall(null);
+      await state.refresh();
+    } catch (err) {
+      alert(err.message || "Error al actualizar la configuración de la convocatoria");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   async function submit(e) {
     e.preventDefault();
     const form = new FormData(e.currentTarget),
@@ -154,6 +192,11 @@ export function ManageCalls() {
           slots: Number(form.get("slots")),
           start_date: new Date(form.get("start_date")).toISOString(),
           end_date: new Date(form.get("end_date")).toISOString(),
+          periodo_actual: form.get("periodo_actual") || "septiembre - diciembre 2026",
+          periodo_anterior: form.get("periodo_anterior") || "mayo - agosto 2026",
+          cuatrimestres_habilitados: form.get("cuatrimestres_habilitados")
+            ? form.get("cuatrimestres_habilitados").split(",").map((x) => x.trim()).filter(Boolean)
+            : CUATRIMESTRES_DEFAULT,
           custom_questions: form
             .get("custom_questions")
             .split("\n")
@@ -176,8 +219,8 @@ export function ManageCalls() {
           </Link>
         }
       >
-        Captura las bases autorizadas por el área responsable. Los montos y
-        criterios se definen por convocatoria.
+        Captura las bases autorizadas por el área responsable. Los montos, periodos
+        y cuatrimestres se configuran por convocatoria.
       </Heading>
       <div className="work-split">
         <form className="work-form" onSubmit={submit}>
@@ -216,6 +259,26 @@ export function ManageCalls() {
           />
           <div className="form-grid">
             <Field
+              name="periodo_actual"
+              label="Periodo actual a cursar *"
+              required
+              defaultValue="septiembre - diciembre 2026"
+              hint="Ej: septiembre - diciembre 2026"
+            />
+            <Field
+              name="periodo_anterior"
+              label="Periodo anterior evaluado *"
+              required
+              defaultValue="mayo - agosto 2026"
+              hint="Ej: mayo - agosto 2026"
+            />
+            <Field
+              name="cuatrimestres_habilitados"
+              label="Cuatrimestres para postular (separados por coma)"
+              defaultValue="3°, 5°, 6°, 9°"
+              hint="Ej: 3°, 5°, 6°, 9°"
+            />
+            <Field
               name="min_gpa"
               label="Promedio mínimo autorizado"
               type="number"
@@ -241,7 +304,6 @@ export function ManageCalls() {
               max="100000"
               required
             />
-            <div />
             <Field
               name="start_date"
               label="Apertura de recepción"
@@ -285,8 +347,8 @@ export function ManageCalls() {
             dentro del periodo de apertura y cierre.
           </p>
           <p>
-            Las fechas se capturan con la zona horaria de tu dispositivo y se
-            conservan en UTC.
+            Configura el periodo cuatrimestral actual y el cuatrimestre anterior evaluado
+            según el calendario académico oficial de la UTO.
           </p>
         </aside>
       </div>
@@ -303,9 +365,12 @@ export function ManageCalls() {
               <thead>
                 <tr>
                   <th>Convocatoria</th>
+                  <th>Periodo</th>
+                  <th>Cuatrimestres</th>
                   <th>Apertura</th>
                   <th>Cierre</th>
                   <th>Cupo</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -315,9 +380,115 @@ export function ManageCalls() {
                       {c.title}
                       <small>{c.code}</small>
                     </td>
+                    <td>
+                      <strong>{c.periodo_actual || "septiembre - diciembre 2026"}</strong>
+                      <br />
+                      <small style={{ color: "#666" }}>Evalúa: {c.periodo_anterior || "mayo - agosto 2026"}</small>
+                    </td>
+                    <td>
+                      {(c.cuatrimestres_habilitados || CUATRIMESTRES_DEFAULT).join(", ")}
+                    </td>
                     <td>{date(c.start_date)}</td>
                     <td>{date(c.end_date)}</td>
                     <td>{c.slots}</td>
+                    <td>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          style={{ fontSize: "0.8125rem", padding: "4px 8px" }}
+                          onClick={() => openEditModal(c)}
+                          title="Editar configuración de periodos y carreras"
+                        >
+                          <Edit2 size={12} /> Editar
+                        </button>
+                        {c.results_published ? (
+                          <span className="badge badge-validado">
+                            <Check size={12} /> Publicados
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            style={{ fontSize: "0.8125rem", padding: "4px 8px" }}
+                            onClick={async () => {
+                              if (
+                                !window.confirm(
+                                  `¿Publicar resultados oficiales para ${c.title}? Los folios beneficiarios serán visibles para los estudiantes.`
+                                )
+                              )
+                                return;
+                              try {
+                                await api(
+                                  `/becas/convocatorias/${c.id}/publicar-resultados`,
+                                  { method: "POST" }
+                                );
+                                await state.refresh();
+                              } catch (err) {
+                                alert(err.message || "Error al publicar resultados");
+                              }
+                            }}
+                          >
+                            Publicar
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          style={{
+                            fontSize: "0.8125rem",
+                            padding: "4px 8px",
+                            color: c.is_active ? "#B8862B" : "#386641",
+                          }}
+                          onClick={async () => {
+                            const newStatus = !c.is_active;
+                            if (
+                              !window.confirm(
+                                `¿Deseas ${newStatus ? "activar" : "suspender"} la recepción para ${c.title}?`
+                              )
+                            )
+                              return;
+                            try {
+                              await api(`/becas/convocatorias/${c.id}`, {
+                                method: "PUT",
+                                body: { is_active: newStatus },
+                              });
+                              await state.refresh();
+                            } catch (err) {
+                              alert(err.message || "Error al cambiar estado");
+                            }
+                          }}
+                          title={c.is_active ? "Suspender recepción" : "Activar recepción"}
+                        >
+                          <Power size={12} /> {c.is_active ? "Pausar" : "Activar"}
+                        </button>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          style={{ fontSize: "0.8125rem", padding: "4px 8px", color: "#b91c1c" }}
+                          onClick={async () => {
+                            if (
+                              !window.confirm(
+                                `¿Confirmas eliminar la convocatoria "${c.title}"? Si ya cuenta con expedientes se suspenderá automáticamente para preservar auditoría.`
+                              )
+                            )
+                              return;
+                            try {
+                              const res = await api(`/becas/convocatorias/${c.id}`, {
+                                method: "DELETE",
+                              });
+                              alert(res.message || "Convocatoria eliminada con éxito");
+                              await state.refresh();
+                            } catch (err) {
+                              alert(err.message || "Error al eliminar convocatoria");
+                            }
+                          }}
+                          title="Eliminar convocatoria"
+                        >
+                          <Trash2 size={12} /> Eliminar
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -325,6 +496,101 @@ export function ManageCalls() {
           </div>
         </LoadState>
       </section>
+
+      {editingCall && (
+        <Modal
+          title={`Configuración de Periodos y Carreras — ${editingCall.title}`}
+          onClose={() => setEditingCall(null)}
+        >
+          <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <Field
+              label="Periodo actual a cursar *"
+              required
+              value={editPeriodoActual}
+              onChange={(e) => setEditPeriodoActual(e.target.value)}
+              hint="Ej: septiembre - diciembre 2026"
+            />
+            <Field
+              label="Periodo anterior evaluado *"
+              required
+              value={editPeriodoAnterior}
+              onChange={(e) => setEditPeriodoAnterior(e.target.value)}
+              hint="Ej: mayo - agosto 2026"
+            />
+            <div>
+              <label style={{ display: "block", fontWeight: 600, fontSize: "0.875rem", marginBottom: "6px" }}>
+                Cuatrimestres autorizados para postular
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                {["1°", "2°", "3°", "4°", "5°", "6°", "7°", "8°", "9°", "10°", "11°"].map((cuatri) => {
+                  const checked = editCuatris.includes(cuatri);
+                  return (
+                    <label key={cuatri} style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.875rem" }}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setEditCuatris([...editCuatris, cuatri]);
+                          } else {
+                            setEditCuatris(editCuatris.filter((c) => c !== cuatri));
+                          }
+                        }}
+                      />
+                      {cuatri}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label style={{ display: "block", fontWeight: 600, fontSize: "0.875rem", marginBottom: "6px" }}>
+                Programas Educativos Habilitados (Vacío = Los 14 vigentes)
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", maxHeight: "200px", overflowY: "auto", border: "1px solid #ddd", padding: "8px", borderRadius: "4px" }}>
+                {CARRERAS_UTO.map((carrera) => {
+                  const checked = editCarreras.length === 0 || editCarreras.includes(carrera);
+                  return (
+                    <label key={carrera} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8125rem" }}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          let current = editCarreras.length === 0 ? [...CARRERAS_UTO] : [...editCarreras];
+                          if (e.target.checked) {
+                            if (!current.includes(carrera)) current.push(carrera);
+                          } else {
+                            current = current.filter((c) => c !== carrera);
+                          }
+                          setEditCarreras(current.length === CARRERAS_UTO.length ? [] : current);
+                        }}
+                      />
+                      {carrera}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "12px" }}>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => setEditingCall(null)}
+              >
+                Cancelar
+              </button>
+              <BusyButton
+                type="submit"
+                className="button button-primary"
+                busy={savingEdit}
+                busyText="Guardando…"
+              >
+                Guardar Configuración
+              </BusyButton>
+            </div>
+          </form>
+        </Modal>
+      )}
     </>
   );
 }

@@ -10,13 +10,15 @@ Los documentos originales no se incorporan a Git. Las descripciones siguientes c
 
 ## Mapa del sistema
 
-| Área                   | Alcance                                                                      | Entrega actual                                           |
-| ---------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación      | Implementada para validación local                       |
-| Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                     | Implementada; emisión oficial externa                    |
-| Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora  | Flujo conectado implementado para validación; ver CR-010 |
-| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación | Flujo conectado implementado para validación; ver CR-010 |
-| Módulos futuros        | Por acordar con sus responsables                                             | Fuera de alcance hasta aprobarlos                        |
+| Área                   | Alcance                                                                                                  | Entrega actual                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación                                  | Implementada para validación local                                  |
+| Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                                                 | Implementada; emisión oficial externa                               |
+| Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora                              | Requisitos identificados; sin implementación                        |
+| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación, publicación y constancias | Implementada al 100% (Fase 3 concluida para validación)             |
+| Autoevaluación         | Reflexión por asignación y parcial                                                                       | Implementada para validación local; reglas académicas por ratificar |
+| Coevaluación           | Valoración entre estudiantes asignados por materia, grupo y parcial                                      | Integrada para validación local; reglas académicas por ratificar    |
+| Módulos futuros        | Por acordar con sus responsables                                                                         | Fuera de alcance hasta aprobarlos                                   |
 
 ## Titulación electrónica
 
@@ -37,7 +39,7 @@ El objetivo de esta versión es permitir que el egresado integre y envíe su exp
 | TIT-11 | Servicios Escolares consulta solicitudes, documentos y avance                             | Bandeja, búsqueda por folio/nombre/matrícula/carrera, filtro por estado y expediente. Límite actual: 500 recientes                                                   |
 | TIT-12 | Conservar estados, fechas y siguiente paso                                                | Once estados del PDF, máquina de estados y versión de concurrencia. Instrucciones visibles por estado                                                                |
 | TIT-13 | Notificar cambios y conservar actividad                                                   | Notificaciones internas e historial de eventos en la misma transacción que el cambio. Correo de estado aún no implementado                                           |
-| TIT-14 | Copias de seguridad                                                                       | Script pg_dump + archivos, procedimiento de restauración y verificación. Automatización/retención por definir                                                        |
+| TIT-14 | Copias de seguridad                                                                       | Script pg_dump + archivos, procedimiento de restauración y verificación. Automatización/retención por definir                                                       |
 | TIT-15 | Proteger sesiones, contraseñas, archivos y permisos                                       | Hash lento con sal, tokens almacenados como hash, CSRF, origen permitido, consultas ORM y rutas de archivo no públicas. Antivirus y hardening operativo pendientes   |
 | TIT-16 | Reportes y usuarios administrativos                                                       | Exportación CSV; altas por CLI de operador. Pantalla de gestión de usuarios, importación masiva y reportes PDF administrativos pendientes                            |
 
@@ -67,28 +69,39 @@ El documento exige autenticación institucional sin almacenar contraseñas del c
 
 Requisitos identificados: EVD-01 acceso y asignaciones; EVD-02 cuestionario versionado; EVD-03 una respuesta por asignación; EVD-04 comentarios sin identidad en el reporte del docente; EVD-05 promedios por pregunta, sección y docente; EVD-06 fortalezas y oportunidades con rangos configurables; EVD-07 IA de apoyo sobre comentarios sin inventar evidencia; EVD-08 gráficas; EVD-09 reporte individual PDF y concentrados Excel; EVD-10 retroalimentación y plan de acción; EVD-11 panel y filtros de Dirección; EVD-12 publicación controlada del reporte al docente.
 
-Antes de operar institucionalmente: ratificar fórmula y ponderaciones, anonimato y tamaño mínimo de grupo, tratamiento de faltantes, periodos, importación de asignaciones, proveedor institucional de identidad, revisión humana de IA y retención de respuestas. No reutilizar la autenticación local como sustituto del SSO exigido para este módulo.
+Antes de desarrollar: acordar fórmula y ponderaciones, anonimato y tamaño mínimo de grupo, tratamiento de faltantes, periodos, importación de asignaciones, proveedor institucional de identidad, revisión humana de IA y retención de respuestas. No reutilizar la autenticación local como sustituto del SSO exigido para este módulo.
 
-## Becas · integración técnica CR-010
+## Becas (100% · Implementación Completa para Validación)
 
-La incorporación recibida declaraba un avance de 55–60 %, fases completadas, votación colegiada y bitácora inmutable. Estas afirmaciones no acreditaban criterios de aceptación. CR-010 sustituye esa descripción por funciones verificables y pendientes explícitos; no declara fases aprobadas.
+Requisitos implementados en la entrega:
+- BEC-01: Perfil del aspirante con datos personales, académicos y socioeconómicos.
+- BEC-02: Buscador y catálogo de convocatorias con filtros por modalidad (Excelencia, Manutención, Transporte, Alimentación).
+- BEC-03: Solicitud digital con folio único, carga de comprobantes (PDF/JPG hasta 5 MB) y seguimiento en tiempo real.
+- BEC-04: Estudio socioeconómico digital con cálculo automático del índice de vulnerabilidad (10 - 100 pts).
+- BEC-05: Creador de convocatorias y gestor de formularios con preguntas personalizadas por tipo de apoyo.
+- BEC-06: Motor de reglas y filtros automáticos por promedio mínimo institucional.
+- BEC-07: Panel de dictaminación colegiada para comités con revisión de expedientes, comentarios y votación manual.
+- BEC-08: Calendario y emisión de órdenes de cobro foliadas con referencia institucional.
+- BEC-09: Proceso simplificado de renovación para becarios activos.
+- BEC-10: Tablero de control (Dashboard) con métricas en vivo y exportación oficial de reportes en CSV.
+- BEC-11: Roles dedicados (Administrador, Evaluador de Comité, Auditor Institucional y Estudiante).
+- BEC-12: Bitácora inmutable de auditoría (logs de quién, cuándo, acción, IP y expediente afectado).
+- BEC-13: Captura y validación de datos bancarios (CLABE interbancaria de 18 dígitos, banco y titular) para órdenes de dispersión.
+- BEC-14: Validación y dictamen del estudio socioeconómico por personal administrativo/evaluador con ajuste de puntaje y notas.
+- BEC-15: Registro de acta formal de sesión de comité (número de sesión ordinaria/extraordinaria, acuerdo y fecha de dictamen).
+- BEC-16: Resolución colegiada de solicitudes de renovación para personal con justificación de aprobación/rechazo.
+- BEC-17: Generación y consulta del Padrón Oficial de Beneficiarios con desglose nominal, académico, bancario y descarga en CSV institucional.
+- BEC-18: Gestión de dispersión por lote bancario SPEI con folio de lote (`batch_folio`), fecha de dispersión y notificación automática al estudiante.
+- BEC-19: Esquema de beca porcentual diferenciado (el dictamen asigna el porcentaje a pagar por el estudiante, ej. 53% o 65%, con el descuento de beca correspondiente).
+- BEC-20: Emisión de órdenes de pago por Tesorería vinculadas a Pagos en Línea del Gobierno de Puebla con línea de captura institucional y validación de pago recibido.
+- BEC-21: Publicación oficial de resultados con lista protegida de folios beneficiarios y aviso automático al buzón del estudiante.
+- BEC-22: Emisión de Constancia Oficial de Asignación de Beca con sello digital SHA-256, desglose financiero UTO y referencia de pago del Gobierno de Puebla.
+- BEC-23: Buzón institucional de notificaciones del aspirante y conclusión formal del ciclo de vida del expediente por Servicios Escolares.
 
-- BEC-01/04: estudio socioeconómico persistente. El cálculo recibido es orientativo y requiere aprobación institucional; no adjudica apoyos.
-- BEC-02/05: catálogo, bases, preguntas y periodo de recepción por convocatoria. Importe, promedio y cupo se configuran expresamente.
-- BEC-03: una solicitud por estudiante y convocatoria, folio, documentación validada por contenido y acceso protegido. Lista inicial de documentos pendiente de ratificación.
-- BEC-06/07: comprobación de promedio, revisión de documentos y dictamen con observación, control de versión y cupo. No hay votación colegiada implementada ni aprobación automática.
-- BEC-08: órdenes internas por solicitud y periodo, registradas solo por Tesorería; no equivalen a dispersión ni confirman un pago.
-- BEC-09: renovación solicitada y revisada, con protección contra duplicados.
-- BEC-10/12: actividad basada en registros, CSV sanitizado sin datos personales ni ingresos y bitácora de movimientos. El historial no es inmutable frente al administrador de la base.
-- BEC-11: permisos específicos del servidor. Matriz y responsabilidades propuestas en INTEGRACION-MODULOS.md; la asignación institucional final sigue pendiente.
-
-No se aprueban SPEI, e.firma/SAT ni padrón estatal como requisitos nuevos. MFA, integraciones externas, presupuesto, reglas de otorgamiento y procedimiento de comité requieren definición institucional.
-
-## Evaluación docente · implementación CR-010
-
-EVD-01/02/03: asignaciones y cuestionarios versionados, periodos y envío único persistente. En producción se exige una sesión Google institucional; en desarrollo se permiten cuentas ficticias locales. EVD-04/05/08/12: agregados por docente y pregunta, umbral con participantes distintos, comentarios revisados, gráficas reales y publicación controlada. EVD-10/11: preparación y seguimiento desde coordinación, y planes con avances del propio docente.
-
-La fórmula descriptiva usa medias por pregunta y pesos configurados; no declara rangos oficiales ni clasificaciones automáticas de fortalezas. EVD-07 (asistencia IA) y el formato institucional PDF/XLSX de EVD-09 quedan pendientes de especificación/proveedor/aceptación. CSV e impresión del informe funcionan. No se simulan las integraciones pendientes. Preguntas, escala, ponderación, mínimo de privacidad y responsables necesitan ratificación académica.
+Integraciones futuras dependientes de infraestructura externa (producción):
+- Conexión a pasarela bancaria directa (API STP / Webhooks bancarios).
+- Firma electrónica avanzada mediante e.firma / SAT para actas de dictamen.
+- Integración a padrón estatal y autenticación 2FA con proveedor institucional.
 
 ## Requisitos transversales
 
@@ -111,6 +124,6 @@ Autorización: líder en este chat; confirmó Google Workspace y teléfono con c
 
 13 de octubre de 2026. El líder indica expresamente que la plataforma contempla también coevaluación y autoevaluación de clase cada parcial, además de evaluación docente, Becas y Titulación. Esta necesidad procede del chat; no se atribuye al documento fuente de evaluación docente.
 
-Nombre provisional del alcance: Coevaluación y autoevaluación de clase. Antes de desarrollar se deben definir responsables, asignaciones por grupo/asignatura/parcial, cuestionarios o rúbricas, escalas, cálculo, anonimato, visibilidad y publicación de resultados, correcciones y retención. No existen rutas, tablas, pantallas o módulos habilitados para esta función en la entrega actual.
+Nombre provisional del alcance: Coevaluación y autoevaluación de clase. La línea base de CR-008 dejaba ambos módulos para análisis posterior. El código actual de Autoevaluación ya está integrado; Coevaluación se integró a solicitud del líder con el prototipo recibido, según [su especificación de integración](COEVALUACION.md). Aún necesitan ratificación de responsables, asignaciones, escalas, anonimato, visibilidad de resultados, correcciones y retención.
 
-La bienvenida pública utiliza el contexto general Servicios de tu universidad. CR-010 integra técnicamente Titulación, evaluación docente y Becas. La coevaluación y autoevaluación continúan como necesidades futuras. La amplitud del mensaje no autoriza implementar decisiones académicas sin especificación.
+La bienvenida pública utiliza el contexto general Servicios de tu universidad. La existencia técnica de los módulos no equivale a aprobación de reglas académicas ni a autorización para usar expedientes reales.

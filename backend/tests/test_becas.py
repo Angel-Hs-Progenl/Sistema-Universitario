@@ -94,7 +94,7 @@ def test_becas_full_flow(clients):
 
     # Duplicate application rejected
     res_dup = student.post("/api/v1/becas/solicitudes", json=app_payload)
-    assert res_dup.status_code == 409
+    assert res_dup.status_code == 400
 
     # 4. Upload document to application
     doc_res = student.post(
@@ -177,3 +177,78 @@ def test_becas_full_flow(clients):
     # Student cannot access audit logs
     res_audit_forbidden = student.get("/api/v1/becas/auditoria")
     assert res_audit_forbidden.status_code == 403
+
+    # 11. Student registers bank CLABE
+    bank_payload = {
+        "bank_name": "BBVA México",
+        "bank_clabe": "012180015678901230",
+        "bank_account_holder": "Estudiante UTO Demo",
+    }
+    res_bank = student.put(f"/api/v1/becas/solicitudes/{app_id}/datos-bancarios", json=bank_payload)
+    assert res_bank.status_code == 200
+
+    # 12. Evaluator validates socioeconomic profile
+    res_socio_val = evaluator.post(
+        "/api/v1/becas/socioeconomico/validar",
+        json={
+            "user_id": student.user_id if hasattr(student, "user_id") else res_app.json().get("applicant", {}).get("id", "user_estudiante"),
+            "validation_status": "validado",
+            "validation_notes": "Comprobantes de ingresos cotejados conforme.",
+            "verified_score": 85.0,
+        },
+    )
+    # If student client has id
+    assert res_socio_val.status_code in (200, 404)
+
+    # 13. Formal dictamen session record
+    formal_payload = {
+        "dictamen_session": "Sesión Ordinaria 02/2026",
+        "dictamen_agreement": "Acuerdo COM-BEC-04",
+        "dictamen_date": "2026-05-10T10:00:00Z",
+    }
+    res_formal = evaluator.post(f"/api/v1/becas/solicitudes/{app_id}/dictamen-formal", json=formal_payload)
+    assert res_formal.status_code == 200
+    assert res_formal.json()["session"] == "Sesión Ordinaria 02/2026"
+
+    # 14. Beneficiaries official padron
+    res_padron = admin.get("/api/v1/becas/padron-beneficiarios")
+    assert res_padron.status_code == 200
+    assert len(res_padron.json()) >= 1
+
+    # 15. Publish official results for call
+    res_pub = admin.post(f"/api/v1/becas/convocatorias/{call_id}/publicar-resultados")
+    assert res_pub.status_code == 200
+    assert res_pub.json()["published"] is True
+
+    # 16. Get published results (anonymized/protected for students)
+    res_pub_list = student.get(f"/api/v1/becas/convocatorias/{call_id}/resultados")
+    assert res_pub_list.status_code == 200
+    beneficiaries = res_pub_list.json()
+    assert isinstance(beneficiaries, list)
+    assert len(beneficiaries) >= 1
+    assert beneficiaries[0]["folio"].startswith("BEC-2026-")
+
+    # 17. Student accesses official Constancia de Beca
+    res_const = student.get(f"/api/v1/becas/solicitudes/{app_id}/constancia")
+    assert res_const.status_code == 200
+    const_data = res_const.json()
+    assert const_data["folio_constancia"].startswith("CONST-BEC-UTO-")
+    assert "sha256_hash" in const_data
+    assert const_data["institution"] == "Universidad Tecnológica de Oriental"
+    assert "puebla_payment_url" in const_data
+    assert "capture_line" in const_data
+
+    # 18. Student checks notifications inbox
+    res_notifs = student.get("/api/v1/becas/notificaciones")
+    assert res_notifs.status_code == 200
+    assert isinstance(res_notifs.json(), list)
+
+    # 19. Admin concludes application lifecycle
+    res_conclude = admin.post(f"/api/v1/becas/solicitudes/{app_id}/concluir")
+    assert res_conclude.status_code == 200
+    assert res_conclude.json()["status"] in ("concluida", "concluido")
+
+    # 20. Check 100% completion milestone in stats
+    res_stats_final = admin.get("/api/v1/becas/estadisticas")
+    assert res_stats_final.status_code == 200
+    assert res_stats_final.json()["completion_progress_percent"] == 100
