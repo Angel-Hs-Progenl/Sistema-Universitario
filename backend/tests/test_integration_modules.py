@@ -68,13 +68,15 @@ def test_becas_orders_are_unique_and_never_invent_bank_references(clients):
     with SessionLocal() as db:
         db.get(ScholarshipApplication, id).status = "aprobada"
         db.commit()
-    payload = {"application_id": id, "period": "Periodo ficticio", "scheduled_date": (now() + timedelta(days=3)).isoformat()}
+    payload = {"application_id": id, "period": "Periodo ficticio", "scheduled_date": (now() + timedelta(days=3)).isoformat(), "cuota_base": 100.25, "student_percentage": 100}
+    assert clients["tesoreria"].post(f"{BEC}/ordenes-cobro/generar", json={k: v for k, v in payload.items() if k != "cuota_base"}).status_code == 422
     assert clients["evaluador"].post(f"{BEC}/ordenes-cobro/generar", json=payload).status_code == 403
     assert clients["administrador"].post(f"{BEC}/ordenes-cobro/generar", json=payload).status_code == 403
     assert clients["tesoreria"].post(f"{BEC}/ordenes-cobro/generar", json=payload).status_code == 200
     assert clients["tesoreria"].post(f"{BEC}/ordenes-cobro/generar", json=payload).status_code == 409
     orders = clients["estudiante"].get(f"{BEC}/ordenes-cobro").json()
-    assert len(orders) == 1 and orders[0]["reference"] == ""
+    assert len(orders) == 1 and orders[0]["reference"] == orders[0]["folio_orden"]
+    assert "puebla_reference" not in orders[0] and "puebla_url" not in orders[0]
     assert float(orders[0]["amount"]) == 100.25
 
 

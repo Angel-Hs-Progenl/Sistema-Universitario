@@ -131,6 +131,7 @@ def test_becas_full_flow(clients):
     dictamen_payload = {
         "decision": "aprobada",
         "committee_notes": "Cumple ampliamente con el promedio y perfil socioeconómico.",
+        "student_percentage": 50,
         "version": version,
     }
     res_dictamen = evaluator.post(f"/api/v1/becas/solicitudes/{app_id}/dictamen", json=dictamen_payload)
@@ -142,10 +143,32 @@ def test_becas_full_flow(clients):
         "application_id": app_id,
         "period": "Parcial 1 - Mayo 2026",
         "scheduled_date": "2026-05-15T12:00:00Z",
+        "cuota_base": 1000,
     }
+    candidates = clients["tesoreria"].get("/api/v1/becas/ordenes-cobro/elegibles")
+    assert candidates.status_code == 200
+    assert any(candidate["id"] == app_id for candidate in candidates.json())
+    assert "custom_answers" not in candidates.json()[0]
+    assert student.get("/api/v1/becas/ordenes-cobro/elegibles").status_code == 403
+    assert admin.get("/api/v1/becas/ordenes-cobro/elegibles").status_code == 403
+    assert clients["tesoreria"].post("/api/v1/becas/ordenes-cobro/generar", json={k: v for k, v in order_payload.items() if k != "cuota_base"}).status_code == 422
     res_order = clients["tesoreria"].post("/api/v1/becas/ordenes-cobro/generar", json=order_payload)
     assert res_order.status_code == 200
     assert "folio_orden" in res_order.json()
+    assert "puebla_reference" not in res_order.json()
+    assert "puebla_url" not in res_order.json()
+    order_id = clients["tesoreria"].get("/api/v1/becas/ordenes-cobro").json()[0]["id"]
+    assert admin.post(f"/api/v1/becas/ordenes-cobro/{order_id}/confirmar-pago", json={"external_reference": "PAGO-EXTERNO-1"}).status_code == 403
+    assert admin.post(f"/api/v1/becas/ordenes-cobro/{order_id}/dispersar", json={"batch_folio": "LOTE-EXTERNO-1"}).status_code == 403
+    assert admin.delete(f"/api/v1/becas/ordenes-cobro/{order_id}").status_code == 403
+    assert clients["docente"].get("/api/v1/becas/ordenes-cobro").status_code == 403
+    auditor_order = auditor.get("/api/v1/becas/ordenes-cobro").json()[0]
+    assert auditor_order["student_name"] is None
+    assert auditor_order["bank_clabe"] is None
+    assert clients["tesoreria"].post(f"/api/v1/becas/ordenes-cobro/{order_id}/confirmar-pago", json={}).status_code == 422
+    assert clients["tesoreria"].post(f"/api/v1/becas/ordenes-cobro/{order_id}/confirmar-pago", json={"external_reference": "   "}).status_code == 422
+    assert clients["tesoreria"].post(f"/api/v1/becas/ordenes-cobro/{order_id}/confirmar-pago", json={"external_reference": "PAGO-EXTERNO-1"}).status_code == 200
+    assert clients["tesoreria"].post(f"/api/v1/becas/ordenes-cobro/{order_id}/dispersar", json={"batch_folio": "   "}).status_code == 422
 
     # 8. Student submits simplified renewal
     renewal_payload = {
@@ -214,6 +237,9 @@ def test_becas_full_flow(clients):
     res_padron = admin.get("/api/v1/becas/padron-beneficiarios")
     assert res_padron.status_code == 200
     assert len(res_padron.json()) >= 1
+    assert student.get("/api/v1/becas/padron-beneficiarios").status_code == 403
+    assert auditor.get("/api/v1/becas/padron-beneficiarios").status_code == 403
+    assert clients["tesoreria"].get("/api/v1/becas/padron-beneficiarios").status_code == 403
 
     # 15. Publish official results for call
     res_pub = admin.post(f"/api/v1/becas/convocatorias/{call_id}/publicar-resultados")
@@ -227,16 +253,18 @@ def test_becas_full_flow(clients):
     assert isinstance(beneficiaries, list)
     assert len(beneficiaries) >= 1
     assert beneficiaries[0]["folio"].startswith("BEC-2026-")
+    assert clients["otro"].get(f"/api/v1/becas/convocatorias/{call_id}/resultados").json() == []
 
-    # 17. Student accesses official Constancia de Beca
+    # 17. Student sees a read-only, non-official summary
     res_const = student.get(f"/api/v1/becas/solicitudes/{app_id}/constancia")
     assert res_const.status_code == 200
     const_data = res_const.json()
-    assert const_data["folio_constancia"].startswith("CONST-BEC-UTO-")
-    assert "sha256_hash" in const_data
-    assert const_data["institution"] == "Universidad Tecnológica de Oriental"
-    assert "puebla_payment_url" in const_data
-    assert "capture_line" in const_data
+    assert const_data["document_type"] == "resumen_no_oficial"
+    assert const_data["application_folio"] == res_app.json()["folio"]
+    assert "sha256_hash" not in const_data
+    assert "capture_line" not in const_data
+    assert auditor.get(f"/api/v1/becas/solicitudes/{app_id}/constancia").status_code == 403
+    assert clients["otro"].get(f"/api/v1/becas/solicitudes/{app_id}/constancia").status_code == 403
 
     # 18. Student checks notifications inbox
     res_notifs = student.get("/api/v1/becas/notificaciones")

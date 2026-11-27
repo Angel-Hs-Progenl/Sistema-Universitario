@@ -174,3 +174,20 @@ La interpretación gráfica de la mascota sigue siendo una propuesta; no se decl
 26 de noviembre de 2026. El líder solicita integrar la carpeta `Coevaluación/` recibida por pull, conectar sus tareas con la aplicación y roles existentes, y adaptar su diseño al portal. Se conserva la propuesta de seis criterios y escala 1–5 como base editable; su promedio es descriptivo, no una nota institucional. El Administrador prepara cuestionarios versionados, actividades y parejas; Estudiante responde solo sus asignaciones. Se sustituyen el selector de rol y `localStorage` del prototipo por sesión, permisos, CSRF, PostgreSQL y auditoría compartidos.
 
 Impacto transversal autorizado por esta solicitud: rutas y navegación compartida, ayuda, router FastAPI y migración Alembic 0010. Los archivos de la página independiente se retiraron; su procedencia se conserva en Git y en `Coevaluación/README.md`. Detalle y decisiones pendientes en [COEVALUACION.md](COEVALUACION.md). La autorización para integrar esta propuesta no sustituye la ratificación de reglas académicas, privacidad o fases institucionales.
+
+## Registro CR-015 · Corrección de permisos y afirmaciones de Becas
+
+27 de noviembre de 2026. El líder solicita corregir los hallazgos de la revisión del módulo recibido. Este registro actualiza el estado técnico de los CR-011 a CR-014; sus descripciones históricas no prueban autorización institucional de pagos, referencias, constancias o calendarios.
+
+- El padrón nominal se limita en FastAPI al personal revisor. El auditor consulta actividad sin identidad nominal; el estudiante solo puede consultar sus solicitudes y resultados propios.
+- Solo Tesorería registra, verifica, devuelve o anula órdenes y registra referencias de operaciones externas. Una orden anulada conserva su fila y bitácora.
+- El importe base se captura explícitamente y el porcentaje procede del dictamen o de una captura verificada; ya no se asignan montos, porcentajes ni fechas por omisión.
+- El portal registra órdenes internas y referencias verificadas manualmente. No genera líneas de captura de Puebla, no ejecuta transferencias SPEI y no confirma pagos mediante una integración bancaria.
+- La vista antes llamada «constancia oficial» presenta un resumen de asignación sin sello, firma, folio de constancia ni referencia de pago ficticios. Su consulta no muta la base.
+- Se retiran botones de PDF y Excel que solo simulaban una descarga y un calendario de pagos no respaldado por datos configurados.
+
+Pendiente de definición con las áreas: responsables definitivos, procedimiento y evidencia de verificación de pagos, interoperabilidad externa, emisión de constancias y criterios de publicación. La corrección es local para revisión; no representa aprobación formal de fases ni operación institucional.
+
+## Registro CR-016 · Anatomía del azor de bienvenida
+
+27 de noviembre de 2026. El líder proporciona seis fotografías de un azor y solicita acercar el ave animada a su anatomía, conservando el tipo de dibujo, la composición y la animación existentes. Se redibuja únicamente `src/modules/auth/Goshawk.jsx`: cabeza gris oscura con ceja clara y ojo ámbar, pico curvo, pecho barrado, alas con plumas diferenciadas y cola transversalmente bandada. Se reutilizan los tokens de color y la clase `scene-azor`; no cambian el movimiento, el control del footer, la escena de documentos, la marca ni las tareas de la aplicación. Las fotografías permanecen como referencias de la conversación, fuera de Git. Esta revisión visual no equivale a aprobación de una mascota institucional.

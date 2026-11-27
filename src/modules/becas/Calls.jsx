@@ -161,7 +161,7 @@ export default function Calls() {
                         style={{ fontSize: "0.8125rem" }}
                         onClick={() => setViewingResults(c)}
                       >
-                        Ver resultados oficiales
+                        Ver resultados publicados
                       </button>
                     )}
                   </div>
@@ -246,7 +246,7 @@ export default function Calls() {
       )}
       {applying && (
         <Modal
-          title={`Solicitud Oficial: ${applying.title}`}
+          title={`Solicitud: ${applying.title}`}
           onClose={() => setApplying(null)}
         >
           <FormularioSolicitudUTO
@@ -265,7 +265,7 @@ export default function Calls() {
         <Modal title="¡Solicitud Registrada Exitosamente!" onClose={() => setCreatedApp(null)}>
           <div style={{ textAlign: "center", padding: "16px" }}>
             <CheckCircle size={48} color="var(--green)" style={{ margin: "0 auto 12px auto" }} />
-            <h3 style={{ margin: "0 0 6px 0", color: "var(--brand)" }}>Folio Oficial: {createdApp.folio}</h3>
+            <h3 style={{ margin: "0 0 6px 0", color: "var(--brand)" }}>Folio de solicitud: {createdApp.folio}</h3>
             <p style={{ margin: "0 0 16px 0", color: "var(--muted)", fontSize: "0.875rem" }}>
               Tu solicitud y documentación han sido recibidas en el sistema institucional de la Universidad Tecnológica de Oriental.
             </p>
@@ -297,16 +297,16 @@ function CallResultsModal({ call, onClose }) {
   );
 
   return (
-    <Modal title={`Resultados Oficiales: ${call.title}`} onClose={onClose}>
+    <Modal title={`Resultados publicados: ${call.title}`} onClose={onClose}>
       <p className="work-help">
-        Convocatoria {call.code} · Dictamen institucional del Comité de Becas UTO
+        Convocatoria {call.code} · Resultados registrados en el portal
       </p>
       {loading && <p>Cargando lista de folios beneficiarios…</p>}
       {error && <p className="alert error">{error}</p>}
       {results && (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <p style={{ margin: 0, fontSize: "0.875rem" }}>
-            Se publican los folios de los aspirantes con dictamen favorable conforme al marco normativo y de protección de datos personales:
+            Cada estudiante ve únicamente sus solicitudes con dictamen favorable. El personal revisor consulta las de la convocatoria.
           </p>
           <div className="audit-table-wrapper">
             <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -334,13 +334,13 @@ function CallResultsModal({ call, onClose }) {
                       <td style={{ padding: "8px 10px", fontSize: "0.875rem" }}>{r.major}</td>
                       <td style={{ padding: "8px 10px" }}>{r.academic_term}</td>
                       <td style={{ padding: "8px 10px", color: "var(--green)", fontWeight: "700" }}>
-                        {r.discount_percentage}% de beca
+                        {r.discount_percentage == null ? "Por definir" : `${r.discount_percentage}% de apoyo`}
                       </td>
                       <td style={{ padding: "8px 10px", fontWeight: "600" }}>
-                        {r.student_percentage}%
+                        {r.student_percentage == null ? "Por definir" : `${r.student_percentage}%`}
                       </td>
                       <td style={{ padding: "8px 10px", fontSize: "0.8125rem", color: "var(--muted)" }}>
-                        {r.dictamen_session}
+                        {r.dictamen_session || "Sin sesión registrada"}
                       </td>
                     </tr>
                   ))

@@ -15,7 +15,7 @@ Los documentos originales no se incorporan a Git. Las descripciones siguientes c
 | Plataforma compartida  | Inicio, identidad, sesión, permisos, diseño, notificaciones, navegación                                  | Implementada para validación local                                  |
 | Titulación electrónica | Expediente y seguimiento desde borrador hasta conclusión                                                 | Implementada; emisión oficial externa                               |
 | Evaluación docente     | Encuestas configurables, asignaciones, cálculo, reportes y planes de mejora                              | Requisitos identificados; sin implementación                        |
-| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, cobro, renovación, publicación y constancias | Implementada al 100% (Fase 3 concluida para validación)             |
+| Becas                  | Convocatorias, perfil socioeconómico, solicitud, dictamen, órdenes internas y renovación                | Implementada para validación local; integraciones externas pendientes |
 | Autoevaluación         | Reflexión por asignación y parcial                                                                       | Implementada para validación local; reglas académicas por ratificar |
 | Coevaluación           | Valoración entre estudiantes asignados por materia, grupo y parcial                                      | Integrada para validación local; reglas académicas por ratificar    |
 | Módulos futuros        | Por acordar con sus responsables                                                                         | Fuera de alcance hasta aprobarlos                                   |
@@ -71,9 +71,9 @@ Requisitos identificados: EVD-01 acceso y asignaciones; EVD-02 cuestionario vers
 
 Antes de desarrollar: acordar fórmula y ponderaciones, anonimato y tamaño mínimo de grupo, tratamiento de faltantes, periodos, importación de asignaciones, proveedor institucional de identidad, revisión humana de IA y retención de respuestas. No reutilizar la autenticación local como sustituto del SSO exigido para este módulo.
 
-## Becas (100% · Implementación Completa para Validación)
+## Becas · propuesta implementada para validación local
 
-Requisitos implementados en la entrega:
+Alcance propuesto por el equipo. Las funciones que requieren acuerdos o servicios externos siguen pendientes de ratificación; el estado técnico vigente se aclara en CR-015 de CASCADA.md.
 - BEC-01: Perfil del aspirante con datos personales, académicos y socioeconómicos.
 - BEC-02: Buscador y catálogo de convocatorias con filtros por modalidad (Excelencia, Manutención, Transporte, Alimentación).
 - BEC-03: Solicitud digital con folio único, carga de comprobantes (PDF/JPG hasta 5 MB) y seguimiento en tiempo real.
@@ -81,21 +81,21 @@ Requisitos implementados en la entrega:
 - BEC-05: Creador de convocatorias y gestor de formularios con preguntas personalizadas por tipo de apoyo.
 - BEC-06: Motor de reglas y filtros automáticos por promedio mínimo institucional.
 - BEC-07: Panel de dictaminación colegiada para comités con revisión de expedientes, comentarios y votación manual.
-- BEC-08: Calendario y emisión de órdenes de cobro foliadas con referencia institucional.
+- BEC-08: Registro de órdenes internas foliadas; no se genera una línea de captura externa.
 - BEC-09: Proceso simplificado de renovación para becarios activos.
-- BEC-10: Tablero de control (Dashboard) con métricas en vivo y exportación oficial de reportes en CSV.
+- BEC-10: Vista de actividad y exportación CSV según rol; PDF y Excel pendientes.
 - BEC-11: Roles dedicados (Administrador, Evaluador de Comité, Auditor Institucional y Estudiante).
-- BEC-12: Bitácora inmutable de auditoría (logs de quién, cuándo, acción, IP y expediente afectado).
+- BEC-12: Bitácora persistente de acciones; su inmutabilidad no está garantizada frente al administrador de la base.
 - BEC-13: Captura y validación de datos bancarios (CLABE interbancaria de 18 dígitos, banco y titular) para órdenes de dispersión.
 - BEC-14: Validación y dictamen del estudio socioeconómico por personal administrativo/evaluador con ajuste de puntaje y notas.
 - BEC-15: Registro de acta formal de sesión de comité (número de sesión ordinaria/extraordinaria, acuerdo y fecha de dictamen).
 - BEC-16: Resolución colegiada de solicitudes de renovación para personal con justificación de aprobación/rechazo.
-- BEC-17: Generación y consulta del Padrón Oficial de Beneficiarios con desglose nominal, académico, bancario y descarga en CSV institucional.
-- BEC-18: Gestión de dispersión por lote bancario SPEI con folio de lote (`batch_folio`), fecha de dispersión y notificación automática al estudiante.
+- BEC-17: Relación interna de beneficiarios para personal revisor autorizado; el auditor no recibe el padrón nominal.
+- BEC-18: Registro manual por Tesorería de una referencia de dispersión externa; el portal no ejecuta transferencias SPEI.
 - BEC-19: Esquema de beca porcentual diferenciado (el dictamen asigna el porcentaje a pagar por el estudiante, ej. 53% o 65%, con el descuento de beca correspondiente).
-- BEC-20: Emisión de órdenes de pago por Tesorería vinculadas a Pagos en Línea del Gobierno de Puebla con línea de captura institucional y validación de pago recibido.
-- BEC-21: Publicación oficial de resultados con lista protegida de folios beneficiarios y aviso automático al buzón del estudiante.
-- BEC-22: Emisión de Constancia Oficial de Asignación de Beca con sello digital SHA-256, desglose financiero UTO y referencia de pago del Gobierno de Puebla.
+- BEC-20: Registro de órdenes internas y verificación manual del pago por Tesorería con referencia externa; integración con Puebla pendiente.
+- BEC-21: Publicación de resultados registrados en el portal; cada estudiante consulta solo su folio.
+- BEC-22: Resumen de asignación para consulta, sin sello, emisión oficial ni referencia de pago. La constancia oficial requiere un proceso autorizado.
 - BEC-23: Buzón institucional de notificaciones del aspirante y conclusión formal del ciclo de vida del expediente por Servicios Escolares.
 
 Integraciones futuras dependientes de infraestructura externa (producción):
