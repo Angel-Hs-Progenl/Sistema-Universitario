@@ -12,7 +12,7 @@ from .modules.evaluacion_docente.router import router as evaluations_router
 from .modules.autoevaluacion.router import router as autoevaluacion_router
 from .modules.coevaluacion.router import router as coevaluacion_router
 
-ALLOWED_ORIGINS = {ORIGIN}
+ALLOWED_ORIGINS = set(ORIGINS)
 
 if not PRODUCTION:
     ALLOWED_ORIGINS.add("http://127.0.0.1:8000")
@@ -32,8 +32,7 @@ app = FastAPI(
 async def security(request: Request, call_next):
     if request.method not in ["GET", "HEAD", "OPTIONS"]:
         origin = request.headers.get("origin")
-        if origin and origin.rstrip("/") not in ORIGINS:
-         if origin and origin.rstrip("/") not in ALLOWED_ORIGINS:
+        if origin and origin.rstrip("/") not in ALLOWED_ORIGINS:
             return JSONResponse({"detail": "Origen no autorizado."}, status_code=403)
         if request.headers.get("sec-fetch-site") == "cross-site":
             return JSONResponse(
