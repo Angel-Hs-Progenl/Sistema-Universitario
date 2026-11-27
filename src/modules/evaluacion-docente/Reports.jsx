@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Download, Printer } from "lucide-react";
 import { useAuth } from "../../app/Auth";
@@ -50,14 +50,14 @@ async function analizarDocente(teacherId) {
     );
     const resultado = respuesta.resultados?.[0];
     if (!resultado) {
-      throw new Error("No se recibiÃ³ un anÃ¡lisis de la IA.");
+      throw new Error("No se recibió un análisis de la IA.");
     }
     setAnalisisIA((anteriores) => ({
       ...anteriores,
       [teacherId]: resultado.analisis,
     }));
   } catch (error) {
-    setErrorIA(error.message || "No se pudo generar el anÃ¡lisis.");
+    setErrorIA(error.message || "No se pudo generar el análisis.");
   } finally {
     setCargandoIA(null);
   }
@@ -68,8 +68,8 @@ async function analizarDocente(teacherId) {
        <Heading
         eyebrow={
           admin
-            ? "EvaluaciÃ³n docente / CoordinaciÃ³n"
-            : "EvaluaciÃ³n docente / Docente"
+            ? "Evaluación docente / Coordinación"
+            : "Evaluación docente / Docente"
         }
         title={admin ? "Resultados por periodo" : "Mis resultados"}
         action={
@@ -93,14 +93,14 @@ async function analizarDocente(teacherId) {
       >
         {admin
           ? "Consulta resultados agregados y verifica el umbral de privacidad antes de publicar."
-          : "Consulta tus resultados y los comentarios revisados despuÃ©s de su publicaciÃ³n."}
+          : "Consulta tus resultados y los comentarios revisados después de su publicación."}
       </Heading>
     </div>
       <LoadState state={periods} empty="No hay periodos asignados">
         <div className="work-toolbar no-print">
           <Field
             as="select"
-            label="Periodo de evaluaciÃ³n"
+            label="Periodo de evaluación"
             value={id}
             onChange={(e) => setSelection(e.target.value)}
           >
@@ -114,13 +114,13 @@ async function analizarDocente(teacherId) {
             <Status value={period.status}>
               {period.status === "publicado"
                 ? "Publicado"
-                : "Pendiente de publicaciÃ³n"}
+                : "Pendiente de publicación"}
             </Status>
           )}
         </div>
         {!visible ? (
-          <Empty title="Resultados pendientes de publicaciÃ³n">
-            El Ã¡rea responsable debe cerrar la recepciÃ³n, revisar los
+          <Empty title="Resultados pendientes de publicación">
+            El área responsable debe cerrar la recepción, revisar los
             comentarios y publicar el periodo.
           </Empty>
         ) : (
@@ -131,7 +131,7 @@ async function analizarDocente(teacherId) {
             {state.data?.map((report) => (
           <article className="work-report" key={report.teacher_id} data-teacher-id={report.teacher_id}
 >                <span className="eyebrow">
-                  {report.period_title} Â·{" "}
+                  {report.period_title} ·{" "}
                   {report.published ? "Publicado" : "Vista interna"}
                 </span>
                 <h2>{report.teacher_name}</h2>
@@ -197,7 +197,7 @@ async function analizarDocente(teacherId) {
                     </dl>
                     <div
                       className="work-bars"
-                      aria-label="Promedios por secciÃ³n"
+                      aria-label="Promedios por sección"
                     >
                       {report.sections.map((s) => (
                         <div key={s.name} className="work-bar">
@@ -226,7 +226,7 @@ async function analizarDocente(teacherId) {
                         <table>
                           <thead>
                             <tr>
-                              <th>SecciÃ³n y pregunta</th>
+                              <th>Sección y pregunta</th>
                               <th>Peso</th>
                               <th>Promedio</th>
                             </tr>
@@ -247,7 +247,7 @@ async function analizarDocente(teacherId) {
                       </div>
                     </details>
                   <p className="work-help">{report.calculation}</p>
-          <div className="work-bars question-chart-grid" aria-label="GrÃ¡fica de resultados por pregunta">
+          <div className="work-bars question-chart-grid" aria-label="Gráfica de resultados por pregunta">
                 <h4>Promedios por pregunta</h4>
                   {report.questions.map((q) => (
                     <div key={q.id} className="work-bar">
@@ -287,7 +287,7 @@ async function analizarDocente(teacherId) {
         return linea ? linea.slice(titulo.length).trim() : "";
       };
       const fortalezas = obtener("Fortalezas mencionadas:");
-      const mejoras = obtener("Ãreas de oportunidad:");
+      const mejoras = obtener("Áreas de oportunidad:");
       const recurrentes = obtener("Temas recurrentes:");
       const recomendaciones = obtener("Recomendaciones sugeridas:");
       return (
@@ -299,7 +299,7 @@ async function analizarDocente(teacherId) {
           )}
           {mejoras && (
             <p>
-              <strong>Ãreas de mejora:</strong> {mejoras}
+              <strong>Áreas de mejora:</strong> {mejoras}
             </p>
           )}
           {recurrentes && (
@@ -320,7 +320,7 @@ async function analizarDocente(teacherId) {
                 </div>
               )}
           <p className="work-help">
-            AnÃ¡lisis asistido por IA. Requiere revisiÃ³n humana.
+            Análisis asistido por IA. Requiere revisión humana.
           </p>
         </div>
       );
@@ -399,7 +399,7 @@ async function analizarDocente(teacherId) {
                 );
                 if (feedbacks.loading) {
                   return (
-                    <p className="work-help">Cargando retroalimentaciÃ³n...</p>
+                    <p className="work-help">Cargando retroalimentación...</p>
                   );
                 }
                 return (
@@ -435,7 +435,7 @@ async function analizarDocente(teacherId) {
                       if (!plan) {
                         return (
                           <p className="work-help">
-                            No hay un plan de mejora registrado para este docente y perÃ­odo.
+                            No hay un plan de mejora registrado para este docente y período.
                           </p>
                         );
                       }
@@ -465,9 +465,9 @@ export function TeacherSubjects() {
   const state = useAsync(() => api(`${BASE}/asignaciones`), []);
   return (
     <>
-      <Heading eyebrow="EvaluaciÃ³n docente / Docente" title="Mis asignaturas">
-        Asignaturas y grupos incluidos en tus periodos de evaluaciÃ³n. La
-        participaciÃ³n individual de estudiantes permanece reservada.
+      <Heading eyebrow="Evaluación docente / Docente" title="Mis asignaturas">
+        Asignaturas y grupos incluidos en tus periodos de evaluación. La
+        participación individual de estudiantes permanece reservada.
       </Heading>
       <LoadState state={state} empty="No hay asignaturas asignadas">
         <div className="work-records">
@@ -475,7 +475,7 @@ export function TeacherSubjects() {
             <article className="work-record" key={`${a.period_id}-${i}`}>
               <div>
                 <span className="record-code">
-                  {a.period_title} Â· {a.group_name}
+                  {a.period_title} · {a.group_name}
                 </span>
                 <h2>{a.subject}</h2>
               </div>
@@ -515,15 +515,15 @@ export function ModerateComments() {
           body: { public_comment: form.get("public_comment") },
         });
         await state.refresh();
-      }, "RevisiÃ³n del comentario guardada.")
+      }, "Revisión del comentario guardada.")
     )
       setSelected(null);
   }
   return (
     <>
       <Heading
-        eyebrow="EvaluaciÃ³n docente / RevisiÃ³n previa"
-        title="Comentarios para publicaciÃ³n"
+        eyebrow="Evaluación docente / Revisión previa"
+        title="Comentarios para publicación"
         action={
           <Link
             className="button button-secondary"
@@ -600,7 +600,7 @@ export function ModerateComments() {
                       {c.teacher_name || "Docente sin nombre registrado"}
                     </strong>
                     <Status value={c.reviewed ? "validado" : "pendiente"}>
-                      {c.reviewed ? "Revisado" : "Pendiente de revisiÃ³n"}
+                      {c.reviewed ? "Revisado" : "Pendiente de revisión"}
                     </Status>
                   </div>
                   <div style={{ marginBottom: c.reviewed ? 16 : 0 }}>
@@ -620,7 +620,7 @@ export function ModerateComments() {
                       }}
                     >
                       <p className="work-help" style={{ marginTop: 0, marginBottom: 6 }}>
-                        VersiÃ³n para publicar
+                        Versión para publicar
                       </p>
                       <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>
                         {c.public_comment || "Excluido del informe"}
@@ -653,7 +653,7 @@ export function ModerateComments() {
         >
           <form onSubmit={submit}>
             <MutationState state={mutation} />
-            <p className="work-help">Original reservado al Ã¡rea revisora</p>
+            <p className="work-help">Original reservado al área revisora</p>
             <blockquote className="work-comment">{selected.comment}</blockquote>
             <Field
               name="public_comment"
@@ -664,7 +664,7 @@ export function ModerateComments() {
               defaultValue={
                 selected.reviewed ? selected.public_comment : selected.comment
               }
-              hint="Retira datos identificables. Deja este campo vacÃ­o para excluir el comentario del informe."
+              hint="Retira datos identificables. Deja este campo vacío para excluir el comentario del informe."
             />
             <div className="work-actions">
               <BusyButton
@@ -672,7 +672,7 @@ export function ModerateComments() {
                 busy={mutation.busy}
                 className="button button-primary"
               >
-                Guardar revisiÃ³n
+                Guardar revisión
               </BusyButton>
               <button
                 type="button"
