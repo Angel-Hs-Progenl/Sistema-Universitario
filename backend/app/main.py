@@ -5,14 +5,14 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from .core.auth import router as auth_router
 from .core.google_oauth import router as google_router
-from .core.security import ORIGIN, PRODUCTION
+from .core.security import ORIGINS, PRODUCTION
 from .modules.titulacion.router import router as titles_router
 from .modules.becas.router import router as becas_router
 from .modules.evaluacion_docente.router import router as evaluations_router
 from .modules.autoevaluacion.router import router as autoevaluacion_router
 from .modules.coevaluacion.router import router as coevaluacion_router
 
-ALLOWED_ORIGINS = {ORIGIN}
+ALLOWED_ORIGINS = set(ORIGINS)
 
 if not PRODUCTION:
     ALLOWED_ORIGINS.add("http://127.0.0.1:8000")
