@@ -279,7 +279,7 @@ async function analizarDocente(teacherId) {
 </div>
 {analisisIA[report.teacher_id] && (
   <section className="work-section">
-    <h3>Resumen de evaluaciÃ³n docente</h3>
+    <h3>Resumen de evaluación docente</h3>
     {(() => {
       const lineas = analisisIA[report.teacher_id].split("\n");
       const obtener = (titulo) => {
@@ -294,7 +294,7 @@ async function analizarDocente(teacherId) {
         <div>
           {fortalezas && (
             <p>
-              <strong>ValoraciÃ³n positiva:</strong> {fortalezas}
+              <strong>Valoración positiva:</strong> {fortalezas}
             </p>
           )}
           {mejoras && (
@@ -347,7 +347,7 @@ async function analizarDocente(teacherId) {
                       )}
                     </section>
               <section className="work-section">
-              <h3>RetroalimentaciÃ³n de DirecciÃ³n AcadÃ©mica</h3>
+              <h3>Retroalimentación de Dirección Académica</h3>
                {admin && report.available && !feedbacks.data?.some(
               (item) =>
                 String(item.teacher_id) === String(report.teacher_id) &&
@@ -371,22 +371,22 @@ async function analizarDocente(teacherId) {
                     await feedbacks.refresh();
                     form.reset();
                   } catch (error) {
-                    alert(error.message || "No se pudo guardar la retroalimentaciÃ³n.");
+                    alert(error.message || "No se pudo guardar la retroalimentación.");
                   }
                 }}
               >
-                <h3>Registrar retroalimentaciÃ³n</h3>
+                <h3>Registrar retroalimentación</h3>
                 <textarea
                   name="feedback"
                   required
                   minLength={10}
                   maxLength={4000}
                   rows={4}
-                  placeholder="Escribe la retroalimentaciÃ³n de DirecciÃ³n AcadÃ©mica..."
+                  placeholder="Escribe la retroalimentación de Dirección Académica..."
                 />
                 <div className="work-actions">
                   <button type="submit" className="button button-primary">
-                    Guardar retroalimentaciÃ³n
+                    Guardar retroalimentación
                   </button>
                 </div>
               </form>
@@ -405,13 +405,14 @@ async function analizarDocente(teacherId) {
                 return (
                   <p className="work-help">
                     {feedback?.feedback ||
-                      "Pendiente de registrar por DirecciÃ³n AcadÃ©mica."}
+                      "Pendiente de registrar por Dirección Académica."}
                   </p>
                 );
               })()}
             </section>
                   <section className="work-section">
-                    <h3>Plan de acciÃ³n</h3>
+                    <h3>Plan de acción
+                    </h3>
                     {admin && (
                   <div className="work-actions no-print">
                     <Link
@@ -440,7 +441,7 @@ async function analizarDocente(teacherId) {
                       }
                       return (
                         <div>
-                          <p><strong>AcciÃ³n de mejora:</strong> {plan.action}</p>
+                          <p><strong>Acción de mejora:</strong> {plan.action}</p>
                           <p><strong>Evidencia esperada:</strong> {plan.evidence || "No registrada"}</p>
                           <p><strong>Fecha de cumplimiento:</strong> {new Date(plan.due_date).toLocaleDateString("es-MX", { timeZone: "UTC" })}</p>
                           <p><strong>Estado:</strong> {plan.status}</p>
