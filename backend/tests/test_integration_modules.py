@@ -127,35 +127,59 @@ def test_becas_isolates_sensitive_records_and_validates_uploads(clients):
 
 
 def test_becas_orders_are_unique_and_never_invent_bank_references(clients):
+    from app.modules.becas.models import ScholarshipPaymentOrder
 
     response = scholarship(clients)
-
+    assert response.status_code == 200, response.text
     id = response.json()["id"]
 
     with SessionLocal() as db:
-
         db.get(ScholarshipApplication, id).status = "aprobada"
-
         db.commit()
 
-    payload = {"application_id": id, "period": "Periodo ficticio", "scheduled_date": (now() + timedelta(days=3)).isoformat()}
+    payload = {
+        "application_id": id,
+        "period": "Periodo ficticio",
+        "scheduled_date": (now() + timedelta(days=3)).isoformat(),
+        "cuota_base": 1000.0,
+        "student_percentage": 50.0,
+    }
 
-    assert clients["evaluador"].post(f"{BEC}/ordenes-cobro/generar", json=payload).status_code == 403
+    assert clients["evaluador"].post(
+        f"{BEC}/ordenes-cobro/generar", json=payload
+    ).status_code == 403
 
-    assert clients["administrador"].post(f"{BEC}/ordenes-cobro/generar", json=payload).status_code == 403
+    assert clients["administrador"].post(
+        f"{BEC}/ordenes-cobro/generar", json=payload
+    ).status_code == 403
 
-    assert clients["tesoreria"].post(f"{BEC}/ordenes-cobro/generar", json=payload).status_code == 200
+    response = clients["tesoreria"].post(
+        f"{BEC}/ordenes-cobro/generar", json=payload
+    )
+    assert response.status_code == 200, response.text
 
-    assert clients["tesoreria"].post(f"{BEC}/ordenes-cobro/generar", json=payload).status_code == 409
+    assert clients["tesoreria"].post(
+        f"{BEC}/ordenes-cobro/generar", json=payload
+    ).status_code == 409
 
-    orders = clients["estudiante"].get(f"{BEC}/ordenes-cobro").json()
+    response = clients["estudiante"].get(f"{BEC}/ordenes-cobro")
+    assert response.status_code == 200, response.text
+    orders = response.json()
 
-    assert len(orders) == 1 and orders[0]["reference"] == ""
+    assert len(orders) == 1
+    assert orders[0]["reference"] == orders[0]["folio_orden"]
+    assert orders[0]["reference"].startswith("ORD-BEC-")
+    assert float(orders[0]["amount"]) == 500.0
 
-    assert float(orders[0]["amount"]) == 100.25
-
-
-
+    with SessionLocal() as db:
+        order = db.scalar(
+            select(ScholarshipPaymentOrder).where(
+                ScholarshipPaymentOrder.application_id == id
+            )
+        )
+        assert order is not None
+        assert order.puebla_reference is None
+        assert order.puebla_url is None
 
 
 def setup_evaluation(clients):
