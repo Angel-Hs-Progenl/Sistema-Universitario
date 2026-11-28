@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../../shared/api";
+import { CARRERAS_UTO } from "../../../shared/becas";
 import { Field, Modal, BusyButton, useAsync } from "../../shared/ui";
 import { Heading, LoadState, MutationState, useMutation } from "../../shared/Work";
 
@@ -275,6 +276,8 @@ export function AcademicGroups() {
   const people = useAsync(() => api(`${BASE}/personas`), []);
   const mutation = useMutation();
   const [dialog, setDialog] = useState(false);
+  const [groupTerm, setGroupTerm] = useState("");
+  const [groupLetter, setGroupLetter] = useState("");
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [subjectGroup, setSubjectGroup] = useState(null);
   const [generationGroup, setGenerationGroup] = useState(null);
@@ -404,7 +407,19 @@ export function AcademicGroups() {
       <Heading
         eyebrow="Evaluación docente / Dirección académica"
         title="Grupos académicos"
-        action={<button className="button button-primary" onClick={() => { mutation.clear(); setDialog(true); }}>Registrar grupo</button>}
+        action={
+  <button
+    className="button button-primary"
+    onClick={() => {
+      mutation.clear();
+      setGroupTerm("");
+      setGroupLetter("");
+      setDialog(true);
+    }}
+  >
+    Registrar grupo
+  </button>
+}
       >
         Administra los grupos académicos utilizados para organizar las evaluaciones docentes.
       </Heading>
@@ -541,18 +556,114 @@ export function AcademicGroups() {
       {generationGroup && <GenerateEvaluationsModal key={generationGroup.id} group={generationGroup} mutation={mutation} onClose={() => setGenerationGroup(null)} />}
 
       {dialog && (
-        <Modal title="Registrar grupo académico" onClose={() => { if (!mutation.busy) setDialog(false); }}>
-          <form onSubmit={submit}>
-            <MutationState state={mutation} />
-            <Field name="name" label="Nombre del grupo" required minLength={2} maxLength={80} />
-            <Field name="career" label="Carrera" required minLength={3} maxLength={150} />
-            <Field name="academic_term" label="Período académico" required minLength={3} maxLength={50} />
-            <div className="work-actions">
-              <BusyButton type="submit" className="button button-primary" busy={mutation.busy}>Guardar grupo</BusyButton>
-              <button type="button" className="button button-secondary" disabled={mutation.busy} onClick={() => setDialog(false)}>Cancelar</button>
-            </div>
-          </form>
-        </Modal>
+    <Modal
+  title="Registrar grupo académico"
+  onClose={() => {
+    if (!mutation.busy) setDialog(false);
+  }}
+>
+  <form onSubmit={submit}>
+    <MutationState state={mutation} />
+
+    <Field
+      name="career"
+      label="Carrera"
+      as="select"
+      required
+      defaultValue=""
+    >
+      <option value="" disabled>Selecciona una carrera</option>
+
+      {CARRERAS_UTO.map((career) => (
+        <option key={career} value={career}>
+          {career}
+        </option>
+      ))}
+    </Field>
+
+    <Field
+      label="Cuatrimestre"
+      as="select"
+      required
+      value={groupTerm}
+      onChange={(e) => setGroupTerm(e.target.value)}
+    >
+      <option value="" disabled>Selecciona un cuatrimestre</option>
+
+      {Array.from({ length: 11 }, (_, i) => i + 1).map((term) => (
+        <option key={term} value={term}>
+          {term}° Cuatrimestre
+        </option>
+      ))}
+    </Field>
+
+    <Field
+      label="Grupo"
+      as="select"
+      required
+      value={groupLetter}
+      onChange={(e) => setGroupLetter(e.target.value)}
+    >
+      <option value="" disabled>Selecciona un grupo</option>
+
+      {["A", "B", "C", "D", "E", "F"].map((letter) => (
+        <option key={letter} value={letter}>
+          {letter}
+        </option>
+      ))}
+    </Field>
+
+    <Field
+      name="academic_term"
+      label="Período académico"
+      as="select"
+      required
+      defaultValue=""
+    >
+      <option value="" disabled>Selecciona un período académico</option>
+
+      {[2026, 2027, 2028].flatMap((year) =>
+        [
+          `Enero - Abril ${year}`,
+          `Mayo - Agosto ${year}`,
+          `Septiembre - Diciembre ${year}`,
+        ].map((term) => (
+          <option key={term} value={term}>
+            {term}
+          </option>
+        ))
+      )}
+    </Field>
+
+    <Field
+      name="name"
+      label="Nombre del grupo generado"
+      value={groupTerm && groupLetter ? `${groupTerm}${groupLetter}` : ""}
+      readOnly
+      required
+    />
+
+    <div className="work-actions">
+      <BusyButton
+        type="submit"
+        className="button button-primary"
+        busy={mutation.busy}
+        disabled={!groupTerm || !groupLetter}
+      >
+        Guardar grupo
+      </BusyButton>
+
+      <button
+        type="button"
+        className="button button-secondary"
+        disabled={mutation.busy}
+        onClick={() => setDialog(false)}
+      >
+        Cancelar
+      </button>
+    </div>
+  </form>
+</Modal>
       )}
     </>
   );
